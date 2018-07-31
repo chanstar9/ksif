@@ -6,3 +6,6 @@ ksif.egg-info/
 data/
 
 /test.py
+
+# Virtual environments
+/venv

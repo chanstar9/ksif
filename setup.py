@@ -23,10 +23,11 @@ setup(
         'matplotlib',
         'tqdm',
         'requests',
+        'tables',
     ],
     packages         = find_packages(exclude = ['tests*']),
     keywords         = ['ksif', 'portfolio', 'backtest', 'finance'],
-    python_requires  = '>=3.5',
+    python_requires  = '>=3.5,!=3.7.*',
     classifiers=(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
