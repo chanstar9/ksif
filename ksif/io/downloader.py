@@ -50,8 +50,10 @@ def _download_data(file_name, url):
     if Path(local_company_file_path).exists():
         latest_company_data = custom_read_hdf(local_company_file_path)
     else:
+        print("Downloading {} from web...".format(file_name))
         latest_company_data = custom_read_csv(url)
-        latest_company_data.to_hdf(local_company_file_path, TABLE, mode='w')
+        latest_company_data.to_hdf(local_company_file_path, key=TABLE, format=TABLE, mode='w')
+        print("{} is saved as {}.".format(file_name, local_company_file_path))
     return latest_company_data
 
 
@@ -61,5 +63,5 @@ def custom_read_csv(path):
 
 
 def custom_read_hdf(path):
-    latest_korea_data = read_hdf(path, TABLE)
+    latest_korea_data = read_hdf(path, key=TABLE, format=TABLE)
     return latest_korea_data
