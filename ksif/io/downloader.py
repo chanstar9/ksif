@@ -56,7 +56,7 @@ def _download_data(file_name, url):
 
 
 def custom_read_csv(path):
-    latest_korea_data = read_csv(path, sep='|', low_memory=False, encoding=ENCODING, parse_dates=[DATE])
+    latest_korea_data = read_csv(path, low_memory=False, encoding=ENCODING, parse_dates=[DATE])
     return latest_korea_data
 
 
