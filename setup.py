@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name             = 'ksif',
-    version          = '2018.6.6',
+    version          = '2018.8.2',
     description      = 'Quantitative investment tools for KSIF',
     long_description = long_description,
     author           = 'Jaekyoung Kim',
