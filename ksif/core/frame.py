@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 :Author: Jaekyoung Kim
-:Date: 2018. 7. 18.
+         Park Ji woo
+:Date: 2018. 7. 18
 """
 from pandas import DataFrame
 import pandas as pd
