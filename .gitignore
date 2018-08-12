@@ -9,3 +9,22 @@ data/
 
 # Virtual environments
 /venv
+
+# PyCharm temp files.
+.idea/
+
+# Raw data files.
+data/
+!test/data/
+
+# Log files.
+test/.cache
+
+*.xlsx
+*.csv
+
+.DS_Store
+core/__pycache__/
+
+# Virtual environments
+venv/
