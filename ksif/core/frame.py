@@ -18,6 +18,7 @@ from pandas.core.indexing import convert_to_index_sliceable
 
 from ..io.downloader import download_latest_korea_data
 from .columns import CODE, FACTORS, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS_SUSPENDED, KOSPI, BENCHMARKS
+import sys
 
 PORTFOLIO_RETURN = 'portfolio_return'
 
@@ -211,3 +212,6 @@ class Portfolio(DataFrame):
             ret = ret.cumprod()
             ret = ret - 1
         return ret
+
+if __name__ == "__main__":
+    print(sys.path)

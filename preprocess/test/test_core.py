@@ -6,9 +6,10 @@
 import unittest
 from unittest import TestCase
 
-from core.columns import *
-from core.data_filter import filter_companies
-from core.data_reader import read_companies, read_benchmarks
+import sys
+from ..core.columns import *
+from ..core.data_filter import filter_companies
+from ..core.data_reader import read_companies, read_benchmarks
 
 TEST_NORMAL = '테스트정상'
 TEST_HOLDING_COMPANY = '테스트지주사'
@@ -106,4 +107,5 @@ class TestDataProcessor(TestCase):
 
 
 if __name__ == '__main__':
+    # print(sys.path)
     unittest.main()
