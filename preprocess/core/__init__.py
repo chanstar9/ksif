@@ -5,9 +5,9 @@
 """
 import argparse
 
-from core.data_reader import read_companies, read_benchmarks
-from core.data_filter import filter_companies
-from core.data_processor import process_companies, process_benchmarks
+from data_reader import read_companies, read_benchmarks
+from data_filter import filter_companies
+from data_processor import process_companies, process_benchmarks
 
 ENCODING = 'utf-8'
 
