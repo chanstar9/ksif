@@ -3,7 +3,6 @@
 build/
 dist/
 ksif.egg-info/
-data/
 
 /test.py
 
@@ -16,7 +15,7 @@ data/
 # Raw data files.
 data/
 !test/data/
-
+!preprocess/data/
 # Log files.
 test/.cache
 
