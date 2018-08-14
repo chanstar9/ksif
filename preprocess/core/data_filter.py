@@ -8,8 +8,8 @@ import math
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-from columns import *
-from utils import query_google_spreadsheet, last_day_of_month
+from preprocess.core.columns import *
+from .utils import query_google_spreadsheet, last_day_of_month
 
 HOLDING_COMPANY_ID = '1wI26_VimJ9txijph0EADwOwi5dVaCR4_3r81WU8qA7Y'
 BANKRUPT_COMPANY_ID = '1F8bdUTenIJhROK0ukVrL7e-HdQCY8rpKQWLPq7jnlKY'

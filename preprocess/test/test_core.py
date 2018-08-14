@@ -7,9 +7,9 @@ import unittest
 from unittest import TestCase
 
 import sys
-from ..core.columns import *
-from ..core.data_filter import filter_companies
-from ..core.data_reader import read_companies, read_benchmarks
+from preprocess.core.columns import *
+from preprocess.core.data_filter import filter_companies
+from preprocess.core.data_reader import read_companies, read_benchmarks
 
 TEST_NORMAL = '테스트정상'
 TEST_HOLDING_COMPANY = '테스트지주사'

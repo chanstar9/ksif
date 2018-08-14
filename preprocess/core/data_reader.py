@@ -6,7 +6,7 @@
 import pandas as pd
 import numpy as np
 
-from columns import *
+from preprocess.core.columns import *
 
 KIND = 'Kind'
 SYMBOL = 'Symbol'

@@ -8,8 +8,8 @@ from pandas import DataFrame
 import numpy as np
 from copy import copy
 
-from columns import *
-from utils import zero_to_nan
+from preprocess.core.columns import *
+from .utils import zero_to_nan
 
 YEAR = 'year'
 MONTH_DAY = 'month_day'
