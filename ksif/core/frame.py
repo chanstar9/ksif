@@ -4,21 +4,16 @@
          Park Ji woo
 :Date: 2018. 7. 18
 """
-from pandas import DataFrame
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from datetime import datetime
 from copy import deepcopy
+from datetime import datetime
 
-from pandas.core.index import (Index, MultiIndex)
-from pandas.core.series import Series
-import pandas.core.common as com
-from pandas.core.indexing import convert_to_index_sliceable
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from pandas import DataFrame
 
-from ..io.downloader import download_latest_korea_data
 from .columns import CODE, FACTORS, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS_SUSPENDED, KOSPI, BENCHMARKS
-import sys
+from ..io.downloader import download_latest_korea_data
 
 PORTFOLIO_RETURN = 'portfolio_return'
 
@@ -65,31 +60,32 @@ class Portfolio(DataFrame):
 
         DataFrame.__init__(self=self, data=data)
 
-    def __getitem__(self, key):
-        key = com._apply_if_callable(key, self)
+    def __init__(self, data=None, index=None, columns=None, dtype=None, copy=False,
+                 start_date=START_DATE, end_date=None,
+                 include_holding=False, include_managed=False, include_suspended=False):
+        if data is None:
+            data, self.benchmarks = download_latest_korea_data()
 
-        # shortcut if we are an actual column
-        is_mi_columns = isinstance(self.columns, MultiIndex)
-        try:
-            if key in self.columns and not is_mi_columns:
-                self._getitem_column(key)
-        except:
-            pass
+            if not include_holding:
+                data = data.loc[~data[HOLDING], :]
 
-        # see if we can slice the rows
-        indexer = convert_to_index_sliceable(self, key)
-        if indexer is not None:
-            return self._getitem_slice(indexer)
+            if not include_managed:
+                data = data.loc[~data[IS_MANAGED], :]
 
-        if isinstance(key, (Series, np.ndarray, Index, list)):
-            # either boolean or fancy integer index
-            return self._getitem_array(key)
-        elif isinstance(key, DataFrame):
-            return self._getitem_frame(key)
-        elif is_mi_columns:
-            return self._getitem_multilevel(key)
+            if not include_suspended:
+                data = data.loc[~data[IS_SUSPENDED], :]
+
+            data = data.loc[data[DATE] >= start_date, :]
+
+            if not end_date:
+                end_date = datetime.today().strftime('%Y-%m-%d')
+            if type(end_date) is not str:
+                raise ValueError("end_time should be a str.")
+            data = data.loc[data[DATE] <= end_date, :]
         else:
-            return self._getitem_column(key)
+            _, self.benchmarks = download_latest_korea_data()
+
+        DataFrame.__init__(self=self, data=data, index=index, columns=columns, dtype=dtype, copy=copy)
 
     @property
     def benchmark(self):
@@ -212,6 +208,3 @@ class Portfolio(DataFrame):
             ret = ret.cumprod()
             ret = ret - 1
         return ret
-
-if __name__ == "__main__":
-    print(sys.path)
