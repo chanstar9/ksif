@@ -12,7 +12,8 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from .columns import CODE, FACTORS, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS_SUSPENDED, KOSPI, BENCHMARKS
+from .columns import CODE, FACTORS, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS_SUSPENDED, KOSPI, BENCHMARKS, \
+    DEBT_RATIO
 from ..io.downloader import download_latest_korea_data
 
 PORTFOLIO_RETURN = 'portfolio_return'
@@ -34,13 +35,32 @@ class Portfolio(DataFrame):
     def _constructor(self):
         return Portfolio
 
-    def __init__(self, data=None, start_date=START_DATE, end_date=None,
-                 include_holding=False, include_managed=False, include_suspended=False):
+    def __init__(self, data=None, index=None, columns=None, dtype=None, copy: bool = False,
+                 start_date: str = START_DATE, end_date: str = None,
+                 include_holding: bool = False, include_finance: bool = False,
+                 include_managed: bool = False, include_suspended: bool = False):
+
+        try:
+            datetime.strptime(start_date, '%Y-%m-%d')
+        except ValueError:
+            raise ValueError("Incorrect data format, start_date should be YYYY-MM-DD")
+
+        if not end_date:
+            end_date = datetime.today().strftime('%Y-%m-%d')
+
+        try:
+            datetime.strptime(end_date, '%Y-%m-%d')
+        except ValueError:
+            raise ValueError("Incorrect data format, end_date should be YYYY-MM-DD")
+
         if data is None:
             data, self.benchmarks = download_latest_korea_data()
 
             if not include_holding:
                 data = data.loc[~data[HOLDING], :]
+
+            if not include_finance:
+                data = data.loc[~np.isnan(data[DEBT_RATIO]), :]
 
             if not include_managed:
                 data = data.loc[~data[IS_MANAGED], :]
@@ -48,40 +68,7 @@ class Portfolio(DataFrame):
             if not include_suspended:
                 data = data.loc[~data[IS_SUSPENDED], :]
 
-            data = data.loc[data[DATE] >= start_date, :]
-
-            if not end_date:
-                end_date = datetime.today().strftime('%Y-%m-%d')
-            if type(end_date) is not str:
-                raise ValueError("end_time should be a str.")
-            data = data.loc[data[DATE] <= end_date, :]
-        else:
-            _, self.benchmarks = download_latest_korea_data()
-
-        DataFrame.__init__(self=self, data=data)
-
-    def __init__(self, data=None, index=None, columns=None, dtype=None, copy=False,
-                 start_date=START_DATE, end_date=None,
-                 include_holding=False, include_managed=False, include_suspended=False):
-        if data is None:
-            data, self.benchmarks = download_latest_korea_data()
-
-            if not include_holding:
-                data = data.loc[~data[HOLDING], :]
-
-            if not include_managed:
-                data = data.loc[~data[IS_MANAGED], :]
-
-            if not include_suspended:
-                data = data.loc[~data[IS_SUSPENDED], :]
-
-            data = data.loc[data[DATE] >= start_date, :]
-
-            if not end_date:
-                end_date = datetime.today().strftime('%Y-%m-%d')
-            if type(end_date) is not str:
-                raise ValueError("end_time should be a str.")
-            data = data.loc[data[DATE] <= end_date, :]
+            data = data.loc[start_date <= data[DATE] <= end_date, :]
         else:
             _, self.benchmarks = download_latest_korea_data()
 
