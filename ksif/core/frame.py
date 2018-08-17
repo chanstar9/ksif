@@ -10,7 +10,11 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pandas.core.common as com
 from pandas import DataFrame
+from pandas import Series
+from pandas.core.index import (Index, MultiIndex)
+from pandas.core.indexing import convert_to_index_sliceable
 
 from .columns import CODE, FACTORS, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS_SUSPENDED, KOSPI, BENCHMARKS, \
     DEBT_RATIO
@@ -73,6 +77,32 @@ class Portfolio(DataFrame):
             _, self.benchmarks = download_latest_korea_data()
 
         DataFrame.__init__(self=self, data=data, index=index, columns=columns, dtype=dtype, copy=copy)
+
+    def __getitem__(self, key):
+        key = com._apply_if_callable(key, self)
+
+        # shortcut if we are an actual column
+        is_mi_columns = isinstance(self.columns, MultiIndex)
+        try:
+            if key in self.columns and not is_mi_columns:
+                self._getitem_column(key)
+        except:
+            pass
+
+        # see if we can slice the rows
+        indexer = convert_to_index_sliceable(self, key)
+        if indexer is not None:
+            return self._getitem_slice(indexer)
+
+        if isinstance(key, (Series, np.ndarray, Index, list)):
+            # either boolean or fancy integer index
+            return self._getitem_array(key)
+        elif isinstance(key, DataFrame):
+            return self._getitem_frame(key)
+        elif is_mi_columns:
+            return self._getitem_multilevel(key)
+        else:
+            return self._getitem_column(key)
 
     @property
     def benchmark(self):
