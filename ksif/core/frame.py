@@ -68,7 +68,7 @@ class Portfolio(DataFrame):
             if not include_suspended:
                 data = data.loc[~data[IS_SUSPENDED], :]
 
-            data = data.loc[start_date <= data[DATE] <= end_date, :]
+            data = data.loc[(start_date <= data[DATE]) & (data[DATE] <= end_date), :]
         else:
             _, self.benchmarks = download_latest_korea_data()
 
