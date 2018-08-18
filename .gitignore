@@ -3,9 +3,27 @@
 build/
 dist/
 ksif.egg-info/
-data/
 
 /test.py
 
 # Virtual environments
 /venv
+
+# Raw data files.
+*.h5
+*.xlsx
+*.csv
+!ksif/tests/data/
+!preprocess/tests/data/
+!preprocess/data/
+
+# Log files.
+preprocess/tests/.cache
+
+.DS_Store
+core/__pycache__/
+
+# Virtual environments
+venv/
+
+__pycache__

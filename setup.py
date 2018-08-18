@@ -10,10 +10,10 @@ with open("README.md", "r") as fh:
 
 setup(
     name             = 'ksif',
-    version          = '2018.8.2',
+    version          = '2018.8.18',
     description      = 'Quantitative investment tools for KSIF',
     long_description = long_description,
-    author           = 'Jaekyoung Kim',
+    author           = 'KSIF Tech',
     author_email     = 'jaekyoungkim@kaist.ac.kr',
     url              = 'https://github.com/willbelucky/ksif',
     download_url     = 'https://github.com/willbelucky/ksif/archive/master.zip',
