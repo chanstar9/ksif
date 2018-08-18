@@ -9,18 +9,16 @@ ksif.egg-info/
 # Virtual environments
 /venv
 
-# PyCharm temp files.
-.idea/
-
 # Raw data files.
-data/
-!test/data/
-!preprocess/data/
-# Log files.
-test/.cache
-
+*.h5
 *.xlsx
 *.csv
+!ksif/tests/data/
+!preprocess/tests/data/
+!preprocess/data/
+
+# Log files.
+preprocess/tests/.cache
 
 .DS_Store
 core/__pycache__/
