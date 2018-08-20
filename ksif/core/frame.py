@@ -156,7 +156,6 @@ class Portfolio(DataFrame):
         del top_companies[RANK]
         return top_companies
 
-
     def quantile_distribution_ratio(self, factor, chunk_num=10, cumulative=True, weighted=False, only_positive=False,
                                     show_plot=False):
         if factor not in FACTORS:
@@ -214,3 +213,5 @@ class Portfolio(DataFrame):
             ret = ret - 1
         return ret
 
+if __name__ == "__main__":
+    print(sys.path)
