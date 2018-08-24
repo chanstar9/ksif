@@ -4,21 +4,21 @@
          Park Ji woo
 :Date: 2018. 7. 18
 """
-from pandas import DataFrame
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from datetime import datetime
 from copy import deepcopy
+from datetime import datetime
 
-from pandas.core.index import (Index, MultiIndex)
-from pandas.core.series import Series
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import pandas.core.common as com
+from pandas import DataFrame
+from pandas import Series
+from pandas.core.index import (Index, MultiIndex)
 from pandas.core.indexing import convert_to_index_sliceable
 
+from .columns import CODE, FACTORS, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS_SUSPENDED, KOSPI, BENCHMARKS, \
+    DEBT_RATIO
 from ..io.downloader import download_latest_korea_data
-from .columns import CODE, FACTORS, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS_SUSPENDED, KOSPI, BENCHMARKS
-import sys
 
 PORTFOLIO_RETURN = 'portfolio_return'
 
@@ -39,13 +39,32 @@ class Portfolio(DataFrame):
     def _constructor(self):
         return Portfolio
 
-    def __init__(self, data=None, start_date=START_DATE, end_date=None,
-                 include_holding=False, include_managed=False, include_suspended=False):
+    def __init__(self, data=None, index=None, columns=None, dtype=None, copy: bool = False,
+                 start_date: str = START_DATE, end_date: str = None,
+                 include_holding: bool = False, include_finance: bool = False,
+                 include_managed: bool = False, include_suspended: bool = False):
+
+        try:
+            datetime.strptime(start_date, '%Y-%m-%d')
+        except ValueError:
+            raise ValueError("Incorrect data format, start_date should be YYYY-MM-DD")
+
+        if not end_date:
+            end_date = datetime.today().strftime('%Y-%m-%d')
+
+        try:
+            datetime.strptime(end_date, '%Y-%m-%d')
+        except ValueError:
+            raise ValueError("Incorrect data format, end_date should be YYYY-MM-DD")
+
         if data is None:
             data, self.benchmarks = download_latest_korea_data()
 
             if not include_holding:
                 data = data.loc[~data[HOLDING], :]
+
+            if not include_finance:
+                data = data.loc[~np.isnan(data[DEBT_RATIO]), :]
 
             if not include_managed:
                 data = data.loc[~data[IS_MANAGED], :]
@@ -53,17 +72,11 @@ class Portfolio(DataFrame):
             if not include_suspended:
                 data = data.loc[~data[IS_SUSPENDED], :]
 
-            data = data.loc[data[DATE] >= start_date, :]
-
-            if not end_date:
-                end_date = datetime.today().strftime('%Y-%m-%d')
-            if type(end_date) is not str:
-                raise ValueError("end_time should be a str.")
-            data = data.loc[data[DATE] <= end_date, :]
+            data = data.loc[(start_date <= data[DATE]) & (data[DATE] <= end_date), :]
         else:
             _, self.benchmarks = download_latest_korea_data()
 
-        DataFrame.__init__(self=self, data=data)
+        DataFrame.__init__(self=self, data=data, index=index, columns=columns, dtype=dtype, copy=copy)
 
     def __getitem__(self, key):
         key = com._apply_if_callable(key, self)
@@ -136,25 +149,54 @@ class Portfolio(DataFrame):
         total_return = self._cumulate(data).iloc[-1]
         return total_return
 
-    def top(self, num, factor=MKTCAP):
-        self[RANK] = self.groupby(by=[DATE])[factor].transform(
-            lambda x: x.rank(ascending=False)
-        )
-        top_companies = deepcopy(self.loc[self[RANK] <= num, :])
-        top_companies = top_companies.sort_values(by=[DATE, RANK])
-        del self[RANK]
-        del top_companies[RANK]
-        return top_companies
+    def periodic_rank(self, min_rank: int, max_rank: int, factor: str = MKTCAP,
+                      bottom: bool = False, drop_rank: bool = True):
+        """
+        Select companies which have a rank bigger than or equal to min_rank, and smaller than or equal to max_rank
+        for each period.
 
-    def bottom(self, num, factor=MKTCAP):
+        :param min_rank: (int) The minimum rank of selected companies.
+                               The ranked_companies includes the minimum ranked company.
+        :param max_rank: (int) The maximum rank of selected companies.
+                               The ranked_companies includes the maximum ranked company.
+        :param factor: (str) The factor used to determine rank.
+        :param bottom: (bool) If bottom is True, select the companies from bottom. Or, select the companies from top.
+        :param drop_rank: (bool) If drop_rank is True, delete rank column from the ranked_companies.
+
+        :return ranked_companies: (DataFrame) Selected companies for each period by rank of the factor.
+        """
+        assert min_rank > 0, "min_rank should be bigger than 0."
+        assert max_rank > min_rank, "max_rank should be bigger than min_rank."
+        assert factor in FACTORS, "factor should be in FACTORS. Check ksif.columns.Factors, please."
+
         self[RANK] = self.groupby(by=[DATE])[factor].transform(
-            lambda x: x.rank(ascending=True)
+            lambda x: x.rank(ascending=bottom)
         )
-        top_companies = deepcopy(self.loc[self[RANK] <= num, :])
-        top_companies = top_companies.sort_values(by=[DATE, RANK])
+        ranked_companies = deepcopy(self.loc[(self[RANK] >= min_rank) & (self[RANK] <= max_rank), :])
+        ranked_companies = ranked_companies.sort_values(by=[DATE, RANK])
+
         del self[RANK]
-        del top_companies[RANK]
-        return top_companies
+        if drop_rank:
+            del ranked_companies[RANK]
+
+        return ranked_companies
+
+    def periodic_standardize(self, factor: str, prefix: str = 'std_'):
+        """
+        Standardize a factor periodically.
+
+        :param factor: (str) The name of factor will be standardized.
+        :param prefix: (str) The prefix preceding a name of standardized factor.
+
+        :return standardized_companies: (DataFrame) Standardized companies for each period by factor.
+        """
+        unstandardized_companies = deepcopy(self.loc[~np.isnan(self[factor]), :])
+        unstandardized_companies[prefix + factor] = unstandardized_companies.groupby(by=[DATE])[factor].transform(
+            lambda x: (x - x.mean()) / x.std()
+        )
+        standardized_companies = unstandardized_companies
+
+        return standardized_companies
 
     def quantile_distribution_ratio(self, factor, chunk_num=10, cumulative=True, weighted=False, only_positive=False,
                                     show_plot=False):
@@ -212,6 +254,3 @@ class Portfolio(DataFrame):
             ret = ret.cumprod()
             ret = ret - 1
         return ret
-
-if __name__ == "__main__":
-    print(sys.path)
