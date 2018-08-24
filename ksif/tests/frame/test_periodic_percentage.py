@@ -4,9 +4,11 @@
 :Date: 2018. 8. 24.
 """
 from unittest import TestCase
+
+import numpy as np
+
 from ksif import Portfolio
 from ksif.core.columns import PER
-import numpy as np
 
 
 class TestPeriodicPercentage(TestCase):

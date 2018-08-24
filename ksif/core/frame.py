@@ -193,7 +193,7 @@ class Portfolio(DataFrame):
         assert max_rank > min_rank, "max_rank should be bigger than min_rank."
 
         all_companies = deepcopy(self)
-        all_companies = all_companies.loc[~np.isnan(all_companies[factor]):]
+        all_companies = all_companies.loc[~np.isnan(all_companies[factor]), :]
         all_companies[RANK] = all_companies.groupby(by=[DATE])[factor].transform(
             lambda x: x.rank(ascending=bottom)
         )

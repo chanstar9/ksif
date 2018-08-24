@@ -4,6 +4,7 @@
 :Date: 2018. 8. 24.
 """
 from unittest import TestCase
+
 from ksif import Portfolio, columns
 from ksif.core.columns import DATE
 
