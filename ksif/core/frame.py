@@ -20,6 +20,8 @@ from .columns import CODE, FACTORS, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS
     DEBT_RATIO
 from ..io.downloader import download_latest_korea_data
 
+PERCENTAGE = 'percentage'
+
 PORTFOLIO_RETURN = 'portfolio_return'
 
 START_DATE = '2001-05-31'
@@ -156,30 +158,64 @@ class Portfolio(DataFrame):
         for each period.
 
         :param min_rank: (int) The minimum rank of selected companies.
-                               The ranked_companies includes the minimum ranked company.
+                               The selected_companies includes the minimum ranked company.
         :param max_rank: (int) The maximum rank of selected companies.
-                               The ranked_companies includes the maximum ranked company.
+                               The selected_companies includes the maximum ranked company.
         :param factor: (str) The factor used to determine rank.
         :param bottom: (bool) If bottom is True, select the companies from bottom. Or, select the companies from top.
-        :param drop_rank: (bool) If drop_rank is True, delete rank column from the ranked_companies.
+        :param drop_rank: (bool) If drop_rank is True, delete rank column from the selected_companies.
 
-        :return ranked_companies: (DataFrame) Selected companies for each period by rank of the factor.
+        :return selected_companies: (DataFrame) Selected companies for each period by rank of the factor.
         """
         assert min_rank > 0, "min_rank should be bigger than 0."
         assert max_rank > min_rank, "max_rank should be bigger than min_rank."
         assert factor in FACTORS, "factor should be in FACTORS. Check ksif.columns.Factors, please."
 
-        self[RANK] = self.groupby(by=[DATE])[factor].transform(
+        all_companies = deepcopy(self)
+        all_companies = all_companies.loc[~np.isnan(all_companies[factor]):]
+        all_companies[RANK] = all_companies.groupby(by=[DATE])[factor].transform(
             lambda x: x.rank(ascending=bottom)
         )
-        ranked_companies = deepcopy(self.loc[(self[RANK] >= min_rank) & (self[RANK] <= max_rank), :])
-        ranked_companies = ranked_companies.sort_values(by=[DATE, RANK])
+        selected_companies = all_companies.loc[(all_companies[RANK] >= min_rank) & (all_companies[RANK] <= max_rank), :]
+        selected_companies = selected_companies.sort_values(by=[DATE, RANK])
 
-        del self[RANK]
         if drop_rank:
-            del ranked_companies[RANK]
+            del selected_companies[RANK]
 
-        return ranked_companies
+        return selected_companies
+
+    def periodic_percentage(self, min_percentage: float, max_percentage: float, factor: str = MKTCAP,
+                            bottom: bool = False):
+        """
+        Select companies which have a percentage bigger than or equal to min_percentage, and smaller than or equal to
+        max_percentage for each period.
+
+        :param min_percentage: (float) The minimum percentage of selected companies.
+                               The selected_companies includes the minimum percent company.
+        :param max_percentage: (float) The maximum percentage of selected companies.
+                               The selected_companies does not include the maximum percent company.
+        :param factor: (str) The factor used to determine rank.
+        :param bottom: (bool) If bottom is True, select the companies from bottom. Or, select the companies from top.
+
+        :return selected_companies: (DataFrame) Selected companies for each period by quantile of the factor.
+        """
+        assert min_percentage >= 0, "min_percentage should be bigger than or equal to 0."
+        assert max_percentage > min_percentage, "max_percentage should be bigger than min_percentage."
+        assert max_percentage <= 1, "max_percentage should be smaller than or equal to 0."
+        assert factor in FACTORS, "factor should be in FACTORS. Check ksif.columns.Factors, please."
+
+        all_companies = deepcopy(self)
+        all_companies = all_companies.loc[~np.isnan(all_companies[factor]), :]
+        all_companies[PERCENTAGE] = all_companies.groupby(by=[DATE])[factor].transform(
+            lambda x: x.rank(ascending=bottom) / x.count()
+        )
+        selected_companies = all_companies.loc[
+                             (all_companies[PERCENTAGE] >= min_percentage) &
+                             (all_companies[PERCENTAGE] < max_percentage), :]
+
+        del selected_companies[PERCENTAGE]
+
+        return selected_companies
 
     def periodic_standardize(self, factor: str, prefix: str = 'std_'):
         """
