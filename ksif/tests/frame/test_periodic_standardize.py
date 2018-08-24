@@ -8,7 +8,8 @@ from ksif import Portfolio, columns
 from ksif.core.columns import DATE
 
 
-class TestPortfolio(TestCase):
+class TestPeriodicStandardize(TestCase):
+
     def test_periodic_standardize(self):
         pf = Portfolio()
 
