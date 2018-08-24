@@ -169,7 +169,6 @@ class Portfolio(DataFrame):
         """
         assert min_rank > 0, "min_rank should be bigger than 0."
         assert max_rank > min_rank, "max_rank should be bigger than min_rank."
-        assert factor in FACTORS, "factor should be in FACTORS. Check ksif.columns.Factors, please."
 
         all_companies = deepcopy(self)
         all_companies = all_companies.loc[~np.isnan(all_companies[factor]):]
@@ -202,7 +201,6 @@ class Portfolio(DataFrame):
         assert min_percentage >= 0, "min_percentage should be bigger than or equal to 0."
         assert max_percentage > min_percentage, "max_percentage should be bigger than min_percentage."
         assert max_percentage <= 1, "max_percentage should be smaller than or equal to 0."
-        assert factor in FACTORS, "factor should be in FACTORS. Check ksif.columns.Factors, please."
 
         all_companies = deepcopy(self)
         all_companies = all_companies.loc[~np.isnan(all_companies[factor]), :]
