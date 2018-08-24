@@ -120,29 +120,51 @@ class Portfolio(DataFrame):
         else:
             self._benchmark = benchmark
 
-    def outcome(self, benchmark=None, weighted=False):
+    def outcome(self, benchmark: str = None, weighted: bool = False):
+        """
+        Calculate various indices of the portfolio.
+
+        :param benchmark: The name of benchmark.
+        :param weighted: If weighted is True, use market capitalization to calculate weighted portfolio.
+
+        :return result: (dict)
+            total_return        | (float) Total compounded return.
+            active_return       | (float) Annualized average excess return.
+            active_risk         | (float) Annualized tracking error.
+            information_ratio   | (float) Average excess return / tracking error
+        """
+        valid_companies = self.loc[~np.isnan(self[RET_1]), :]
+
         if benchmark is not None:
             if benchmark not in BENCHMARKS:
                 raise ValueError('{} is not registered.'.format(benchmark))
 
         if weighted:
-            portfolio_ret_1 = self.groupby([DATE]).apply(lambda x: np.average(x[RET_1], weights=x[MKTCAP]))
+            portfolio_ret_1 = valid_companies.groupby([DATE]).apply(lambda x: np.average(x[RET_1], weights=x[MKTCAP]))
         else:
-            portfolio_ret_1 = self.groupby([DATE])[RET_1].mean()
+            portfolio_ret_1 = valid_companies.groupby([DATE])[RET_1].mean()
         portfolio_ret_1 = portfolio_ret_1.reset_index()
         portfolio_ret_1.columns = [DATE, PORTFOLIO_RETURN]
 
         total_return = self._calculate_total_return(portfolio_ret_1[PORTFOLIO_RETURN])
 
-        merged_return = pd.merge(portfolio_ret_1, self.get_benchmark, on=DATE)
+        merged_return = pd.merge(portfolio_ret_1, valid_companies.get_benchmark, on=DATE)
         merged_return = merged_return.dropna()
         benchmark_excess_returns = merged_return[PORTFOLIO_RETURN] - merged_return[RET_1]
-        information_ratio = np.average(benchmark_excess_returns) / np.std(benchmark_excess_returns)
 
-        result = DataFrame(data={
-            'total_return': [total_return],
-            'information_ratio': [information_ratio],
-        })
+        average_excess_return = np.average(benchmark_excess_returns)
+        tracking_error = np.std(benchmark_excess_returns)
+
+        active_return = average_excess_return * 12
+        active_risk = tracking_error * np.sqrt(12)
+        information_ratio = average_excess_return / tracking_error
+
+        result = {
+            'total_return': total_return,
+            'active_return': active_return,
+            'active_risk': active_risk,
+            'information_ratio': information_ratio,
+        }
 
         return result
 
