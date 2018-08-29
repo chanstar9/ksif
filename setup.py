@@ -24,6 +24,7 @@ setup(
         'tqdm',
         'requests',
         'tables',
+        'python-dateutil',
     ],
     packages         = find_packages(exclude = ['tests*']),
     keywords         = ['ksif', 'portfolio', 'backtest', 'finance'],

@@ -13,10 +13,10 @@ ADJP = 'adjp'
 ENDP = 'endp'
 MKTCAP = 'mktcap'
 FN_GUIDE_SECTOR = 'fn_guide_sector'
+FN_GUIDE_INDUSTRY_GROUP_27 = 'fn_guide_industry_group_27'
 RET_1 = 'ret1'
 TD_VALUE = 'td_value'
 TD_VOLUMN = 'td_volumn'
-BASE_INFORMATION = [CODE, NAME, DATE, ADJP, ENDP, MKTCAP, FN_GUIDE_SECTOR, RET_1, TD_VALUE, TD_VOLUMN]
 
 # Filter
 EXCHANGE = 'exchange'
@@ -25,7 +25,6 @@ IS_MANAGED = 'is_managed'
 WHY_MANAGED = 'why_managed'
 IS_SUSPENDED = 'is_suspended'
 WHY_SUSPENDED = 'why_suspended'
-FILTERS = [EXCHANGE, HOLDING, IS_MANAGED, WHY_MANAGED, IS_SUSPENDED, WHY_SUSPENDED]
 
 # Value factors
 PER = 'per'
@@ -95,6 +94,10 @@ VOL_1W = 'vol_1w'
 VOL_2W = 'vol_2w'
 SAFETY_FACTORS = [BETA_1D, BETA_1W, BETA_2W, BETA_3M, BETA_5M, VOL_1D, VOL_1W, VOL_2W, VOL_3M, VOL_5M]
 
+# Liquidity factors
+FOREIGN_OWNERSHIP_RATIO = 'foreign_ownership_ratio'  # 외국인보유비중
+LIQUIDITY_FACTORS = [FOREIGN_OWNERSHIP_RATIO]
+
 FACTORS = list(
     itertools.chain(
         # Values factors
@@ -109,6 +112,8 @@ FACTORS = list(
         MOMENTUM_FACTORS,
         # Safety factors
         SAFETY_FACTORS,
+        # Liquidity factors
+        LIQUIDITY_FACTORS,
     )
 )
 
