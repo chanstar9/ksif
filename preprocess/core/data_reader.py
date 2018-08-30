@@ -45,7 +45,7 @@ def read_companies(file_name: str) -> pd.DataFrame:
     # Save symbol names and item names.
     names = raw_companies.drop_duplicates(subset=CODE, keep='last').loc[:, [CODE, NAME]]
     names = names.set_index(CODE)
-    item_name_num = len(raw_companies.loc[:200, ITEM_NAME].unique())
+    item_name_num = len(raw_companies.loc[:1000, ITEM_NAME].unique())
     item_names = raw_companies.loc[:item_name_num - 1, ITEM_NAME]
 
     # Remove unnecessary columns, for example, Symbol, Kind, Item, Item Name, Frequency
@@ -76,9 +76,22 @@ def read_companies(file_name: str) -> pd.DataFrame:
     melted_companies[IS_SUSPENDED] = melted_companies[IS_SUSPENDED].replace('정지', True)
     melted_companies[IS_SUSPENDED] = melted_companies[IS_SUSPENDED].fillna(False)
 
-    # NI_OWNER, NI, INT_INC, INT_EXP, CFO, EBIT, EBITDA: 0 -> na
-    melted_companies.loc[:, [NI_OWNER, NI, INT_INC, INT_EXP, CFO, EBIT, EBITDA]] = \
-        melted_companies.loc[:, [NI_OWNER, NI, INT_INC, INT_EXP, CFO, EBIT, EBITDA]].replace(0, np.nan)
+    # 0 -> nan
+    to_nan_columns = [NI_OWNER, NI, INT_INC, INT_EXP, CFO, EBIT, EBITDA]
+    melted_companies.loc[:, to_nan_columns] = \
+        melted_companies.loc[:, to_nan_columns].replace(0, np.nan)
+
+    # nan -> 0
+    to_zero_columns = [
+        CFO, ALLOWANCE_AR_, TRADING_VOLUME, RES_EXP, AR, DIVP, AP,
+        NET_PERSONAL_PURCHASE, NET_NATIONAL_PURCHASE, NET_FINANCIAL_INVESTMENT_PURCHASE,
+        NET_INSTITUTIONAL_FOREIGN_PURCHASE, NET_INSTITUTIONAL_PURCHASE, NET_ETC_FINANCE_PURCHASE,
+        NET_ETC_CORPORATION_PURCHASE, NET_ETC_FOREIGN_PURCHASE, NET_REGISTERED_FOREIGN_PURCHASE,
+        NET_INSURANCE_PURCHASE, NET_PRIVATE_FUND_PURCHASE, NET_PENSION_PURCHASE, NET_FOREIGN_PURCHASE,
+        NET_BANK_PURCHASE, NET_TRUST_PURCHASE, SHORT_SALE_VOLUME, SHORT_SALE_BALANCE, FOREIGN_OWNERSHIP_RATIO
+    ]
+    melted_companies.loc[:, to_zero_columns] = \
+        melted_companies.loc[:, to_zero_columns].replace(np.nan, 0)
 
     melted_companies = melted_companies.sort_values([CODE, DATE])
 

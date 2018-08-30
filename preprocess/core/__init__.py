@@ -20,8 +20,8 @@ if __name__ == '__main__':
     companies = read_companies(file_name)
     filtered_companies = filter_companies(companies)
     processed_companies = process_companies(filtered_companies)
-    processed_companies.to_csv('{}_company.csv'.format(file_name), index=False, encoding=ENCODING)
+    processed_companies.to_csv('data/{}_company.csv'.format(file_name), index=False, encoding=ENCODING)
 
     benchmarks = read_benchmarks(file_name)
     processed_benchmarks = process_benchmarks(benchmarks)
-    processed_benchmarks.to_csv('{}_benchmark.csv'.format(file_name), index=False, encoding=ENCODING)
+    processed_benchmarks.to_csv('data/{}_benchmark.csv'.format(file_name), index=False, encoding=ENCODING)
