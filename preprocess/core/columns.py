@@ -22,39 +22,36 @@ FISCAL_QUARTER = 'fiscal_quarter'
 # Daily columns
 OUTCST = 'outcst'
 CS_TOBEPUB = 'cs_tobepub'
-CS_TR = 'cs_tr'
-OUTPST = 'outpst'
-PS_TOBEPUB = 'ps_tobepub'
-PS_TR = 'ps_tr'
-TD_VALUE = 'td_value'
-TD_VOLUMN = 'td_volumn'
-KRX_SECTOR = 'krx_sector'
+TRADING_VOLUME = 'trading_volume'
 ENDP_PS = 'endp_ps'
 NET_PERSONAL_PURCHASE = 'net_personal_purchase'
 NET_NATIONAL_PURCHASE = 'net_national_purchase'
-NET_FINANCIAL_INVESTMENT_PURCHASE = 'net_personal_purchase'
-NET_INSTITUTIONAL_FOREIGNER_PURCHASE = 'net_personal_purchase'
-NET_INSTITUTIONAL_PURCHASE = 'net_personal_purchase'
-NET_ETC_FINANCE_PURCHASE = 'net_personal_purchase'
-NET_ETC_CORPORATION_PURCHASE = 'net_personal_purchase'
-NET_ETC_FOREIGNER_PURCHASE = 'net_personal_purchase'
-NET_REGISTERED_FOREIGNER_PURCHASE = 'net_personal_purchase'
-NET_INSURANCE_PURCHASE = 'net_personal_purchase'
-NET_PRIVATE_FUND_PURCHASE = 'net_personal_purchase'
-NET_PENSION_PURCHASE = 'net_personal_purchase'
-NET_FOREIGNER_PURCHASE = 'net_personal_purchase'
-NET_BANK_PURCHASE = 'net_personal_purchase'
-NET_TRUST_PURCHASE = 'net_personal_purchase'
+NET_FINANCIAL_INVESTMENT_PURCHASE = 'net_financial_investment_purchase'
+NET_INSTITUTIONAL_FOREIGN_PURCHASE = 'net_institutional_foreign_purchase'
+NET_INSTITUTIONAL_PURCHASE = 'net_institutional_purchase'
+NET_ETC_FINANCE_PURCHASE = 'net_etc_finance_purchase'
+NET_ETC_CORPORATION_PURCHASE = 'net_etc_corporation_purchase'
+NET_ETC_FOREIGN_PURCHASE = 'net_etc_foreign_purchase'
+NET_REGISTERED_FOREIGN_PURCHASE = 'net_registered_foreign_purchase'
+NET_INSURANCE_PURCHASE = 'net_insurance_purchase'
+NET_PRIVATE_FUND_PURCHASE = 'net_private_fund_purchase'
+NET_PENSION_PURCHASE = 'net_pension_purchase'
+NET_FOREIGN_PURCHASE = 'net_foreign_purchase'
+NET_BANK_PURCHASE = 'net_bank_purchase'
+NET_TRUST_PURCHASE = 'net_trust_purchase'
 SHORT_SALE_VOLUME = 'short_sale_volume'
 SHORT_SALE_BALANCE = 'short_sale_balance'
 
 DAILY_DATA = [
-    CODE, DATE, NAME, FN_GUIDE_SECTOR, FN_GUIDE_INDUSTRY_GROUP_27, ADJP, OUTCST, CS_TOBEPUB, CS_TR, ENDP, OUTPST,
-    PS_TOBEPUB, PS_TR, BETA_1D, BETA_1W, BETA_2W, BETA_3M, BETA_5M, VOL_1D, VOL_1W, VOL_2W, VOL_3M, VOL_5M, IS_MANAGED,
-    WHY_MANAGED, IS_SUSPENDED, WHY_SUSPENDED, TD_VALUE, TD_VOLUMN, EXCHANGE, KRX_SECTOR, ENDP_PS, HOLDING,
+    CODE, DATE, NAME, FN_GUIDE_SECTOR, FN_GUIDE_INDUSTRY_GROUP_27, ADJP, OUTCST, CS_TOBEPUB, ENDP,
+    BETA_1D, BETA_1W, BETA_2W, BETA_3M, BETA_5M, VOL_1D, VOL_1W, VOL_2W, VOL_3M, VOL_5M, IS_MANAGED,
+    WHY_MANAGED, IS_SUSPENDED, WHY_SUSPENDED, TRADING_VOLUME, EXCHANGE, KRX_SECTOR, ENDP_PS, HOLDING,
+    NET_PERSONAL_PURCHASE, NET_NATIONAL_PURCHASE, NET_FINANCIAL_INVESTMENT_PURCHASE,
+    NET_INSTITUTIONAL_FOREIGN_PURCHASE, NET_INSTITUTIONAL_PURCHASE, NET_ETC_FINANCE_PURCHASE,
+    NET_ETC_CORPORATION_PURCHASE, NET_ETC_FOREIGN_PURCHASE, NET_REGISTERED_FOREIGN_PURCHASE,
+    NET_INSURANCE_PURCHASE, NET_PRIVATE_FUND_PURCHASE, NET_PENSION_PURCHASE, NET_FOREIGN_PURCHASE,
+    NET_BANK_PURCHASE, NET_TRUST_PURCHASE, SHORT_SALE_VOLUME, SHORT_SALE_BALANCE, FOREIGN_OWNERSHIP_RATIO
 ]
-
-MKTCAP_CS = 'mktcap_cs'
 
 # Quarterly columns
 ASSETS = 'assets'
@@ -65,7 +62,7 @@ INV = 'inv'
 SALES = 'sales'
 GP = 'gp'
 NI_OWNER = 'ni_owner'
-NI = 'ni'
+NI = 'net_income'
 INT_INC = 'int_inc'
 INT_EXP = 'int_exp'
 CFO = 'cfo'
@@ -81,11 +78,10 @@ DIVP = 'divp'
 EQUITY = 'equity'
 TANG_ASSET = 'tang_asset'
 FIN_LIAB = 'fin_liab'
-PS_DIV = 'ps_div'
 
 QUARTERLY_DATA = [
     CODE, DATE, ASSETS, CUR_ASSETS, LIAB, CUR_LIAB, INV, SALES, GP, NI_OWNER, NI, INT_INC, INT_EXP, CFO, AR,
-    ALLOWANCE_AR_, AP, EBIT, EBITDA, CASH, TAX, RES_EXP, DIVP, EQUITY, TANG_ASSET, FIN_LIAB, PS_DIV,
+    ALLOWANCE_AR_, AP, EBIT, EBITDA, CASH, TAX, RES_EXP, DIVP, EQUITY, TANG_ASSET, FIN_LIAB,
 ]
 
 RENAMES = {
@@ -94,11 +90,7 @@ RENAMES = {
     '수정주가 (현금배당반영)(원)': ADJP,
     '상장주식수 (보통)(주)': OUTCST,
     '상장예정주식수 (보통)(주)': CS_TOBEPUB,
-    '자기주식수 (보통)(주)': CS_TR,
     '종가(원)': ENDP,
-    '상장주식수 (우선)(주)': OUTPST,
-    '상장예정주식수 (우선)(주)': PS_TOBEPUB,
-    '자기주식수 (우선)(주)': PS_TR,
     '베타 (D,1Yr)': BETA_1D,
     '베타 (W,1Yr)': BETA_1W,
     '베타 (W,2Yr)': BETA_2W,
@@ -113,8 +105,7 @@ RENAMES = {
     '관리종목지정사유': WHY_MANAGED,
     '거래정지여부': IS_SUSPENDED,
     '거래정지사유': WHY_SUSPENDED,
-    '거래대금 (60일 평균)(원)': TD_VALUE,
-    '거래량 (60일 평균)(주)': TD_VOLUMN,
+    '거래량 (60일 평균)(주)': TRADING_VOLUME,
     '거래소(시장)': EXCHANGE,
     '자산(*)(천원)': ASSETS,
     '유동자산(*)(천원)': CUR_ASSETS,
@@ -142,49 +133,34 @@ RENAMES = {
     '*총금융부채(천원)': FIN_LIAB,
     '거래소 업종': KRX_SECTOR,
     '종가 (우선)(원)': ENDP_PS,
-    '배당금(우선주,현금)(천원)': PS_DIV,
-'순매수수량(개인)(주)': ,
-'순매수수량(국가)(주)': ,
-'순매수수량(금융투자)(주)': ,
-'순매수수량(기관/외국인계)(주)': ,
-'순매수수량(기관계)(주)': ,
-'순매수수량(기타금융)(주)': ,
-'순매수수량(기타법인)(주)': ,
-'순매수수량(기타외국인)(주)': ,
-'순매수수량(등록외국인)(주)': ,
-'순매수수량(보험)(주)': ,
-'순매수수량(사모펀드)(주)': ,
-'순매수수량(연기금)(주)': ,
-'순매수수량(외국인계)(주)': ,
-'순매수수량(은행)(주)': ,
-'순매수수량(투신)(주)': ,
-'공매도거래량(주)': ,
-'공매도잔고량(주)': ,
-'외국인보유비중(티커)(%)': ,
+    '순매수수량(개인)(주)': NET_PERSONAL_PURCHASE,
+    '순매수수량(국가)(주)': NET_NATIONAL_PURCHASE,
+    '순매수수량(금융투자)(주)': NET_FINANCIAL_INVESTMENT_PURCHASE,
+    '순매수수량(기관/외국인계)(주)': NET_INSTITUTIONAL_FOREIGN_PURCHASE,
+    '순매수수량(기관계)(주)': NET_INSTITUTIONAL_PURCHASE,
+    '순매수수량(기타금융)(주)': NET_ETC_FINANCE_PURCHASE,
+    '순매수수량(기타법인)(주)': NET_ETC_CORPORATION_PURCHASE,
+    '순매수수량(기타외국인)(주)': NET_ETC_FOREIGN_PURCHASE,
+    '순매수수량(등록외국인)(주)': NET_REGISTERED_FOREIGN_PURCHASE,
+    '순매수수량(보험)(주)': NET_INSURANCE_PURCHASE,
+    '순매수수량(사모펀드)(주)': NET_PRIVATE_FUND_PURCHASE,
+    '순매수수량(연기금)(주)': NET_PENSION_PURCHASE,
+    '순매수수량(외국인계)(주)': NET_FOREIGN_PURCHASE,
+    '순매수수량(은행)(주)': NET_BANK_PURCHASE,
+    '순매수수량(투신)(주)': NET_TRUST_PURCHASE,
+    '공매도거래량(주)': SHORT_SALE_VOLUME,
+    '공매도잔고량(주)': SHORT_SALE_BALANCE,
+    '외국인보유비중(티커)(%)': FOREIGN_OWNERSHIP_RATIO,
 }
 
 COMPANY_RESULT_COLUMNS = list(
     itertools.chain(
         # Base information
-        [CODE, NAME, DATE, ADJP, ENDP, MKTCAP, FN_GUIDE_SECTOR, FN_GUIDE_INDUSTRY_GROUP_27, KRX_SECTOR, RET_1, TD_VALUE,
-         TD_VOLUMN],
+        BASE_INFORMATION,
         # Filter
-        [EXCHANGE, HOLDING, IS_MANAGED, WHY_MANAGED, IS_SUSPENDED, WHY_SUSPENDED],
-        # Values factors
-        [PER, PBR, PSR, PCR, PGPR, POPR, EV_EBITDA],
-        # Reverse value factors
-        [EBIT_EV, CF_EV, S_EV, E_P, B_P, C_P, S_P, GP_P, OP_P],
-        # Profit factors
-        [S_A, GP_A, OP_A, CF_A, ROA, ROE, QROA, QROE, EBT_E, ROIC, GP_S, LIQ_RATIO, DEBT_RATIO],
-        # Growth factors
-        [SALESQOQ, GPQOQ, OPQOQ, ROAQOQ, ROAYOY, GP_SYOY, GP_AYOY],
-        # Momentum factors
-        [MOM12_1, MOM6, MOM3, MOM1],
-        # Safety factors
-        [BETA_1D, BETA_1W, BETA_2W, BETA_3M, BETA_5M, VOL_1D, VOL_1W, VOL_2W, VOL_3M, VOL_5M],
-        # Liquidity factors
-        [],
+        FILTERS,
+        COMPANY_FACTORS
     )
 )
 
-BENCHMARK_RESULT_COLUMNS = [CODE, DATE, RET_1]
+BENCHMARK_RESULT_COLUMNS = [CODE, DATE, RET_1, RET_3, RET_6]

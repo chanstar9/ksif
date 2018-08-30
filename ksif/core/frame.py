@@ -16,7 +16,7 @@ from pandas import Series
 from pandas.core.index import (Index, MultiIndex)
 from pandas.core.indexing import convert_to_index_sliceable
 
-from .columns import CODE, FACTORS, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS_SUSPENDED, KOSPI, BENCHMARKS, \
+from .columns import CODE, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS_SUSPENDED, KOSPI, BENCHMARKS, \
     DEBT_RATIO
 from ..io.downloader import download_latest_korea_data
 
@@ -81,10 +81,12 @@ class Portfolio(DataFrame):
         DataFrame.__init__(self=self, data=data, index=index, columns=columns, dtype=dtype, copy=copy)
 
     def __getitem__(self, key):
+        # noinspection PyProtectedMember
         key = com._apply_if_callable(key, self)
 
         # shortcut if we are an actual column
         is_mi_columns = isinstance(self.columns, MultiIndex)
+        # noinspection PyBroadException
         try:
             if key in self.columns and not is_mi_columns:
                 self._getitem_column(key)
@@ -256,8 +258,6 @@ class Portfolio(DataFrame):
 
     def quantile_distribution_ratio(self, factor, chunk_num=10, cumulative=True, weighted=False, only_positive=False,
                                     show_plot=False):
-        if factor not in FACTORS:
-            raise ValueError("The factor is not exist. Use ksif.columns, please.")
 
         labels = [str(x) for x in range(1, chunk_num + 1)]
 
