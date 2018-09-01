@@ -76,11 +76,6 @@ def read_companies(file_name: str) -> pd.DataFrame:
     melted_companies[IS_SUSPENDED] = melted_companies[IS_SUSPENDED].replace('정지', True)
     melted_companies[IS_SUSPENDED] = melted_companies[IS_SUSPENDED].fillna(False)
 
-    # 0 -> nan
-    to_nan_columns = [NI_OWNER, NI, INT_INC, INT_EXP, CFO, EBIT, EBITDA]
-    melted_companies.loc[:, to_nan_columns] = \
-        melted_companies.loc[:, to_nan_columns].replace(0, np.nan)
-
     # nan -> 0
     to_zero_columns = [
         CFO, ALLOWANCE_AR_, TRADING_VOLUME, RES_EXP, AR, DIVP, AP,

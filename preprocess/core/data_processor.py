@@ -103,7 +103,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     quarterly_companies = quarterly_companies.groupby(CODE).ffill()
 
     # Merge daily data and quarterly data.
-    available_companies = pd.merge(daily_companies, quarterly_companies, how='left', on=[CODE, FISCAL_QUARTER])
+    available_companies = pd.merge(daily_companies, quarterly_companies, on=[CODE, FISCAL_QUARTER])
 
     # Return
     available_companies[RET_1] = available_companies.groupby(CODE).apply(
@@ -165,7 +165,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     available_companies[NET_ETC_FOREIGN_PURCHASE_RATIO] = available_companies[NET_ETC_FOREIGN_PURCHASE] / available_companies[OUTCST]
     available_companies[SHORT_SALE_VOLUME_RATIO] = available_companies[SHORT_SALE_VOLUME] / available_companies[OUTCST]
     available_companies[SHORT_SALE_BALANCE_RATIO] = available_companies[SHORT_SALE_BALANCE] / available_companies[OUTCST]
-    available_companies[FOREIGN_OWNERSHIP_RATIO] = available_companies[FOREIGN_OWNERSHIP_RATIO] / available_companies[OUTCST]
+    available_companies[FOREIGN_OWNERSHIP_RATIO] = available_companies[FOREIGN_OWNERSHIP_RATIO] / 100
 
     # Select result columns
     processed_companies = copy(available_companies[COMPANY_RESULT_COLUMNS])

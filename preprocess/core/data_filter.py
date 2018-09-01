@@ -47,6 +47,9 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
 
     unfiltered_companies[HOLDING] = [code in list(holdings[CODE]) for code in unfiltered_companies[CODE]]
 
+    # Save the last day for check new relisted companies.
+    pre_last_day = sorted(unfiltered_companies[DATE].unique())[-1]
+
     # Set the next price to 0 when a company is delisted due to bankruptcy.
     bankrupt_companies = query_google_spreadsheet(BANKRUPT_COMPANY_ID)
     bankrupt_records = unfiltered_companies.loc[
@@ -82,6 +85,13 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
 
     # Make all date into the last day of month.
     unfiltered_companies[DATE] = unfiltered_companies[DATE].apply(last_day_of_month)
+
+    # Check new relisted companies.
+    post_last_day = sorted(unfiltered_companies[DATE].unique())[-1]
+    if pre_last_day != post_last_day:
+        raise ValueError("There are new relisted companies.\n{}".format(
+            unfiltered_companies.loc[unfiltered_companies[DATE] == post_last_day, :]
+        ))
 
     filtered_companies = unfiltered_companies.sort_values([CODE, DATE])
     return filtered_companies
