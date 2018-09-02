@@ -22,6 +22,7 @@ FISCAL_QUARTER = 'fiscal_quarter'
 # Daily columns
 OUTCST = 'outcst'
 CS_TOBEPUB = 'cs_tobepub'
+LIQUID_OUTCST = 'liquid_outstanding_share'  # Not used now
 TRADING_VOLUME = 'trading_volume'
 ENDP_PS = 'endp_ps'
 NET_PERSONAL_PURCHASE = 'net_personal_purchase'
@@ -105,7 +106,6 @@ RENAMES = {
     '관리종목지정사유': WHY_MANAGED,
     '거래정지여부': IS_SUSPENDED,
     '거래정지사유': WHY_SUSPENDED,
-    '거래량 (60일 평균)(주)': TRADING_VOLUME,
     '거래소(시장)': EXCHANGE,
     '자산(*)(천원)': ASSETS,
     '유동자산(*)(천원)': CUR_ASSETS,
@@ -148,9 +148,11 @@ RENAMES = {
     '순매수수량(외국인계)(주)': NET_FOREIGN_PURCHASE,
     '순매수수량(은행)(주)': NET_BANK_PURCHASE,
     '순매수수량(투신)(주)': NET_TRUST_PURCHASE,
-    '공매도거래량(주)': SHORT_SALE_VOLUME,
+    '공매도거래량 (20일)(주)': SHORT_SALE_VOLUME,
     '공매도잔고량(주)': SHORT_SALE_BALANCE,
     '외국인보유비중(티커)(%)': FOREIGN_OWNERSHIP_RATIO,
+    '거래량 (20일 평균)(주)': TRADING_VOLUME,
+    '유동주식수(주)': LIQUID_OUTCST
 }
 
 COMPANY_RESULT_COLUMNS = list(
