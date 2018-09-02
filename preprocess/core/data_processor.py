@@ -30,7 +30,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     :return processed_companies: (DataFrame)
     """
     # Calculate fiscal quarters of daily data.
-    daily_companies = unprocessed_companies.loc[:, DAILY_DATA]
+    daily_companies = unprocessed_companies.loc[:, DAILY_DATA].reset_index(drop=True)
     daily_companies.loc[:, MONTH_DAY] = daily_companies[DATE].dt.month * 100 + daily_companies[DATE].dt.day
     daily_companies.loc[:, YEAR] = daily_companies[DATE].dt.year
     daily_companies.loc[:, FISCAL_QUARTER] = 0
@@ -44,7 +44,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     daily_companies.loc[:, MKTCAP] = daily_companies[ENDP] * (daily_companies[OUTCST] + daily_companies[CS_TOBEPUB])
 
     # Calculate fiscal quarters of quarterly data.
-    quarterly_companies = unprocessed_companies.loc[unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA]
+    quarterly_companies = unprocessed_companies.loc[unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA].reset_index(drop=True)
     quarterly_companies[FISCAL_QUARTER] = quarterly_companies[DATE].dt.year * 10 + (quarterly_companies[DATE].dt.month / 3)
     quarterly_companies = quarterly_companies.drop(columns=[DATE])
 
@@ -103,7 +103,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     quarterly_companies = quarterly_companies.groupby(CODE).ffill()
 
     # Merge daily data and quarterly data.
-    available_companies = pd.merge(daily_companies, quarterly_companies, on=[CODE, FISCAL_QUARTER])
+    available_companies = pd.merge(daily_companies, quarterly_companies, on=[CODE, FISCAL_QUARTER]).reset_index(drop=True)
 
     # Return
     available_companies[RET_1] = available_companies.groupby(CODE).apply(
@@ -171,7 +171,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     processed_companies = copy(available_companies[COMPANY_RESULT_COLUMNS])
 
     # 2001년 5월 31일 이후 데이터만 남기기
-    processed_companies = processed_companies.loc[processed_companies[DATE] >= '2001-05-31', :]
+    processed_companies = processed_companies.loc[processed_companies[DATE] >= '2001-05-31', :].reset_index(drop=True)
 
     return processed_companies
 
@@ -190,6 +190,7 @@ def process_benchmarks(unprocessed_benchmarks: DataFrame) -> DataFrame:
         date        | (Datetime)
         ret_1       | (float)
     """
+    unprocessed_benchmarks = unprocessed_benchmarks.reset_index(drop=True)
     unprocessed_benchmarks[RET_1] = unprocessed_benchmarks.groupby(CODE).apply(
         lambda x: (x[PRICE_INDEX].shift(-1) - x[PRICE_INDEX]) / x[PRICE_INDEX]
     ).reset_index(level=0)[PRICE_INDEX]
@@ -215,7 +216,7 @@ def process_benchmarks(unprocessed_benchmarks: DataFrame) -> DataFrame:
     unprocessed_benchmarks = pd.concat([unprocessed_benchmarks, total_large, total_middle, total_small], ignore_index=True)
 
     # 2001년 5월 31일 이후 데이터만 남기기
-    processed_benchmarks = unprocessed_benchmarks.loc[unprocessed_benchmarks[DATE] >= '2001-05-31', :]
+    processed_benchmarks = unprocessed_benchmarks.loc[unprocessed_benchmarks[DATE] >= '2001-05-31', :].reset_index(drop=True)
 
     return processed_benchmarks
 

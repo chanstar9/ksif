@@ -88,7 +88,7 @@ def read_companies(file_name: str) -> pd.DataFrame:
     melted_companies.loc[:, to_zero_columns] = \
         melted_companies.loc[:, to_zero_columns].replace(np.nan, 0)
 
-    melted_companies = melted_companies.sort_values([CODE, DATE])
+    melted_companies = melted_companies.sort_values([CODE, DATE]).reset_index(drop=True)
 
     return melted_companies
 
@@ -117,6 +117,6 @@ def read_benchmarks(file_name: str) -> pd.DataFrame:
     melted_benchmarks = melted_benchmarks.dropna()
 
     # Sort by code and date
-    melted_benchmarks = melted_benchmarks.sort_values([CODE, DATE])
+    melted_benchmarks = melted_benchmarks.sort_values([CODE, DATE]).reset_index(drop=True)
 
     return melted_benchmarks

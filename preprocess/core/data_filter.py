@@ -32,7 +32,7 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
     :return filtered_companies: (DataFrame)
     """
     # Select rows which OUTCST > 0.
-    unfiltered_companies = unfiltered_companies.loc[unfiltered_companies[OUTCST] > 0, :]
+    unfiltered_companies = unfiltered_companies.loc[unfiltered_companies[OUTCST] > 0, :].reset_index(drop=True)
 
     # Remove delisted rows.
     unfiltered_companies = unfiltered_companies.loc[[not math.isnan(price) for price in unfiltered_companies[ENDP]]]
@@ -93,5 +93,5 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
             unfiltered_companies.loc[unfiltered_companies[DATE] == post_last_day, :]
         ))
 
-    filtered_companies = unfiltered_companies.sort_values([CODE, DATE])
+    filtered_companies = unfiltered_companies.sort_values([CODE, DATE]).reset_index(drop=True)
     return filtered_companies
