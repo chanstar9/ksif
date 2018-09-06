@@ -16,8 +16,7 @@ from pandas import Series
 from pandas.core.index import (Index, MultiIndex)
 from pandas.core.indexing import convert_to_index_sliceable
 
-from .columns import CODE, RET_1, DATE, MKTCAP, HOLDING, IS_MANAGED, IS_SUSPENDED, KOSPI, BENCHMARKS, \
-    DEBT_RATIO
+from .columns import *
 from ..io.downloader import download_latest_korea_data
 
 PERCENTAGE = 'percentage'
@@ -66,7 +65,7 @@ class Portfolio(DataFrame):
                 data = data.loc[~data[HOLDING], :]
 
             if not include_finance:
-                data = data.loc[~np.isnan(data[DEBT_RATIO]), :]
+                data = data.loc[data[FN_GUIDE_SECTOR] != '금융', :]
 
             if not include_managed:
                 data = data.loc[~data[IS_MANAGED], :]
@@ -112,7 +111,6 @@ class Portfolio(DataFrame):
     def benchmark(self):
         return self._benchmark
 
-    @property
     def get_benchmark(self):
         return self.benchmarks.loc[self.benchmarks[CODE] == self._benchmark, :]
 
@@ -135,7 +133,7 @@ class Portfolio(DataFrame):
             active_risk         | (float) Annualized tracking error.
             information_ratio   | (float) Average excess return / tracking error
         """
-        valid_companies = self.loc[~np.isnan(self[RET_1]), :]
+        valid_companies = self.dropna(subset=[RET_1])
 
         if benchmark is not None:
             if benchmark not in BENCHMARKS:
@@ -195,7 +193,7 @@ class Portfolio(DataFrame):
         assert max_rank > min_rank, "max_rank should be bigger than min_rank."
 
         all_companies = deepcopy(self)
-        all_companies = all_companies.loc[~np.isnan(all_companies[factor]), :]
+        all_companies = all_companies.dropna(subset=[factor])
         all_companies[RANK] = all_companies.groupby(by=[DATE])[factor].transform(
             lambda x: x.rank(ascending=bottom)
         )
@@ -227,7 +225,7 @@ class Portfolio(DataFrame):
         assert max_percentage <= 1, "max_percentage should be smaller than or equal to 0."
 
         all_companies = deepcopy(self)
-        all_companies = all_companies.loc[~np.isnan(all_companies[factor]), :]
+        all_companies = all_companies.dropna(subset=[factor])
         all_companies[PERCENTAGE] = all_companies.groupby(by=[DATE])[factor].transform(
             lambda x: x.rank(ascending=bottom) / x.count()
         )
@@ -299,12 +297,15 @@ class Portfolio(DataFrame):
         return results
 
     def show_plot(self, cumulative: bool = True, weighted: bool = False, title: str = None):
-        if weighted:
-            grouped_data = self.groupby([DATE]).apply(lambda x: np.average(x[RET_1], weights=x[MKTCAP]))
-        else:
-            grouped_data = self.groupby([DATE])[RET_1].mean()
+        portfolio = self.dropna(subset=[RET_1])
 
-        grouped_data = self._cumulate(grouped_data, cumulative)
+        if weighted:
+            grouped_data = portfolio.groupby([DATE]).apply(lambda x: np.average(x[RET_1], weights=x[MKTCAP]))
+        else:
+            grouped_data = portfolio.groupby([DATE])[RET_1].mean()
+
+        # noinspection PyProtectedMember
+        grouped_data = portfolio._cumulate(grouped_data, cumulative)
 
         plt.figure()
         grouped_data.plot()
