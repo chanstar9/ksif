@@ -12,10 +12,11 @@ DATE = 'date'
 RET_1 = 'return_1'  # 1개월 수익
 RET_3 = 'return_3'  # 3개월 수익
 RET_6 = 'return_6'  # 6개월 수익
+RET_12 = 'return_12'  # 12개월 수익
 ADJP = 'adjp'  # 수정종가
 ENDP = 'endp'  # 종가
 MKTCAP = 'mktcap'  # 시가총액
-BASE_INFORMATION = [CODE, NAME, DATE, RET_1, RET_3, RET_6, ADJP, ENDP, MKTCAP]
+BASE_INFORMATION = [CODE, NAME, DATE, RET_1, RET_3, RET_6, RET_12, ADJP, ENDP, MKTCAP]
 
 # Filter
 EXCHANGE = 'exchange'  # 거래소
@@ -24,11 +25,11 @@ FN_GUIDE_INDUSTRY_GROUP_27 = 'fn_guide_industry_group_27'
 KRX_SECTOR = 'krx_sector'
 HOLDING = 'holding'  # 지주사 여부
 IS_MANAGED = 'is_managed'  # 관리종목 여부
-WHY_MANAGED = 'why_managed'  # 관리종목 지정사유
+WHY_MANAGED = 'why_managed'  # 관리종목 지정사유, Not used now
 IS_SUSPENDED = 'is_suspended'  # 거래정지 여부
-WHY_SUSPENDED = 'why_suspended'  # 거래정지 지정사유
+WHY_SUSPENDED = 'why_suspended'  # 거래정지 지정사유, Not used now
 FILTERS = [EXCHANGE, FN_GUIDE_SECTOR, FN_GUIDE_INDUSTRY_GROUP_27, KRX_SECTOR, HOLDING, IS_MANAGED,
-           WHY_MANAGED, IS_SUSPENDED, WHY_SUSPENDED]
+           IS_SUSPENDED]
 
 # Value factors
 PER = 'per'
@@ -115,6 +116,10 @@ NET_REGISTERED_FOREIGN_PURCHASE_RATIO = 'net_registered_foreign_purchase_ratio' 
 NET_ETC_FOREIGN_PURCHASE_RATIO = 'net_etc_foreign_purchase_ratio'  # 기타외국인순매수비율
 SHORT_SALE_VOLUME_RATIO = 'short_sale_volume_ratio'  # 공매도거래비율
 SHORT_SALE_BALANCE_RATIO = 'short_sale_balance_ratio'  # 공매도잔고비율
+SHORT_SALE_BALANCE_MOM = 'short_sale_balance_mom'  # 월간 공매도잔고변화율
+SHARE_LENDING_VOLUME_RATIO = 'share_lending_volume_ratio'  # 대차거래비율
+SHARE_LENDING_BALANCE_RATIO = 'share_lending_balance_ratio'  # 대차잔고비율
+SHARE_LENDING_BALANCE_MOM = 'share_lending_balance_mom'  # 월간 공매도잔고변화율
 FOREIGN_OWNERSHIP_RATIO = 'foreign_ownership_ratio'  # 외국인보유비중
 LIQUIDITY_FACTORS = [
     TRADING_VOLUME_RATIO, NET_PERSONAL_PURCHASE_RATIO, NET_INSTITUTIONAL_FOREIGN_PURCHASE_RATIO,
@@ -122,8 +127,8 @@ LIQUIDITY_FACTORS = [
     NET_TRUST_PURCHASE_RATIO, NET_PRIVATE_FUND_PURCHASE_RATIO, NET_BANK_PURCHASE_RATIO,
     NET_ETC_FINANCE_PURCHASE_RATIO, NET_PENSION_PURCHASE_RATIO, NET_NATIONAL_PURCHASE_RATIO,
     NET_ETC_CORPORATION_PURCHASE_RATIO, NET_FOREIGN_PURCHASE_RATIO, NET_REGISTERED_FOREIGN_PURCHASE_RATIO,
-    NET_ETC_FOREIGN_PURCHASE_RATIO, SHORT_SALE_VOLUME_RATIO, SHORT_SALE_BALANCE_RATIO,
-    FOREIGN_OWNERSHIP_RATIO
+    NET_ETC_FOREIGN_PURCHASE_RATIO, FOREIGN_OWNERSHIP_RATIO, SHORT_SALE_VOLUME_RATIO, SHORT_SALE_BALANCE_RATIO,
+    SHORT_SALE_BALANCE_MOM, SHARE_LENDING_VOLUME_RATIO, SHARE_LENDING_BALANCE_RATIO, SHARE_LENDING_BALANCE_MOM,
 ]
 
 COMPANY_FACTORS = list(
@@ -157,6 +162,11 @@ KOSPI_SMALL = '코스피 소형주'
 TOTAL_LARGE = '코스피/코스닥 대형주 평균'
 TOTAL_MIDDLE = '코스피/코스닥 중형주 평균'
 TOTAL_SMALL = '코스피/코스닥 소형주 평균'
+
+BENCHMARK_RET_1 = 'benchmark_return_1'
+BENCHMARK_RET_3 = 'benchmark_return_3'
+BENCHMARK_RET_6 = 'benchmark_return_6'
+BENCHMARK_RET_12 = 'benchmark_return_12'
 
 BENCHMARKS = [
     MKF_2000,

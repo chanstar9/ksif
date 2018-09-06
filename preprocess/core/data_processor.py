@@ -34,18 +34,24 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     daily_companies.loc[:, MONTH_DAY] = daily_companies[DATE].dt.month * 100 + daily_companies[DATE].dt.day
     daily_companies.loc[:, YEAR] = daily_companies[DATE].dt.year
     daily_companies.loc[:, FISCAL_QUARTER] = 0
-    daily_companies.loc[(daily_companies[MONTH_DAY] >= 402) & (daily_companies[MONTH_DAY] < 515), FISCAL_QUARTER] = daily_companies[YEAR] * 10 + 4
-    daily_companies.loc[(daily_companies[MONTH_DAY] >= 515) & (daily_companies[MONTH_DAY] < 814), FISCAL_QUARTER] = daily_companies[YEAR] * 10 + 1
-    daily_companies.loc[(daily_companies[MONTH_DAY] >= 814) & (daily_companies[MONTH_DAY] < 1114), FISCAL_QUARTER] = daily_companies[YEAR] * 10 + 2
-    daily_companies.loc[(daily_companies[MONTH_DAY] < 402) | (daily_companies[MONTH_DAY] >= 1114), FISCAL_QUARTER] = daily_companies[YEAR] * 10 + 3
+    daily_companies.loc[(daily_companies[MONTH_DAY] >= 402) & (daily_companies[MONTH_DAY] < 515), FISCAL_QUARTER] = \
+        daily_companies[YEAR] * 10 + 4
+    daily_companies.loc[(daily_companies[MONTH_DAY] >= 515) & (daily_companies[MONTH_DAY] < 814), FISCAL_QUARTER] = \
+        daily_companies[YEAR] * 10 + 1
+    daily_companies.loc[(daily_companies[MONTH_DAY] >= 814) & (daily_companies[MONTH_DAY] < 1114), FISCAL_QUARTER] = \
+        daily_companies[YEAR] * 10 + 2
+    daily_companies.loc[(daily_companies[MONTH_DAY] < 402) | (daily_companies[MONTH_DAY] >= 1114), FISCAL_QUARTER] = \
+        daily_companies[YEAR] * 10 + 3
     daily_companies.loc[(daily_companies[MONTH_DAY] < 515), FISCAL_QUARTER] += -10
 
     # market capital = $ of common stocks * # of common stocks
     daily_companies.loc[:, MKTCAP] = daily_companies[ENDP] * (daily_companies[OUTCST] + daily_companies[CS_TOBEPUB])
 
     # Calculate fiscal quarters of quarterly data.
-    quarterly_companies = unprocessed_companies.loc[unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA].reset_index(drop=True)
-    quarterly_companies[FISCAL_QUARTER] = quarterly_companies[DATE].dt.year * 10 + (quarterly_companies[DATE].dt.month / 3)
+    quarterly_companies = unprocessed_companies.loc[
+        unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA].reset_index(drop=True)
+    quarterly_companies[FISCAL_QUARTER] = quarterly_companies[DATE].dt.year * 10 + (
+            quarterly_companies[DATE].dt.month / 3)
     quarterly_companies = quarterly_companies.drop(columns=[DATE])
 
     quarterly_companies['sales12'] = quarterly_companies.groupby(CODE)[SALES].rolling(4).sum().reset_index(0, drop=True)
@@ -53,16 +59,21 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     quarterly_companies['op12'] = quarterly_companies.groupby(CODE)[EBIT].rolling(4).sum().reset_index(0, drop=True)
     quarterly_companies['ni12'] = quarterly_companies.groupby(CODE)[NI_OWNER].rolling(4).sum().reset_index(0, drop=True)
     quarterly_companies['cfo12'] = quarterly_companies.groupby(CODE)[CFO].rolling(4).sum().reset_index(0, drop=True)
-    quarterly_companies['ebitda12'] = quarterly_companies.groupby(CODE)[EBITDA].rolling(4).sum().reset_index(0, drop=True)
+    quarterly_companies['ebitda12'] = quarterly_companies.groupby(CODE)[EBITDA].rolling(4).sum().reset_index(0,
+                                                                                                             drop=True)
     quarterly_companies['ebt12'] = (
             quarterly_companies.groupby(CODE)[NI].rolling(4).sum().reset_index(0, drop=True) +
             quarterly_companies.groupby(
                 CODE)[TAX].rolling(4).sum().reset_index(0, drop=True))
 
-    quarterly_companies['nopat12'] = (quarterly_companies['op12'] - quarterly_companies.groupby(CODE)[TAX].rolling(4).sum().reset_index(0, drop=True))
+    quarterly_companies['nopat12'] = (
+            quarterly_companies['op12'] - quarterly_companies.groupby(CODE)[TAX].rolling(4).sum().reset_index(0,
+                                                                                                              drop=True))
 
-    quarterly_companies[AVG_ASSET] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(0, drop=True)
-    quarterly_companies[AVG_EQUITY] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(0, drop=True)
+    quarterly_companies[AVG_ASSET] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(0,
+                                                                                                             drop=True)
+    quarterly_companies[AVG_EQUITY] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(0,
+                                                                                                              drop=True)
 
     # Profit factors
     quarterly_companies[S_A] = quarterly_companies['sales12'] / zero_to_nan(quarterly_companies[AVG_ASSET])
@@ -71,9 +82,12 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     quarterly_companies[CF_A] = quarterly_companies['cfo12'] / zero_to_nan(quarterly_companies[AVG_ASSET])
     quarterly_companies[ROA] = quarterly_companies['ni12'] / zero_to_nan(quarterly_companies[AVG_ASSET])
     quarterly_companies[ROE] = quarterly_companies['ni12'] / zero_to_nan(quarterly_companies[AVG_EQUITY])
-    quarterly_companies[QROA] = quarterly_companies[NI_OWNER] / zero_to_nan(quarterly_companies.groupby(CODE)[ASSETS].rolling(2).mean().reset_index(0, drop=True))
-    quarterly_companies[QROE] = quarterly_companies[NI_OWNER] / zero_to_nan(quarterly_companies.groupby(CODE)[EQUITY].rolling(2).mean().reset_index(0, drop=True))
-    quarterly_companies[EBT_E] = quarterly_companies['ebt12'] / zero_to_nan(quarterly_companies.groupby(CODE)[EQUITY].rolling(4).mean().reset_index(0, drop=True))
+    quarterly_companies[QROA] = quarterly_companies[NI_OWNER] / zero_to_nan(
+        quarterly_companies.groupby(CODE)[ASSETS].rolling(2).mean().reset_index(0, drop=True))
+    quarterly_companies[QROE] = quarterly_companies[NI_OWNER] / zero_to_nan(
+        quarterly_companies.groupby(CODE)[EQUITY].rolling(2).mean().reset_index(0, drop=True))
+    quarterly_companies[EBT_E] = quarterly_companies['ebt12'] / zero_to_nan(
+        quarterly_companies.groupby(CODE)[EQUITY].rolling(4).mean().reset_index(0, drop=True))
     quarterly_companies[ROIC] = quarterly_companies.nopat12 / zero_to_nan(
         quarterly_companies[TANG_ASSET] + quarterly_companies[INV] + quarterly_companies[AR] -
         quarterly_companies[ALLOWANCE_AR_] - quarterly_companies[AP]
@@ -112,6 +126,8 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
         lambda x: (x[ADJP].shift(-3) - x[ADJP]) / zero_to_nan(x[ADJP])).reset_index(drop=True)
     available_companies[RET_6] = available_companies.groupby(CODE).apply(
         lambda x: (x[ADJP].shift(-6) - x[ADJP]) / zero_to_nan(x[ADJP])).reset_index(drop=True)
+    available_companies[RET_12] = available_companies.groupby(CODE).apply(
+        lambda x: (x[ADJP].shift(-12) - x[ADJP]) / zero_to_nan(x[ADJP])).reset_index(drop=True)
 
     # Value factors
     available_companies[PER] = available_companies[MKTCAP] / zero_to_nan(available_companies.ni12) / 1000
@@ -163,12 +179,27 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     available_companies[NET_FOREIGN_PURCHASE_RATIO] = available_companies[NET_FOREIGN_PURCHASE] / available_companies[OUTCST]
     available_companies[NET_REGISTERED_FOREIGN_PURCHASE_RATIO] = available_companies[NET_REGISTERED_FOREIGN_PURCHASE] / available_companies[OUTCST]
     available_companies[NET_ETC_FOREIGN_PURCHASE_RATIO] = available_companies[NET_ETC_FOREIGN_PURCHASE] / available_companies[OUTCST]
+    available_companies[FOREIGN_OWNERSHIP_RATIO] = available_companies[FOREIGN_OWNERSHIP_RATIO] / 100
     available_companies[SHORT_SALE_VOLUME_RATIO] = available_companies[SHORT_SALE_VOLUME] / available_companies[OUTCST]
     available_companies[SHORT_SALE_BALANCE_RATIO] = available_companies[SHORT_SALE_BALANCE] / available_companies[OUTCST]
-    available_companies[FOREIGN_OWNERSHIP_RATIO] = available_companies[FOREIGN_OWNERSHIP_RATIO] / 100
+    available_companies[SHORT_SALE_BALANCE_MOM] = available_companies.groupby(CODE).apply(
+        lambda x: (x[SHORT_SALE_BALANCE_RATIO] - x[SHORT_SALE_BALANCE_RATIO].shift(1)) / zero_to_nan(
+            np.abs(x[SHORT_SALE_BALANCE_RATIO].shift(1)))).reset_index(drop=True)
+    available_companies[SHARE_LENDING_VOLUME_RATIO] = available_companies[SHARE_LENDING_VOLUME] / available_companies[OUTCST]
+    available_companies[SHARE_LENDING_BALANCE_RATIO] = available_companies[SHARE_LENDING_BALANCE] / available_companies[OUTCST]
+    available_companies[SHARE_LENDING_BALANCE_MOM] = available_companies.groupby(CODE).apply(
+        lambda x: (x[SHARE_LENDING_BALANCE_RATIO] - x[SHARE_LENDING_BALANCE_RATIO].shift(1)) / zero_to_nan(
+            np.abs(x[SHARE_LENDING_BALANCE_RATIO].shift(1)))).reset_index(drop=True)
 
     # Select result columns
     processed_companies = copy(available_companies[COMPANY_RESULT_COLUMNS])
+
+    # Select rows which RET_1 is not nan before the last month.
+    processed_companies.loc[
+        (processed_companies[RET_1].isnull()) &
+        (processed_companies[DATE] != sorted(processed_companies[DATE].unique())[-1]),
+        IS_SUSPENDED
+    ] = True
 
     # 2001년 5월 31일 이후 데이터만 남기기
     processed_companies = processed_companies.loc[processed_companies[DATE] >= '2001-05-31', :].reset_index(drop=True)
@@ -191,29 +222,45 @@ def process_benchmarks(unprocessed_benchmarks: DataFrame) -> DataFrame:
         ret_1       | (float)
     """
     unprocessed_benchmarks = unprocessed_benchmarks.reset_index(drop=True)
-    unprocessed_benchmarks[RET_1] = unprocessed_benchmarks.groupby(CODE).apply(
+    unprocessed_benchmarks[BENCHMARK_RET_1] = unprocessed_benchmarks.groupby(CODE).apply(
         lambda x: (x[PRICE_INDEX].shift(-1) - x[PRICE_INDEX]) / x[PRICE_INDEX]
     ).reset_index(level=0)[PRICE_INDEX]
-    unprocessed_benchmarks[RET_3] = unprocessed_benchmarks.groupby(CODE).apply(
+    unprocessed_benchmarks[BENCHMARK_RET_3] = unprocessed_benchmarks.groupby(CODE).apply(
         lambda x: (x[PRICE_INDEX].shift(-3) - x[PRICE_INDEX]) / x[PRICE_INDEX]
     ).reset_index(level=0)[PRICE_INDEX]
-    unprocessed_benchmarks[RET_6] = unprocessed_benchmarks.groupby(CODE).apply(
+    unprocessed_benchmarks[BENCHMARK_RET_6] = unprocessed_benchmarks.groupby(CODE).apply(
         lambda x: (x[PRICE_INDEX].shift(-6) - x[PRICE_INDEX]) / x[PRICE_INDEX]
+    ).reset_index(level=0)[PRICE_INDEX]
+    unprocessed_benchmarks[BENCHMARK_RET_12] = unprocessed_benchmarks.groupby(CODE).apply(
+        lambda x: (x[PRICE_INDEX].shift(-12) - x[PRICE_INDEX]) / x[PRICE_INDEX]
     ).reset_index(level=0)[PRICE_INDEX]
     unprocessed_benchmarks = unprocessed_benchmarks[BENCHMARK_RESULT_COLUMNS].sort_values(by=[CODE, DATE])
 
-    kospi_large = unprocessed_benchmarks.loc[unprocessed_benchmarks[CODE] == KOSPI_LARGE, [DATE, RET_1, RET_3, RET_6]]
-    kospi_middle = unprocessed_benchmarks.loc[unprocessed_benchmarks[CODE] == KOSPI_MIDDLE, [DATE, RET_1, RET_3, RET_6]]
-    kospi_small = unprocessed_benchmarks.loc[unprocessed_benchmarks[CODE] == KOSPI_SMALL, [DATE, RET_1, RET_3, RET_6]]
-    kosdaq_large = unprocessed_benchmarks.loc[unprocessed_benchmarks[CODE] == KOSDAQ_LARGE, [DATE, RET_1, RET_3, RET_6]]
-    kosdaq_middle = unprocessed_benchmarks.loc[unprocessed_benchmarks[CODE] == KOSDAQ_MIDDLE, [DATE, RET_1, RET_3, RET_6]]
-    kosdaq_small = unprocessed_benchmarks.loc[unprocessed_benchmarks[CODE] == KOSDAQ_SMALL, [DATE, RET_1, RET_3, RET_6]]
+    kospi_large = unprocessed_benchmarks.loc[
+        unprocessed_benchmarks[CODE] == KOSPI_LARGE,
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+    kospi_middle = unprocessed_benchmarks.loc[
+        unprocessed_benchmarks[CODE] == KOSPI_MIDDLE,
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+    kospi_small = unprocessed_benchmarks.loc[
+        unprocessed_benchmarks[CODE] == KOSPI_SMALL,
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+    kosdaq_large = unprocessed_benchmarks.loc[
+        unprocessed_benchmarks[CODE] == KOSDAQ_LARGE,
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+    kosdaq_middle = unprocessed_benchmarks.loc[
+        unprocessed_benchmarks[CODE] == KOSDAQ_MIDDLE,
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+    kosdaq_small = unprocessed_benchmarks.loc[
+        unprocessed_benchmarks[CODE] == KOSDAQ_SMALL,
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
 
     total_large = _calculate_total(TOTAL_LARGE, kospi_large, kosdaq_large)
     total_middle = _calculate_total(TOTAL_MIDDLE, kospi_middle, kosdaq_middle)
     total_small = _calculate_total(TOTAL_SMALL, kospi_small, kosdaq_small)
 
-    unprocessed_benchmarks = pd.concat([unprocessed_benchmarks, total_large, total_middle, total_small], ignore_index=True)
+    unprocessed_benchmarks = pd.concat([unprocessed_benchmarks, total_large, total_middle, total_small],
+                                       ignore_index=True, sort=False)
 
     # 2001년 5월 31일 이후 데이터만 남기기
     processed_benchmarks = unprocessed_benchmarks.loc[unprocessed_benchmarks[DATE] >= '2001-05-31', :].reset_index(drop=True)
@@ -224,8 +271,9 @@ def process_benchmarks(unprocessed_benchmarks: DataFrame) -> DataFrame:
 def _calculate_total(code, kospi, kosdaq):
     total = pd.merge(left=kospi, right=kosdaq, on=[DATE], suffixes=(KOSPI, KOSDAQ))
     total[CODE] = code
-    total[RET_1] = (total[RET_1 + KOSPI] + total[RET_1 + KOSDAQ]) / 2
-    total[RET_3] = (total[RET_3 + KOSPI] + total[RET_3 + KOSDAQ]) / 2
-    total[RET_6] = (total[RET_6 + KOSPI] + total[RET_6 + KOSDAQ]) / 2
+    total[BENCHMARK_RET_1] = (total[BENCHMARK_RET_1 + KOSPI] + total[BENCHMARK_RET_1 + KOSDAQ]) / 2
+    total[BENCHMARK_RET_3] = (total[BENCHMARK_RET_3 + KOSPI] + total[BENCHMARK_RET_3 + KOSDAQ]) / 2
+    total[BENCHMARK_RET_6] = (total[BENCHMARK_RET_6 + KOSPI] + total[BENCHMARK_RET_6 + KOSDAQ]) / 2
+    total[BENCHMARK_RET_12] = (total[BENCHMARK_RET_12 + KOSPI] + total[BENCHMARK_RET_12 + KOSDAQ]) / 2
 
     return total.loc[:, [CODE, DATE, RET_1, RET_3, RET_6]]
