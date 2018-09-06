@@ -83,10 +83,13 @@ def read_companies(file_name: str) -> pd.DataFrame:
         NET_INSTITUTIONAL_FOREIGN_PURCHASE, NET_INSTITUTIONAL_PURCHASE, NET_ETC_FINANCE_PURCHASE,
         NET_ETC_CORPORATION_PURCHASE, NET_ETC_FOREIGN_PURCHASE, NET_REGISTERED_FOREIGN_PURCHASE,
         NET_INSURANCE_PURCHASE, NET_PRIVATE_FUND_PURCHASE, NET_PENSION_PURCHASE, NET_FOREIGN_PURCHASE,
-        NET_BANK_PURCHASE, NET_TRUST_PURCHASE, SHORT_SALE_VOLUME, SHORT_SALE_BALANCE, FOREIGN_OWNERSHIP_RATIO
+        NET_BANK_PURCHASE, NET_TRUST_PURCHASE, SHORT_SALE_BALANCE, FOREIGN_OWNERSHIP_RATIO
     ]
     melted_companies.loc[:, to_zero_columns] = \
         melted_companies.loc[:, to_zero_columns].replace(np.nan, 0)
+
+    # There are no SHORT_SALE_BALANCE before 2016-06-30
+    melted_companies.loc[melted_companies[DATE] < '2016-06-30', SHORT_SALE_BALANCE] = np.nan
 
     melted_companies = melted_companies.sort_values([CODE, DATE]).reset_index(drop=True)
 

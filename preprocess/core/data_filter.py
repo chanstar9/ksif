@@ -6,7 +6,6 @@
 import math
 
 import pandas as pd
-import numpy as np
 from dateutil.relativedelta import relativedelta
 
 from preprocess.core.columns import *
@@ -33,6 +32,9 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
     """
     # Select rows which OUTCST > 0.
     unfiltered_companies = unfiltered_companies.loc[unfiltered_companies[OUTCST] > 0, :].reset_index(drop=True)
+
+    # Select rows which ENDP is not nan.
+    unfiltered_companies = unfiltered_companies.loc[~pd.isnull(unfiltered_companies[ENDP]), :].reset_index(drop=True)
 
     # Remove delisted rows.
     unfiltered_companies = unfiltered_companies.loc[[not math.isnan(price) for price in unfiltered_companies[ENDP]]]
