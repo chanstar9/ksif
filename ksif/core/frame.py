@@ -256,8 +256,9 @@ class Portfolio(DataFrame):
 
         return standardized_companies
 
-    def quantile_distribution_ratio(self, factor, chunk_num=10, cumulative=True, weighted=False, only_positive=False,
-                                    show_plot=False):
+    def quantile_distribution_ratio(self, factor: str, chunk_num: int = 10, cumulative: bool = True,
+                                    weighted: bool = False, only_positive: bool = False, show_plot: bool = False,
+                                    title: str = None):
 
         labels = [str(x) for x in range(1, chunk_num + 1)]
 
@@ -287,11 +288,17 @@ class Portfolio(DataFrame):
         if show_plot:
             plt.figure()
             results.plot()
+            if title:
+                plt.title(title)
+            else:
+                plt.title(factor.upper())
+            plt.ylabel("Return")
+            plt.xlabel("Date")
             plt.show()
 
         return results
 
-    def show_plot(self, cumulative=True, weighted=False):
+    def show_plot(self, cumulative: bool = True, weighted: bool = False, title: str = None):
         if weighted:
             grouped_data = self.groupby([DATE]).apply(lambda x: np.average(x[RET_1], weights=x[MKTCAP]))
         else:
@@ -301,6 +308,12 @@ class Portfolio(DataFrame):
 
         plt.figure()
         grouped_data.plot()
+        if title:
+            plt.title(title)
+        else:
+            plt.title("Portfolio Simulation")
+        plt.ylabel("Return")
+        plt.xlabel("Date")
         plt.show()
 
     @staticmethod
