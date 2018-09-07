@@ -4,7 +4,7 @@
          Park Ji woo
 :Date: 2018. 7. 18
 """
-from copy import deepcopy
+from copy import deepcopy as dc
 from datetime import datetime
 
 import matplotlib.pyplot as plt
@@ -114,6 +114,22 @@ class Portfolio(DataFrame):
     def get_benchmark(self):
         return self.benchmarks.loc[self.benchmarks[CODE] == self._benchmark, :]
 
+    def to_dataframe(self, deepcopy: bool = True) -> DataFrame:
+        """
+        Convert portfolio to dataframe type.
+
+        :param deepcopy : (bool) If deepcopy is True, convert to dataframe based on deepcopy. Or, convert to dataframe
+                                  based on shallow copy.
+
+        :return dataframe : (DataFrame) Converted dataframe type portfolio
+        """
+        if deepcopy:
+            dataframe = DataFrame(dc(self))
+        else:
+            dataframe = DataFrame(self)
+
+        return dataframe
+
     def set_benchmark(self, benchmark):
         if benchmark not in BENCHMARKS:
             raise ValueError('{} is not registered.'.format(benchmark))
@@ -192,7 +208,7 @@ class Portfolio(DataFrame):
         assert min_rank > 0, "min_rank should be bigger than 0."
         assert max_rank > min_rank, "max_rank should be bigger than min_rank."
 
-        all_companies = deepcopy(self)
+        all_companies = dc(self)
         all_companies = all_companies.dropna(subset=[factor])
         all_companies[RANK] = all_companies.groupby(by=[DATE])[factor].transform(
             lambda x: x.rank(ascending=bottom)
@@ -224,7 +240,7 @@ class Portfolio(DataFrame):
         assert max_percentage > min_percentage, "max_percentage should be bigger than min_percentage."
         assert max_percentage <= 1, "max_percentage should be smaller than or equal to 0."
 
-        all_companies = deepcopy(self)
+        all_companies = dc(self)
         all_companies = all_companies.dropna(subset=[factor])
         all_companies[PERCENTAGE] = all_companies.groupby(by=[DATE])[factor].transform(
             lambda x: x.rank(ascending=bottom) / x.count()
@@ -246,7 +262,7 @@ class Portfolio(DataFrame):
 
         :return standardized_companies: (DataFrame) Standardized companies for each period by factor.
         """
-        unstandardized_companies = deepcopy(self.loc[~np.isnan(self[factor]), :])
+        unstandardized_companies = dc(self.loc[~np.isnan(self[factor]), :])
         unstandardized_companies[prefix + factor] = unstandardized_companies.groupby(by=[DATE])[factor].transform(
             lambda x: (x - x.mean()) / x.std()
         )
@@ -260,7 +276,7 @@ class Portfolio(DataFrame):
 
         labels = [str(x) for x in range(1, chunk_num + 1)]
 
-        data = deepcopy(self)
+        data = dc(self)
         data = data.dropna(subset=[factor])
         data = data.dropna(subset=[RET_1])
 
