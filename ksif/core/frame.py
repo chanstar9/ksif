@@ -21,6 +21,7 @@ from pandas.core.indexing import convert_to_index_sliceable
 
 from .columns import *
 from ..io.downloader import download_latest_korea_data
+from ..util.checker import not_empty
 
 # Hangul font setting
 if platform.system() == 'Windows':
@@ -53,6 +54,7 @@ class Portfolio(DataFrame):
     def _constructor(self):
         return Portfolio
 
+    @not_empty
     def __init__(self, data=None, index=None, columns=None, dtype=None, copy: bool = False,
                  start_date: str = START_DATE, end_date: str = None,
                  include_holding: bool = False, include_finance: bool = False,
@@ -124,9 +126,42 @@ class Portfolio(DataFrame):
     def benchmark(self):
         return self._benchmark
 
-    def get_benchmark(self):
-        return self.benchmarks.loc[self.benchmarks[CODE] == self._benchmark, :]
+    @not_empty
+    def get_benchmark(self, benchmark: str = None) -> DataFrame:
+        """
+        Return a benchmark of this portfolio period.
 
+        :param benchmark: (str) The name of benchmark to use. If benchmark is None, use self.benchmark.
+
+        :return selected_benchmark: (DataFrame)
+            code                | (str) The name of benchmark. ex) 코스피, 코스닥...
+            date                | (datetime)
+            benchmark_return_1  | (float) 1 month return.
+            benchmark_return_3  | (float) 3 month return.
+            benchmark_return_6  | (float) 6 month return.
+            benchmark_return_12 | (float) 12 month return.
+        """
+        if benchmark is not None and benchmark not in BENCHMARKS:
+            raise ValueError('{} is not registered.'.format(benchmark))
+
+        if benchmark:
+            selected_benchmark = self.benchmarks.loc[(self.benchmarks[CODE] == benchmark) &
+                                                     (self.benchmarks[DATE] >= min(self[DATE])) &
+                                                     (self.benchmarks[DATE] <= max(self[DATE])), :]
+        else:
+            selected_benchmark = self.benchmarks.loc[(self.benchmarks[CODE] == self._benchmark) &
+                                                     (self.benchmarks[DATE] >= min(self[DATE])) &
+                                                     (self.benchmarks[DATE] <= max(self[DATE])), :]
+
+        return selected_benchmark
+
+    def set_benchmark(self, benchmark):
+        if benchmark not in BENCHMARKS:
+            raise ValueError('{} is not registered.'.format(benchmark))
+        else:
+            self._benchmark = benchmark
+
+    @not_empty
     def to_dataframe(self, deepcopy: bool = True) -> DataFrame:
         """
         Convert portfolio to dataframe type.
@@ -142,12 +177,6 @@ class Portfolio(DataFrame):
             dataframe = DataFrame(self)
 
         return dataframe
-
-    def set_benchmark(self, benchmark):
-        if benchmark not in BENCHMARKS:
-            raise ValueError('{} is not registered.'.format(benchmark))
-        else:
-            self._benchmark = benchmark
 
     def outcome(self, benchmark: str = None, weighted: bool = False):
         """
@@ -177,9 +206,9 @@ class Portfolio(DataFrame):
 
         total_return = self._calculate_total_return(portfolio_ret_1[PORTFOLIO_RETURN])
 
-        merged_return = pd.merge(portfolio_ret_1, valid_companies.get_benchmark, on=DATE)
+        merged_return = pd.merge(portfolio_ret_1, valid_companies.get_benchmark()[[DATE, BENCHMARK_RET_1]], on=DATE)
         merged_return = merged_return.dropna()
-        benchmark_excess_returns = merged_return[PORTFOLIO_RETURN] - merged_return[RET_1]
+        benchmark_excess_returns = merged_return[PORTFOLIO_RETURN] - merged_return[BENCHMARK_RET_1]
 
         average_excess_return = np.average(benchmark_excess_returns)
         tracking_error = np.std(benchmark_excess_returns)
@@ -197,11 +226,13 @@ class Portfolio(DataFrame):
 
         return result
 
+    @not_empty
     def _calculate_total_return(self, grouped_data):
         data = grouped_data.dropna()
         total_return = self._cumulate(data).iloc[-1]
         return total_return
 
+    @not_empty
     def periodic_rank(self, min_rank: int, max_rank: int, factor: str = MKTCAP,
                       bottom: bool = False, drop_rank: bool = True):
         """
@@ -234,6 +265,7 @@ class Portfolio(DataFrame):
 
         return selected_companies
 
+    @not_empty
     def periodic_percentage(self, min_percentage: float, max_percentage: float, factor: str = MKTCAP,
                             bottom: bool = False):
         """
@@ -266,6 +298,7 @@ class Portfolio(DataFrame):
 
         return selected_companies
 
+    @not_empty
     def periodic_standardize(self, factor: str, prefix: str = 'std_'):
         """
         Standardize a factor periodically.
@@ -283,6 +316,7 @@ class Portfolio(DataFrame):
 
         return standardized_companies
 
+    @not_empty
     def quantile_distribution_ratio(self, factor: str, chunk_num: int = 10, cumulative: bool = True,
                                     weighted: bool = False, only_positive: bool = False, show_plot: bool = False,
                                     title: str = None):
@@ -342,8 +376,8 @@ class Portfolio(DataFrame):
         if show_benchmark:
             benchmark = self.get_benchmark()[[DATE, BENCHMARK_RET_1]]
             benchmark = benchmark.set_index(keys=[DATE])
-            benchmark = self._cumulate(benchmark, cumulative)
-            grouped_data = pd.concat([grouped_data, benchmark], axis=1)
+            benchmark = self._cumulate(benchmark, cumulative).reset_index(drop=False)
+            grouped_data = pd.merge(grouped_data.reset_index(drop=False), benchmark, on=[DATE])
             grouped_data = grouped_data.rename(index=str, columns={
                 RET_1: 'Portfolio',
                 BENCHMARK_RET_1: self.benchmark
@@ -361,7 +395,9 @@ class Portfolio(DataFrame):
         plt.show()
 
     @staticmethod
-    def _cumulate(ret, cumulative=True):
+    @not_empty
+    def _cumulate(ret: Series, cumulative=True) -> Series:
+        ret = ret - ret.values[0]
         if cumulative:
             ret = ret + 1
             ret = ret.cumprod()
