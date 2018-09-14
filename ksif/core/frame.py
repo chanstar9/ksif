@@ -398,7 +398,8 @@ class Portfolio(DataFrame):
 
     @staticmethod
     @not_empty
-    def _cumulate(ret: Series, cumulative=True) -> Series:
+    def _cumulate(ret, cumulative=True):
+        ret.iloc[0] = 0
         if cumulative:
             ret = ret + 1
             ret = ret.cumprod()
