@@ -8,6 +8,9 @@ from copy import deepcopy as dc
 from datetime import datetime
 
 import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib import font_manager, rc
+import platform
 import numpy as np
 import pandas as pd
 import pandas.core.common as com
@@ -18,6 +21,16 @@ from pandas.core.indexing import convert_to_index_sliceable
 
 from .columns import *
 from ..io.downloader import download_latest_korea_data
+
+# Hangul font setting
+if platform.system() == 'Windows':
+    font_name = font_manager.FontProperties(fname='c:/Windows/Fonts/malgun.ttf').get_name()
+    rc('font', family=font_name)
+else:
+    rc('font', family='AppleGothic')
+
+# Minus sign
+matplotlib.rcParams['axes.unicode_minus'] = False
 
 PERCENTAGE = 'percentage'
 
@@ -312,7 +325,8 @@ class Portfolio(DataFrame):
 
         return results
 
-    def show_plot(self, cumulative: bool = True, weighted: bool = False, title: str = None):
+    def show_plot(self, cumulative: bool = True, weighted: bool = False, title: str = None,
+                  show_benchmark: bool = True):
         portfolio = self.dropna(subset=[RET_1])
 
         if weighted:
@@ -321,16 +335,29 @@ class Portfolio(DataFrame):
             grouped_data = portfolio.groupby([DATE])[RET_1].mean()
 
         # noinspection PyProtectedMember
-        grouped_data = portfolio._cumulate(grouped_data, cumulative)
+        grouped_data = self._cumulate(grouped_data, cumulative)
 
         plt.figure()
+
+        if show_benchmark:
+            benchmark = self.get_benchmark()[[DATE, BENCHMARK_RET_1]]
+            benchmark = benchmark.set_index(keys=[DATE])
+            benchmark = self._cumulate(benchmark, cumulative)
+            grouped_data = pd.concat([grouped_data, benchmark], axis=1)
+            grouped_data = grouped_data.rename(index=str, columns={
+                RET_1: 'Portfolio',
+                BENCHMARK_RET_1: self.benchmark
+            })
+
         grouped_data.plot()
+
         if title:
             plt.title(title)
         else:
             plt.title("Portfolio Simulation")
         plt.ylabel("Return")
         plt.xlabel("Date")
+
         plt.show()
 
     @staticmethod
