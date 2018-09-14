@@ -376,12 +376,14 @@ class Portfolio(DataFrame):
         if show_benchmark:
             benchmark = self.get_benchmark()[[DATE, BENCHMARK_RET_1]]
             benchmark = benchmark.set_index(keys=[DATE])
-            benchmark = self._cumulate(benchmark, cumulative).reset_index(drop=False)
-            grouped_data = pd.merge(grouped_data.reset_index(drop=False), benchmark, on=[DATE])
+            benchmark = self._cumulate(benchmark, cumulative).dropna().reset_index(drop=False)
+            grouped_data = grouped_data.reset_index(drop=False)
+            grouped_data = pd.merge(grouped_data, benchmark, on=[DATE])
             grouped_data = grouped_data.rename(index=str, columns={
                 RET_1: 'Portfolio',
                 BENCHMARK_RET_1: self.benchmark
             })
+            grouped_data = grouped_data.set_index(keys=[DATE])
 
         grouped_data.plot()
 
