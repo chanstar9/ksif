@@ -21,14 +21,14 @@ def retry(exceptions, tries=3, delay=1, backoff=2, logger=None):
         logger: Logger to use. If None, print.
     """
 
-    def deco_retry(f):
+    def deco_retry(func):
 
-        @wraps(f)
+        @wraps(func)
         def f_retry(*args, **kwargs):
             mtries, mdelay = tries, delay
             while mtries > 1:
                 try:
-                    return f(*args, **kwargs)
+                    return func(*args, **kwargs)
                 except exceptions as e:
                     msg = '{}, Retrying in {} seconds...'.format(e, mdelay)
                     if logger:
@@ -38,7 +38,7 @@ def retry(exceptions, tries=3, delay=1, backoff=2, logger=None):
                     time.sleep(mdelay)
                     mtries -= 1
                     mdelay *= backoff
-            return f(*args, **kwargs)
+            return func(*args, **kwargs)
 
         return f_retry
 

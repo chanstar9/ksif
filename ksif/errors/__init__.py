@@ -13,3 +13,10 @@ class GoogleQueryException(Exception):
 
     def __str__(self):
         return self.message.format(self._status_code)
+
+
+class EmptyResultException(Exception):
+    message = "The result of the function is empty."
+
+    def __str__(self):
+        return self.message
