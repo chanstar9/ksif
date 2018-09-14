@@ -399,7 +399,6 @@ class Portfolio(DataFrame):
     @staticmethod
     @not_empty
     def _cumulate(ret: Series, cumulative=True) -> Series:
-        ret = ret - ret.values[0]
         if cumulative:
             ret = ret + 1
             ret = ret.cumprod()
