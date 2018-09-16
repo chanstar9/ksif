@@ -288,7 +288,7 @@ class Portfolio(DataFrame):
         all_companies = dc(self)
         all_companies = all_companies.dropna(subset=[factor])
         all_companies[PERCENTAGE] = all_companies.groupby(by=[DATE])[factor].transform(
-            lambda x: x.rank(ascending=bottom) / x.count()
+            lambda x:  x.rank(ascending=bottom, pct=True)
         )
         selected_companies = all_companies.loc[
                              (all_companies[PERCENTAGE] >= min_percentage) &
