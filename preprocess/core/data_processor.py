@@ -276,4 +276,4 @@ def _calculate_total(code, kospi, kosdaq):
     total[BENCHMARK_RET_6] = (total[BENCHMARK_RET_6 + KOSPI] + total[BENCHMARK_RET_6 + KOSDAQ]) / 2
     total[BENCHMARK_RET_12] = (total[BENCHMARK_RET_12 + KOSPI] + total[BENCHMARK_RET_12 + KOSDAQ]) / 2
 
-    return total.loc[:, [CODE, DATE, RET_1, RET_3, RET_6]]
+    return total.loc[:, BENCHMARK_RESULT_COLUMNS]
