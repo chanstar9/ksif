@@ -48,32 +48,25 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     daily_companies.loc[:, MKTCAP] = daily_companies[ENDP] * (daily_companies[OUTCST] + daily_companies[CS_TOBEPUB])
 
     # Calculate fiscal quarters of quarterly data.
-    quarterly_companies = unprocessed_companies.loc[
-        unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA].reset_index(drop=True)
-    quarterly_companies[FISCAL_QUARTER] = quarterly_companies[DATE].dt.year * 10 + (
-            quarterly_companies[DATE].dt.month / 3)
+    quarterly_companies = unprocessed_companies.loc[unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA].reset_index(drop=True)
+    quarterly_companies[FISCAL_QUARTER] = quarterly_companies[DATE].dt.year * 10 + (quarterly_companies[DATE].dt.month / 3)
     quarterly_companies = quarterly_companies.drop(columns=[DATE])
 
-    quarterly_companies['sales12'] = quarterly_companies.groupby(CODE)[SALES].rolling(4).sum().reset_index(0, drop=True)
-    quarterly_companies['gp12'] = quarterly_companies.groupby(CODE)[GP].rolling(4).sum().reset_index(0, drop=True)
-    quarterly_companies['op12'] = quarterly_companies.groupby(CODE)[EBIT].rolling(4).sum().reset_index(0, drop=True)
-    quarterly_companies['ni12'] = quarterly_companies.groupby(CODE)[NI_OWNER].rolling(4).sum().reset_index(0, drop=True)
-    quarterly_companies['cfo12'] = quarterly_companies.groupby(CODE)[CFO].rolling(4).sum().reset_index(0, drop=True)
-    quarterly_companies['ebitda12'] = quarterly_companies.groupby(CODE)[EBITDA].rolling(4).sum().reset_index(0,
-                                                                                                             drop=True)
+    quarterly_companies['sales12'] = quarterly_companies.groupby(CODE)[SALES].rolling(4).sum().reset_index(drop=True)
+    quarterly_companies['gp12'] = quarterly_companies.groupby(CODE)[GP].rolling(4).sum().reset_index(drop=True)
+    quarterly_companies['op12'] = quarterly_companies.groupby(CODE)[EBIT].rolling(4).sum().reset_index(drop=True)
+    quarterly_companies['ni12'] = quarterly_companies.groupby(CODE)[NI_OWNER].rolling(4).sum().reset_index(drop=True)
+    quarterly_companies['cfo12'] = quarterly_companies.groupby(CODE)[CFO].rolling(4).sum().reset_index(drop=True)
+    quarterly_companies['ebitda12'] = quarterly_companies.groupby(CODE)[EBITDA].rolling(4).sum().reset_index(drop=True)
     quarterly_companies['ebt12'] = (
-            quarterly_companies.groupby(CODE)[NI].rolling(4).sum().reset_index(0, drop=True) +
-            quarterly_companies.groupby(
-                CODE)[TAX].rolling(4).sum().reset_index(0, drop=True))
+            quarterly_companies.groupby(CODE)[NI].rolling(4).sum() +
+            quarterly_companies.groupby(CODE)[TAX].rolling(4).sum()
+    ).reset_index(drop=True)
 
-    quarterly_companies['nopat12'] = (
-            quarterly_companies['op12'] - quarterly_companies.groupby(CODE)[TAX].rolling(4).sum().reset_index(0,
-                                                                                                              drop=True))
+    quarterly_companies['nopat12'] = (quarterly_companies['op12'] - quarterly_companies.groupby(CODE)[TAX].rolling(4).sum().reset_index(drop=True))
 
-    quarterly_companies[AVG_ASSET] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(0,
-                                                                                                             drop=True)
-    quarterly_companies[AVG_EQUITY] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(0,
-                                                                                                              drop=True)
+    quarterly_companies[AVG_ASSET] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(drop=True)
+    quarterly_companies[AVG_EQUITY] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(drop=True)
 
     # Profit factors
     quarterly_companies[S_A] = quarterly_companies['sales12'] / zero_to_nan(quarterly_companies[AVG_ASSET])
@@ -83,20 +76,18 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     quarterly_companies[ROA] = quarterly_companies['ni12'] / zero_to_nan(quarterly_companies[AVG_ASSET])
     quarterly_companies[ROE] = quarterly_companies['ni12'] / zero_to_nan(quarterly_companies[AVG_EQUITY])
     quarterly_companies[QROA] = quarterly_companies[NI_OWNER] / zero_to_nan(
-        quarterly_companies.groupby(CODE)[ASSETS].rolling(2).mean().reset_index(0, drop=True))
+        quarterly_companies.groupby(CODE)[ASSETS].rolling(2).mean()).reset_index(drop=True)
     quarterly_companies[QROE] = quarterly_companies[NI_OWNER] / zero_to_nan(
-        quarterly_companies.groupby(CODE)[EQUITY].rolling(2).mean().reset_index(0, drop=True))
+        quarterly_companies.groupby(CODE)[EQUITY].rolling(2).mean()).reset_index(drop=True)
     quarterly_companies[EBT_E] = quarterly_companies['ebt12'] / zero_to_nan(
-        quarterly_companies.groupby(CODE)[EQUITY].rolling(4).mean().reset_index(0, drop=True))
+        quarterly_companies.groupby(CODE)[EQUITY].rolling(4).mean()).reset_index(drop=True)
     quarterly_companies[ROIC] = quarterly_companies.nopat12 / zero_to_nan(
         quarterly_companies[TANG_ASSET] + quarterly_companies[INV] + quarterly_companies[AR] -
         quarterly_companies[ALLOWANCE_AR_] - quarterly_companies[AP]
     )
+    quarterly_companies[DIVP] = quarterly_companies.groupby(CODE)[DIVP].rolling(4).sum().reset_index(drop=True)
 
     quarterly_companies[GP_S] = quarterly_companies['gp12'] / zero_to_nan(quarterly_companies['sales12'])
-
-    quarterly_companies[LIQ_RATIO] = quarterly_companies[CUR_ASSETS] / zero_to_nan(quarterly_companies[CUR_LIAB])
-    quarterly_companies[DEBT_RATIO] = quarterly_companies[LIAB] / zero_to_nan(quarterly_companies[EQUITY])
 
     # Growth factors
     quarterly_companies[SALESQOQ] = quarterly_companies.groupby(CODE).apply(
@@ -113,6 +104,15 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
         lambda x: (x[GP_S] - x[GP_S].shift(4)) / zero_to_nan(np.abs(x[GP_S].shift(4)))).reset_index(drop=True)
     quarterly_companies[GP_AYOY] = quarterly_companies.groupby(CODE).apply(
         lambda x: (x[GP_A] - x[GP_A].shift(4)) / zero_to_nan(np.abs(x[GP_A].shift(4)))).reset_index(drop=True)
+    quarterly_companies[ASSETSYOY] = quarterly_companies.groupby(CODE).apply(
+        lambda x: (x[ASSETS] - x[ASSETS].shift(4)) / zero_to_nan(np.abs(x[ASSETS].shift(4)))).reset_index(drop=True)
+    quarterly_companies[ASSETSQOQ] = quarterly_companies.groupby(CODE).apply(
+        lambda x: (x[ASSETS] - x[ASSETS].shift(1)) / zero_to_nan(np.abs(x[ASSETS].shift(1)))).reset_index(drop=True)
+
+    # Safety factors
+    quarterly_companies[LIQ_RATIO] = quarterly_companies[CUR_ASSETS] / zero_to_nan(quarterly_companies[CUR_LIAB])
+    quarterly_companies[DEBT_RATIO] = quarterly_companies[LIAB] / zero_to_nan(quarterly_companies[EQUITY])
+    quarterly_companies[EQUITY_RATIO] = quarterly_companies[EQUITY] / zero_to_nan(quarterly_companies[ASSETS])
 
     quarterly_companies = quarterly_companies.groupby(CODE).ffill()
 
@@ -155,6 +155,8 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
         lambda x: (x[ADJP].shift(1) - x[ADJP].shift(12)) / zero_to_nan(x[ADJP].shift(12))).reset_index(drop=True)
     available_companies[MOM6_1] = available_companies.groupby(CODE).apply(
         lambda x: (x[ADJP].shift(1) - x[ADJP].shift(6)) / zero_to_nan(x[ADJP].shift(6))).reset_index(drop=True)
+    available_companies[MOM12] = available_companies.groupby(CODE).apply(
+        lambda x: (x[ADJP] - x[ADJP].shift(12)) / zero_to_nan(x[ADJP].shift(12))).reset_index(drop=True)
     available_companies[MOM6] = available_companies.groupby(CODE).apply(
         lambda x: (x[ADJP] - x[ADJP].shift(6)) / zero_to_nan(x[ADJP].shift(6))).reset_index(drop=True)
     available_companies[MOM3] = available_companies.groupby(CODE).apply(
