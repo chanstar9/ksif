@@ -85,8 +85,7 @@ def read_companies(file_name: str) -> pd.DataFrame:
         NET_INSURANCE_PURCHASE, NET_PRIVATE_FUND_PURCHASE, NET_PENSION_PURCHASE, NET_FOREIGN_PURCHASE,
         NET_BANK_PURCHASE, NET_TRUST_PURCHASE, SHORT_SALE_BALANCE, FOREIGN_OWNERSHIP_RATIO
     ]
-    melted_companies.loc[:, to_zero_columns] = \
-        melted_companies.loc[:, to_zero_columns].replace(np.nan, 0)
+    melted_companies.loc[:, to_zero_columns] = melted_companies.replace(np.nan, 0.0).loc[:, to_zero_columns]
 
     # There are no SHORT_SALE_BALANCE before 2016-06-30
     melted_companies.loc[melted_companies[DATE] < '2016-06-30', SHORT_SALE_BALANCE] = np.nan

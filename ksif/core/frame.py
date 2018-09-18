@@ -288,7 +288,7 @@ class Portfolio(DataFrame):
         all_companies = dc(self)
         all_companies = all_companies.dropna(subset=[factor])
         all_companies[PERCENTAGE] = all_companies.groupby(by=[DATE])[factor].transform(
-            lambda x: x.rank(ascending=bottom) / x.count()
+            lambda x: x.rank(ascending=bottom, pct=True)
         )
         selected_companies = all_companies.loc[
                              (all_companies[PERCENTAGE] >= min_percentage) &
@@ -319,45 +319,83 @@ class Portfolio(DataFrame):
     @not_empty
     def quantile_distribution_ratio(self, factor: str, chunk_num: int = 10, cumulative: bool = True,
                                     weighted: bool = False, only_positive: bool = False, show_plot: bool = False,
-                                    title: str = None):
+                                    show_bar_chart: bool = False, title: str = None) -> DataFrame:
+        """
+        Make quantile portfolios by the given factor, and calculate returns.
+
+        :param factor: (str) The name of factor used to make quantile portfolios.
+        :param chunk_num: (int) The number of portfolios.
+        :param cumulative: (bool) If cumulative is true, calculate cumulative returns.
+        :param weighted: (bool) If weighted is true, each portfolio is a weighted portfolio based on MKTCAP
+        :param only_positive: (bool) If only_positive is true, use only positive value of the factor.
+        :param show_plot: (bool) If show_plot is true, show a time series line chart of groups.
+        :param show_bar_chart: (bool) If show_bar_chart is true, show a arithmetic average bar chart of groups.
+        :param title: (str) If title is not None, set the title.
+
+        :return quantile_portfolio_returns: (DataFrame) The returns of each group
+            --------------------------------------------------------------
+            date    | (datetime)
+            --------------------------------------------------------------
+            1       | (float) The return of group 1 portfolio at the date.
+            2       | (float) The return of group 2 portfolio at the date.
+            3       | (float) The return of group 3 portfolio at the date.
+            ...
+            --------------------------------------------------------------
+        """
+        assert chunk_num > 1, "chunk_num should be bigger than 1."
 
         labels = [str(x) for x in range(1, chunk_num + 1)]
 
-        data = dc(self)
-        data = data.dropna(subset=[factor])
-        data = data.dropna(subset=[RET_1])
+        portfolio = dc(self)
+        portfolio = portfolio.dropna(subset=[factor, RET_1])
 
         if only_positive:
-            data = data.loc[data[factor] > 0, :]
+            portfolio = portfolio.loc[portfolio[factor] > 0, :]
 
-        data[QUANTILE] = data.groupby(by=[DATE])[factor].transform(
+        portfolio[QUANTILE] = portfolio.groupby(by=[DATE])[factor].transform(
             lambda x: pd.qcut(x, chunk_num, labels=labels)
         )
-        data[QUANTILE] = data[QUANTILE].apply(int).apply(str)
+        portfolio[QUANTILE] = portfolio[QUANTILE].apply(int).apply(str)
 
-        results = DataFrame()
+        quantile_portfolio_returns = DataFrame()
         for label in labels:
-            labelled_data = data.loc[data[QUANTILE] == label, :]
+            labelled_data = portfolio.loc[portfolio[QUANTILE] == label, :]
             if weighted:
                 grouped_data = labelled_data.groupby([DATE]).apply(lambda x: np.average(x[RET_1], weights=x[MKTCAP]))
             else:
                 grouped_data = labelled_data.groupby([DATE])[RET_1].mean()
             grouped_data = grouped_data.rename(label)
             grouped_data = self._cumulate(grouped_data, cumulative)
-            results = pd.concat([results, grouped_data], axis=1)
+            quantile_portfolio_returns = pd.concat([quantile_portfolio_returns, grouped_data], axis=1)
 
         if show_plot:
             plt.figure()
-            results.plot()
+            quantile_portfolio_returns.plot()
             if title:
                 plt.title(title)
             else:
                 plt.title(factor.upper())
             plt.ylabel("Return")
             plt.xlabel("Date")
+            plt.legend(loc='upper left')
             plt.show()
 
-        return results
+        if show_bar_chart:
+            plt.figure()
+            quantile_result = portfolio.quantile_distribution_ratio(
+                factor, chunk_num=chunk_num, cumulative=False, weighted=weighted, only_positive=only_positive,
+                show_plot=False, show_bar_chart=False, title=None
+            )
+            quantile_result.mean(axis=0).plot(kind='bar')
+            if title:
+                plt.title(title)
+            else:
+                plt.title(factor.upper())
+            plt.ylabel("Return")
+            plt.xlabel("Group")
+            plt.show()
+
+        return quantile_portfolio_returns
 
     def show_plot(self, cumulative: bool = True, weighted: bool = False, title: str = None,
                   show_benchmark: bool = True):
