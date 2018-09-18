@@ -321,16 +321,26 @@ class Portfolio(DataFrame):
                                     weighted: bool = False, only_positive: bool = False, show_plot: bool = False,
                                     show_bar_chart: bool = False, title: str = None) -> DataFrame:
         """
+        Make quantile portfolios by the given factor, and calculate returns.
 
-        :param factor:
-        :param chunk_num:
-        :param cumulative:
-        :param weighted:
-        :param only_positive:
-        :param show_plot:
-        :param show_bar_chart:
-        :param title:
-        :return quantile_portfolio_returns: (DataFrame)
+        :param factor: (str) The name of factor used to make quantile portfolios.
+        :param chunk_num: (int) The number of portfolios.
+        :param cumulative: (bool) If cumulative is true, calculate cumulative returns.
+        :param weighted: (bool) If weighted is true, each portfolio is a weighted portfolio based on MKTCAP
+        :param only_positive: (bool) If only_positive is true, use only positive value of the factor.
+        :param show_plot: (bool) If show_plot is true, show a time series line chart of groups.
+        :param show_bar_chart: (bool) If show_bar_chart is true, show a arithmetic average bar chart of groups.
+        :param title: (str) If title is not None, set the title.
+
+        :return quantile_portfolio_returns: (DataFrame) The returns of each group
+            --------------------------------------------------------------
+            date    | (datetime)
+            --------------------------------------------------------------
+            1       | (float) The return of group 1 portfolio at the date.
+            2       | (float) The return of group 2 portfolio at the date.
+            3       | (float) The return of group 3 portfolio at the date.
+            ...
+            --------------------------------------------------------------
         """
         assert chunk_num > 1, "chunk_num should be bigger than 1."
 
@@ -367,6 +377,7 @@ class Portfolio(DataFrame):
                 plt.title(factor.upper())
             plt.ylabel("Return")
             plt.xlabel("Date")
+            plt.legend(loc='upper left')
             plt.show()
 
         if show_bar_chart:
