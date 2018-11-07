@@ -4,6 +4,9 @@
 :Date: 2018. 7. 18.
 """
 import os
+import io
+import requests
+import urllib3
 from pandas import DataFrame
 from pandas import read_csv, read_hdf
 from pathlib import Path
@@ -12,6 +15,8 @@ from ..core.columns import DATE
 from .google_drive import query_google_spreadsheet, GoogleQueryException
 from ..util.memoization import memoize
 from ..util.retrial import retry
+
+urllib3.disable_warnings()  # Ignore InsecureRequestWarning.
 
 TABLE = 'table'
 
@@ -58,7 +63,9 @@ def _download_data(file_name, url):
 
 
 def custom_read_csv(path):
-    latest_korea_data = read_csv(path, low_memory=False, encoding=ENCODING, parse_dates=[DATE])
+    content = requests.get(url=path, verify=False).content
+    latest_korea_data = read_csv(io.StringIO(content.decode(ENCODING)), low_memory=False,
+                                 encoding=ENCODING, parse_dates=[DATE])
     return latest_korea_data
 
 
