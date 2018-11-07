@@ -9,21 +9,16 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 from preprocess.core.columns import *
-from .utils import query_google_spreadsheet, last_day_of_month
-
-HOLDING_COMPANY_ID = '1wI26_VimJ9txijph0EADwOwi5dVaCR4_3r81WU8qA7Y'
-BANKRUPT_COMPANY_ID = '1F8bdUTenIJhROK0ukVrL7e-HdQCY8rpKQWLPq7jnlKY'
-MERGED_COMPANY_ID = '1F8bdUTenIJhROK0ukVrL7e-HdQCY8rpKQWLPq7jnlKY'
-MERGED_COMPANY_GID = '1748346223'
-RELISTED_COMPANY_ID = '1F8bdUTenIJhROK0ukVrL7e-HdQCY8rpKQWLPq7jnlKY'
-RELISTED_COMPANY_GID = '808532832'
+from .utils import last_day_of_month
+from ksif.io.google_drive import query_google_spreadsheet, HOLDING_COMPANY_GID, DELISTED_COMPANY_GID, \
+    MERGED_COMPANY_GID, RELISTED_COMPANY_GID
 
 
 def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
     """
     Filter spac companies and delisted rows.
     Mark on holding companies.
-    Add a 0 price row at the end of bankrupt companies.
+    Add a 0 price row at the end of delisted companies.
     Add a same price row at the end of merged companies.
 
     :param unfiltered_companies: (DataFrame) A dataframe containing all kind of companies and rows.
@@ -45,7 +40,7 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
     unfiltered_companies = unfiltered_companies.loc[[SPAC not in name for name in unfiltered_companies[NAME]], :]
 
     # Read the list of holding companies.
-    holdings = query_google_spreadsheet(HOLDING_COMPANY_ID)
+    holdings = query_google_spreadsheet(HOLDING_COMPANY_GID)
 
     unfiltered_companies[HOLDING] = [code in list(holdings[CODE]) for code in unfiltered_companies[CODE]]
 
@@ -53,17 +48,17 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
     pre_last_day = sorted(unfiltered_companies[DATE].unique())[-1]
 
     # Set the next price to 0 when a company is delisted due to bankruptcy.
-    bankrupt_companies = query_google_spreadsheet(BANKRUPT_COMPANY_ID)
-    bankrupt_records = unfiltered_companies.loc[
-        [code in bankrupt_companies[CODE].unique() for code in unfiltered_companies[CODE]]
+    delisted_companies = query_google_spreadsheet(DELISTED_COMPANY_GID)
+    delisted_records = unfiltered_companies.loc[
+        [code in delisted_companies[CODE].unique() for code in unfiltered_companies[CODE]]
     ]
-    bankrupt_records = bankrupt_records.groupby(CODE).last().reset_index()
-    bankrupt_records[DATE] = bankrupt_records[DATE].apply(lambda x: x + relativedelta(months=1))
-    bankrupt_records[[ENDP, ADJP]] = 0
-    unfiltered_companies = pd.concat([unfiltered_companies, bankrupt_records], axis=0, ignore_index=True)
+    delisted_records = delisted_records.groupby(CODE).last().reset_index()
+    delisted_records[DATE] = delisted_records[DATE].apply(lambda x: x + relativedelta(months=1))
+    delisted_records[[ENDP, ADJP]] = 0
+    unfiltered_companies = pd.concat([unfiltered_companies, delisted_records], axis=0, ignore_index=True)
 
     # Set the next price to the current price when a company is delisted due to M&A.
-    merged_companies = query_google_spreadsheet(MERGED_COMPANY_ID, MERGED_COMPANY_GID)
+    merged_companies = query_google_spreadsheet(MERGED_COMPANY_GID)
     merged_records = unfiltered_companies.loc[
         [code in merged_companies[CODE].unique() for code in unfiltered_companies[CODE]]
     ]
@@ -72,7 +67,7 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
     unfiltered_companies = pd.concat([unfiltered_companies, merged_records], axis=0, ignore_index=True)
 
     # Set is_suspended of a delisted period to True when a company had been delisted and was listed again.
-    relisted_companies = query_google_spreadsheet(RELISTED_COMPANY_ID, RELISTED_COMPANY_GID)
+    relisted_companies = query_google_spreadsheet(RELISTED_COMPANY_GID)
     for index, (code, name, start_date, end_date) in relisted_companies.iterrows():
         unfiltered_companies.loc[(unfiltered_companies[CODE] == code) &
                                  (unfiltered_companies[DATE] >= start_date) &

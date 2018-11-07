@@ -25,7 +25,8 @@ setup(
         'requests',
         'tables',
         'python-dateutil',
-        'urllib3'
+        'urllib3',
+        'xlrd'
     ],
     packages         = find_packages(exclude = ['tests*']),
     keywords         = ['ksif', 'portfolio', 'backtest', 'finance'],
