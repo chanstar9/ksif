@@ -20,7 +20,7 @@ from pandas.core.index import (Index, MultiIndex)
 from pandas.core.indexing import convert_to_index_sliceable
 
 from .columns import *
-from ..io.downloader import download_latest_korea_data
+from ..io.downloader import download_latest_data
 from ..util.checker import not_empty
 
 # Hangul font setting
@@ -74,7 +74,7 @@ class Portfolio(DataFrame):
             raise ValueError("Incorrect data format, end_date should be YYYY-MM-DD")
 
         if data is None:
-            data, self.benchmarks = download_latest_korea_data()
+            data, self.benchmarks = download_latest_data()
 
             if not include_holding:
                 data = data.loc[~data[HOLDING], :]
@@ -90,7 +90,7 @@ class Portfolio(DataFrame):
 
             data = data.loc[(start_date <= data[DATE]) & (data[DATE] <= end_date), :]
         else:
-            _, self.benchmarks = download_latest_korea_data()
+            _, self.benchmarks = download_latest_data()
 
         DataFrame.__init__(self=self, data=data, index=index, columns=columns, dtype=dtype, copy=copy)
 
@@ -366,7 +366,7 @@ class Portfolio(DataFrame):
                 grouped_data = labelled_data.groupby([DATE])[RET_1].mean()
             grouped_data = grouped_data.rename(label)
             grouped_data = self._cumulate(grouped_data, cumulative)
-            quantile_portfolio_returns = pd.concat([quantile_portfolio_returns, grouped_data], axis=1)
+            quantile_portfolio_returns = pd.concat([quantile_portfolio_returns, grouped_data], axis=1, sort=True)
 
         if show_plot:
             plt.figure()
