@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name             = 'ksif',
-    version          = '2018.09.19',
+    version          = '2018.11.07',
     description      = 'Quantitative investment tools for KSIF',
     long_description = long_description,
     author           = 'KSIF Tech',
@@ -25,6 +25,8 @@ setup(
         'requests',
         'tables',
         'python-dateutil',
+        'urllib3',
+        'xlrd'
     ],
     packages         = find_packages(exclude = ['tests*']),
     keywords         = ['ksif', 'portfolio', 'backtest', 'finance'],

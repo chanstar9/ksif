@@ -12,7 +12,7 @@ from ksif.core.columns import *
 class TestQuantileDistributionRatio(TestCase):
 
     def test_quantile_distribution_ratio(self):
-        pf = Portfolio()
+        pf = Portfolio(start_date='2017-01-01')
 
         # When chunk_num is less than or equal to 1, raise an assertion error.
         with self.assertRaises(AssertionError):
