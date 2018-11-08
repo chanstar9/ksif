@@ -4,6 +4,7 @@
          Park Ji woo
 :Date: 2018. 7. 18
 """
+import sys
 from copy import deepcopy as dc
 from datetime import datetime
 
@@ -41,6 +42,7 @@ START_DATE = '2001-05-31'
 
 QUANTILE = 'quantile'
 RANK = 'rank'
+RANK_CORRELATION = 'Rank correlation'
 
 
 class Portfolio(DataFrame):
@@ -233,7 +235,7 @@ class Portfolio(DataFrame):
         return total_return
 
     @not_empty
-    def periodic_rank(self, min_rank: int, max_rank: int, factor: str = MKTCAP,
+    def periodic_rank(self, min_rank: int = 1, max_rank: int = sys.maxsize, factor: str = MKTCAP,
                       bottom: bool = False, drop_rank: bool = True):
         """
         Select companies which have a rank bigger than or equal to min_rank, and smaller than or equal to max_rank
@@ -396,6 +398,32 @@ class Portfolio(DataFrame):
             plt.show()
 
         return quantile_portfolio_returns
+
+    def rank_correlation(self, factor: str, ranked_by: str = RET_1, rolling: int = 6,
+                         show_plot=False, title: str = '') -> DataFrame:
+        portfolio = dc(self.dropna(subset=[ranked_by]))
+        portfolio = portfolio.periodic_rank(factor=factor, drop_rank=False)
+        factor_rank = "{factor}_rank".format(factor=factor)
+        portfolio = portfolio.rename(index=str, columns={"rank": factor_rank})
+        portfolio = portfolio.periodic_rank(factor=ranked_by, drop_rank=False)
+        actual_rank = "{ranked_by}_rank".format(ranked_by=ranked_by)
+        portfolio = portfolio.rename(index=str, columns={"rank": actual_rank})
+        rank_ic = portfolio.groupby(by=[DATE]).apply(
+            lambda x: 1 - (6 * ((x[factor_rank] - x[actual_rank]) ** 2).sum()) / (len(x) * (len(x) ** 2 - 1)))
+
+        rank_ic = pd.DataFrame(rank_ic, columns=[RANK_CORRELATION])
+        rolling_column_name = 'rolling_{}'.format(rolling)
+        rank_ic[rolling_column_name] = rank_ic[RANK_CORRELATION].rolling(window=rolling).mean()
+
+        if show_plot:
+            rank_ic.plot()
+            plt.title(title)
+            plt.axhline(y=0, color='black')
+            plt.ylabel('Rank IC')
+            plt.xlabel('Date')
+            plt.show()
+
+        return rank_ic
 
     def show_plot(self, cumulative: bool = True, weighted: bool = False, title: str = None,
                   show_benchmark: bool = True):

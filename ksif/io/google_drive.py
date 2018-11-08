@@ -16,7 +16,7 @@ urllib3.disable_warnings()  # Ignore InsecureRequestWarning.
 
 SPREADSHEET_DOWNLOAD_REQUEST_URL = 'https://docs.google.com/spreadsheet/ccc?key=1e_7FLT22f0MPfk0zuisbCukWVoCKT3Rm9tPi6R7xntc&output=csv&gid={}'
 
-CSV_FILE_DOWNLOAD_REQUEST_URL = 'https://drive.google.com/a/yonsei.ac.kr/uc?export=download'
+CSV_FILE_DOWNLOAD_REQUEST_URL = 'https://drive.google.com/uc?export=download'
 
 CSV_FILES_GID = '0'
 HOLDING_COMPANY_GID = '1815448628'
@@ -53,18 +53,17 @@ def query_google_csv_file(csv_file_id) -> DataFrame:
 
     :return csv_file: (DataFrame)
     """
-    response = requests.get(CSV_FILE_DOWNLOAD_REQUEST_URL, params={'id': csv_file_id}, stream=True)
-    if response.status_code != 200:
-        raise GoogleQueryException(response.status_code)
+    session = requests.Session()
+
+    response = session.get(CSV_FILE_DOWNLOAD_REQUEST_URL, params={'id': csv_file_id}, stream=True)
     token = get_confirm_token(response)
 
     if token:
         params = {'id': csv_file_id, 'confirm': token}
-        response = requests.get(CSV_FILE_DOWNLOAD_REQUEST_URL, params=params, stream=True)
-        if response.status_code != 200:
-            raise GoogleQueryException(response.status_code)
+        response = session.get(CSV_FILE_DOWNLOAD_REQUEST_URL, params=params, stream=True)
 
     csv_file = pd.read_csv(StringIO(response.content.decode(encoding='UTF-8', errors='strict')))
+    session.close()
     return csv_file
 
 
