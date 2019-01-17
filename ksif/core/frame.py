@@ -21,6 +21,7 @@ from pandas.core.index import (Index, MultiIndex)
 from pandas.core.indexing import convert_to_index_sliceable
 
 from .columns import *
+from .outcomes import *
 from ..io.downloader import download_latest_data
 from ..util.checker import not_empty
 
@@ -35,8 +36,6 @@ else:
 matplotlib.rcParams['axes.unicode_minus'] = False
 
 PERCENTAGE = 'percentage'
-
-PORTFOLIO_RETURN = 'portfolio_return'
 
 START_DATE = '2001-05-31'
 
@@ -188,29 +187,41 @@ class Portfolio(DataFrame):
         :param weighted: If weighted is True, use market capitalization to calculate weighted portfolio.
 
         :return result: (dict)
-            total_return        | (float) Total compounded return.
-            active_return       | (float) Annualized average excess return.
-            active_risk         | (float) Annualized tracking error.
-            information_ratio   | (float) Average excess return / tracking error
+            portfolio_return            | (float) Total compound return of the portfolio.
+            benchmark_return            | (float) Total compound return of the benchmark.
+            active_return               | (float) Annualized average excess return.
+            active_risk                 | (float) Annualized tracking error.
+            information_ratio           | (float) Average excess return / tracking error
+            compound_annual_growth_rate | (float) Annual compound return of the portfolio.
         """
-        valid_companies = self.dropna(subset=[RET_1])
+        portfolio = dc(self)
 
         if benchmark is not None:
             if benchmark not in BENCHMARKS:
                 raise ValueError('{} is not registered.'.format(benchmark))
 
+        portfolio_returns = pd.DataFrame()
         if weighted:
-            portfolio_ret_1 = valid_companies.groupby([DATE]).apply(lambda x: np.average(x[RET_1], weights=x[MKTCAP]))
+            portfolio_returns[PORTFOLIO_RETURN] = portfolio.dropna(subset=[RET_1]).groupby([DATE]).apply(
+                lambda x: np.average(x[RET_1], weights=x[MKTCAP])
+            )
         else:
-            portfolio_ret_1 = valid_companies.groupby([DATE])[RET_1].mean()
-        portfolio_ret_1 = portfolio_ret_1.reset_index()
-        portfolio_ret_1.columns = [DATE, PORTFOLIO_RETURN]
+            portfolio_returns[PORTFOLIO_RETURN] = portfolio.dropna(subset=[RET_1]).groupby([DATE]).apply(
+                lambda x: np.average(x[RET_1])
+            )
 
-        total_return = self._calculate_total_return(portfolio_ret_1[PORTFOLIO_RETURN])
+        portfolio_returns = portfolio_returns.reset_index()
+        merged_returns = pd.merge(portfolio_returns, portfolio.get_benchmark()[
+            [DATE, BENCHMARK_RET_1]
+        ], on=DATE)
 
-        merged_return = pd.merge(portfolio_ret_1, valid_companies.get_benchmark()[[DATE, BENCHMARK_RET_1]], on=DATE)
-        merged_return = merged_return.dropna()
-        benchmark_excess_returns = merged_return[PORTFOLIO_RETURN] - merged_return[BENCHMARK_RET_1]
+        portfolio_return = self._calculate_total_return(merged_returns[PORTFOLIO_RETURN])
+
+        benchmark_return = self._calculate_total_return(merged_returns[BENCHMARK_RET_1])
+
+        period_len = len(portfolio[DATE].unique())
+        compound_annual_growth_rate = (portfolio_return + 1) ** (12 / period_len) - 1
+        benchmark_excess_returns = merged_returns[PORTFOLIO_RETURN] - merged_returns[BENCHMARK_RET_1]
 
         average_excess_return = np.average(benchmark_excess_returns)
         tracking_error = np.std(benchmark_excess_returns)
@@ -220,10 +231,12 @@ class Portfolio(DataFrame):
         information_ratio = average_excess_return / tracking_error
 
         result = {
-            'total_return': total_return,
-            'active_return': active_return,
-            'active_risk': active_risk,
-            'information_ratio': information_ratio,
+            PORTFOLIO_RETURN: portfolio_return,
+            BENCHMARK_RETURN: benchmark_return,
+            ACTIVE_RETURN: active_return,
+            ACTIVE_RISK: active_risk,
+            IR: information_ratio,
+            CAGR: compound_annual_growth_rate,
         }
 
         return result
