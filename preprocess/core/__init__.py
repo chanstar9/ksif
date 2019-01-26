@@ -25,3 +25,4 @@ if __name__ == '__main__':
     benchmarks = read_benchmarks(file_name)
     processed_benchmarks = process_benchmarks(benchmarks)
     processed_benchmarks.to_csv('data/{}_benchmark.csv'.format(file_name), index=False, encoding=ENCODING)
+

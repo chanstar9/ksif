@@ -122,3 +122,14 @@ def read_benchmarks(file_name: str) -> pd.DataFrame:
     melted_benchmarks = melted_benchmarks.sort_values([CODE, DATE]).reset_index(drop=True)
 
     return melted_benchmarks
+
+def read_macro(file_name: str) -> pd.DataFrame:
+    """
+    :param file_name:
+    :return: macro: (DataFrame)
+
+
+    """
+
+
+    return macro
