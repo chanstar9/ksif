@@ -18,9 +18,12 @@ setup(
     url              = 'https://github.com/willbelucky/ksif',
     download_url     = 'https://github.com/willbelucky/ksif/archive/master.zip',
     install_requires = [
+        'h5py==2.8.0',
         'pandas',
         'numpy',
         'matplotlib',
+        'scikit-learn',
+        'scipy',
         'tqdm',
         'requests',
         'tables',
