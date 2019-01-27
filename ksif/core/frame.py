@@ -19,6 +19,7 @@ from pandas import DataFrame
 from pandas import Series
 from pandas.core.index import (Index, MultiIndex)
 from pandas.core.indexing import convert_to_index_sliceable
+from performanceanalytics.charts.performance_summary import create_performance_summary
 
 from .columns import *
 from .outcomes import *
@@ -179,12 +180,13 @@ class Portfolio(DataFrame):
 
         return dataframe
 
-    def outcome(self, benchmark: str = None, weighted: bool = False):
+    def outcome(self, benchmark: str = None, weighted: bool = False, show_plot: bool = False):
         """
         Calculate various indices of the portfolio.
 
-        :param benchmark: The name of benchmark.
-        :param weighted: If weighted is True, use market capitalization to calculate weighted portfolio.
+        :param benchmark: (str) The name of benchmark. If benchmark is None, use a default benchmark.
+        :param weighted: (bool) If weighted is True, use market capitalization to calculate weighted portfolio.
+        :param show_plot: (bool) If show_plot is True, show a performance summary graph.
 
         :return result: (dict)
             portfolio_return            | (float) Total compound return of the portfolio.
@@ -238,6 +240,12 @@ class Portfolio(DataFrame):
             IR: information_ratio,
             CAGR: compound_annual_growth_rate,
         }
+
+        if show_plot:
+            merged_returns[DATE] = pd.to_datetime(merged_returns[DATE])
+            merged_returns.set_index(keys=[DATE], inplace=True)
+            create_performance_summary(merged_returns, other_cols=range(1, 2))
+            plt.show()
 
         return result
 
