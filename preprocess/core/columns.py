@@ -8,6 +8,8 @@ from ksif.core.columns import *
 # Names of raw excel sheets
 COMPANY = 'company'
 BENCHMARK = 'benchmark'
+MACRO_DAILY = 'macro_daily'
+MACRO_MONTHLY = 'macro_monthly'
 
 # Special words for companies
 SPAC = '스팩'

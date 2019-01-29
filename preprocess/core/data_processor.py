@@ -368,3 +368,12 @@ def process_macro_monthly(raw_unprocessed_macros: DataFrame) -> DataFrame:
     #df3 = df2.merge(rdfm4, left_index=True, right_index=True)
 
     return macros_from_monthly
+
+def merging_with_macros(companies, macro_from_daily, macro_from_monthly: DataFrame)-> DataFrame:
+
+    macro = macro_from_daily.merge(macro_from_monthly, how = "left", left_index=True ,right_index=True)
+
+    # lagging !!
+    companies = companies.merge(macro, how = 'left', left_on = "date", right_index = True)
+
+    return companies
