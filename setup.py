@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name             = 'ksif',
-    version          = '2019.1.27',
+    version          = '2019.2.1',
     description      = 'Quantitative investment tools for KSIF',
     long_description = long_description,
     author           = 'KSIF Tech',
@@ -19,7 +19,7 @@ setup(
     download_url     = 'https://github.com/willbelucky/ksif/archive/master.zip',
     install_requires = [
         'h5py==2.8.0',
-        'pandas',
+        'pandas==0.23.4',
         'numpy',
         'matplotlib',
         'scikit-learn',
