@@ -19,10 +19,11 @@ SYMBOL_NAME = 'Symbol Name'
 
 DIR = 'data/{}.xlsx'
 COMPANY_UNNECESSARY_COLUMNS = [KIND, NAME, ITEM_NAME, ITEM, FREQUENCY]
+
+
 BENCHMARK_UNNECESSARY_COLUMNS = [SYMBOL, KIND, ITEM, ITEM_NAME, FREQUENCY]
-
-
 # noinspection PyShadowingNames
+
 def read_companies(file_name: str) -> pd.DataFrame:
     """
     :param file_name: (String) A file name of the raw data Excel file, except '.xlsx'.
@@ -93,9 +94,8 @@ def read_companies(file_name: str) -> pd.DataFrame:
     melted_companies = melted_companies.sort_values([CODE, DATE]).reset_index(drop=True)
 
     return melted_companies
-
-
 # noinspection PyShadowingNames
+
 def read_benchmarks(file_name: str) -> pd.DataFrame:
     """
     :param file_name: (String) A file name of the raw data Excel file, except '.xlsx'.
@@ -122,3 +122,20 @@ def read_benchmarks(file_name: str) -> pd.DataFrame:
     melted_benchmarks = melted_benchmarks.sort_values([CODE, DATE]).reset_index(drop=True)
 
     return melted_benchmarks
+
+
+def read_macro_daily(file_name):
+
+    # Read excel file
+    #temp = pd.read_excel("data/181231.xlsx", sheet_name="macro_daily")
+    raw_macro_from_daily = pd.read_excel(DIR.format(file_name), sheet_name=MACRO_DAILY, skiprows=8)
+
+    #macros_from_daily = process_macro_daily(raw_unprocessed_macros)
+
+    return raw_macro_from_daily
+
+def read_macro_monthly(file_name):
+    
+    raw_macro_from_monthly = pd.read_excel(DIR.format(file_name), sheet_name=MACRO_MONTHLY, skiprows=8)
+
+    return raw_macro_from_monthly

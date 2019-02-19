@@ -1,0 +1,3 @@
+[submodule "ksif_tech_pocket"]
+	path = ksif_tech_pocket
+	url = https://github.com/ksif-tech-team/ksif_tech_pocket.git

@@ -7,14 +7,15 @@ import pandas as pd
 from pandas import DataFrame
 import numpy as np
 from copy import copy
-
+from datetime import datetime
+from pandas.tseries.offsets import MonthEnd
 from preprocess.core.columns import *
-from .utils import zero_to_nan
+from preprocess.core.utils import zero_to_nan
 
 YEAR = 'year'
 MONTH_DAY = 'month_day'
 
-EV = 'ev'
+EV = 'ev'  # 시장가격
 AVG_EQUITY = 'avg_equity'
 AVG_ASSET = 'avg_asset'
 
@@ -48,8 +49,10 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     daily_companies.loc[:, MKTCAP] = daily_companies[ENDP] * (daily_companies[OUTCST] + daily_companies[CS_TOBEPUB])
 
     # Calculate fiscal quarters of quarterly data.
-    quarterly_companies = unprocessed_companies.loc[unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA].reset_index(drop=True)
-    quarterly_companies[FISCAL_QUARTER] = quarterly_companies[DATE].dt.year * 10 + (quarterly_companies[DATE].dt.month / 3)
+    quarterly_companies = unprocessed_companies.loc[
+        unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA].reset_index(drop=True)
+    quarterly_companies[FISCAL_QUARTER] = quarterly_companies[DATE].dt.year * 10 + (
+            quarterly_companies[DATE].dt.month / 3)
     quarterly_companies = quarterly_companies.drop(columns=[DATE])
 
     quarterly_companies['sales12'] = quarterly_companies.groupby(CODE)[SALES].rolling(4).sum().reset_index(drop=True)
@@ -63,7 +66,9 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
             quarterly_companies.groupby(CODE)[TAX].rolling(4).sum()
     ).reset_index(drop=True)
 
-    quarterly_companies['nopat12'] = (quarterly_companies['op12'] - quarterly_companies.groupby(CODE)[TAX].rolling(4).sum().reset_index(drop=True))
+    quarterly_companies['nopat12'] = (
+            quarterly_companies['op12'] - quarterly_companies.groupby(CODE)[TAX].rolling(4).sum().reset_index(
+        drop=True))
 
     quarterly_companies[AVG_ASSET] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(drop=True)
     quarterly_companies[AVG_EQUITY] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(drop=True)
@@ -117,7 +122,8 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     quarterly_companies = quarterly_companies.groupby(CODE).ffill()
 
     # Merge daily data and quarterly data.
-    available_companies = pd.merge(daily_companies, quarterly_companies, on=[CODE, FISCAL_QUARTER]).reset_index(drop=True)
+    available_companies = pd.merge(daily_companies, quarterly_companies, on=[CODE, FISCAL_QUARTER]).reset_index(
+        drop=True)
 
     # Return
     available_companies[RET_1] = available_companies.groupby(CODE).apply(
@@ -139,9 +145,12 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
 
     available_companies[EV] = available_companies[MKTCAP] + available_companies[FIN_LIAB] - available_companies[CASH]
     available_companies[EV_EBITDA] = available_companies[EV] / zero_to_nan(available_companies.ebitda12) / 1000
-    available_companies[EBIT_EV] = available_companies.op12 * 1000 / zero_to_nan(available_companies[EV]).reset_index(drop=True)
-    available_companies[CF_EV] = available_companies.cfo12 * 1000 / zero_to_nan(available_companies[EV]).reset_index(drop=True)
-    available_companies[S_EV] = available_companies.sales12 * 1000 / zero_to_nan(available_companies[EV]).reset_index(drop=True)
+    available_companies[EBIT_EV] = available_companies.op12 * 1000 / zero_to_nan(available_companies[EV]).reset_index(
+        drop=True)
+    available_companies[CF_EV] = available_companies.cfo12 * 1000 / zero_to_nan(available_companies[EV]).reset_index(
+        drop=True)
+    available_companies[S_EV] = available_companies.sales12 * 1000 / zero_to_nan(available_companies[EV]).reset_index(
+        drop=True)
 
     available_companies[E_P] = 1 / zero_to_nan(available_companies[PER]).reset_index(drop=True)
     available_companies[B_P] = 1 / zero_to_nan(available_companies[PBR]).reset_index(drop=True)
@@ -166,29 +175,48 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
 
     # Liquidity factors
     available_companies[TRADING_VOLUME_RATIO] = available_companies[TRADING_VOLUME] / available_companies[OUTCST]
-    available_companies[NET_PERSONAL_PURCHASE_RATIO] = available_companies[NET_PERSONAL_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_INSTITUTIONAL_FOREIGN_PURCHASE_RATIO] = available_companies[NET_INSTITUTIONAL_FOREIGN_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_INSTITUTIONAL_PURCHASE_RATIO] = available_companies[NET_INSTITUTIONAL_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_FINANCIAL_INVESTMENT_PURCHASE_RATIO] = available_companies[NET_FINANCIAL_INVESTMENT_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_INSURANCE_PURCHASE_RATIO] = available_companies[NET_INSURANCE_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_TRUST_PURCHASE_RATIO] = available_companies[NET_TRUST_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_PRIVATE_FUND_PURCHASE_RATIO] = available_companies[NET_PRIVATE_FUND_PURCHASE] / available_companies[OUTCST]
+    available_companies[NET_PERSONAL_PURCHASE_RATIO] = available_companies[NET_PERSONAL_PURCHASE] / available_companies[
+        OUTCST]
+    available_companies[NET_INSTITUTIONAL_FOREIGN_PURCHASE_RATIO] = available_companies[
+                                                                        NET_INSTITUTIONAL_FOREIGN_PURCHASE] / \
+                                                                    available_companies[OUTCST]
+    available_companies[NET_INSTITUTIONAL_PURCHASE_RATIO] = available_companies[NET_INSTITUTIONAL_PURCHASE] / \
+                                                            available_companies[OUTCST]
+    available_companies[NET_FINANCIAL_INVESTMENT_PURCHASE_RATIO] = available_companies[
+                                                                       NET_FINANCIAL_INVESTMENT_PURCHASE] / \
+                                                                   available_companies[OUTCST]
+    available_companies[NET_INSURANCE_PURCHASE_RATIO] = available_companies[NET_INSURANCE_PURCHASE] / \
+                                                        available_companies[OUTCST]
+    available_companies[NET_TRUST_PURCHASE_RATIO] = available_companies[NET_TRUST_PURCHASE] / available_companies[
+        OUTCST]
+    available_companies[NET_PRIVATE_FUND_PURCHASE_RATIO] = available_companies[NET_PRIVATE_FUND_PURCHASE] / \
+                                                           available_companies[OUTCST]
     available_companies[NET_BANK_PURCHASE_RATIO] = available_companies[NET_BANK_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_ETC_FINANCE_PURCHASE_RATIO] = available_companies[NET_ETC_FINANCE_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_PENSION_PURCHASE_RATIO] = available_companies[NET_PENSION_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_NATIONAL_PURCHASE_RATIO] = available_companies[NET_NATIONAL_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_ETC_CORPORATION_PURCHASE_RATIO] = available_companies[NET_ETC_CORPORATION_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_FOREIGN_PURCHASE_RATIO] = available_companies[NET_FOREIGN_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_REGISTERED_FOREIGN_PURCHASE_RATIO] = available_companies[NET_REGISTERED_FOREIGN_PURCHASE] / available_companies[OUTCST]
-    available_companies[NET_ETC_FOREIGN_PURCHASE_RATIO] = available_companies[NET_ETC_FOREIGN_PURCHASE] / available_companies[OUTCST]
+    available_companies[NET_ETC_FINANCE_PURCHASE_RATIO] = available_companies[NET_ETC_FINANCE_PURCHASE] / \
+                                                          available_companies[OUTCST]
+    available_companies[NET_PENSION_PURCHASE_RATIO] = available_companies[NET_PENSION_PURCHASE] / available_companies[
+        OUTCST]
+    available_companies[NET_NATIONAL_PURCHASE_RATIO] = available_companies[NET_NATIONAL_PURCHASE] / available_companies[
+        OUTCST]
+    available_companies[NET_ETC_CORPORATION_PURCHASE_RATIO] = available_companies[NET_ETC_CORPORATION_PURCHASE] / \
+                                                              available_companies[OUTCST]
+    available_companies[NET_FOREIGN_PURCHASE_RATIO] = available_companies[NET_FOREIGN_PURCHASE] / available_companies[
+        OUTCST]
+    available_companies[NET_REGISTERED_FOREIGN_PURCHASE_RATIO] = available_companies[NET_REGISTERED_FOREIGN_PURCHASE] / \
+                                                                 available_companies[OUTCST]
+    available_companies[NET_ETC_FOREIGN_PURCHASE_RATIO] = available_companies[NET_ETC_FOREIGN_PURCHASE] / \
+                                                          available_companies[OUTCST]
     available_companies[FOREIGN_OWNERSHIP_RATIO] = available_companies[FOREIGN_OWNERSHIP_RATIO] / 100
     available_companies[SHORT_SALE_VOLUME_RATIO] = available_companies[SHORT_SALE_VOLUME] / available_companies[OUTCST]
-    available_companies[SHORT_SALE_BALANCE_RATIO] = available_companies[SHORT_SALE_BALANCE] / available_companies[OUTCST]
+    available_companies[SHORT_SALE_BALANCE_RATIO] = available_companies[SHORT_SALE_BALANCE] / available_companies[
+        OUTCST]
     available_companies[SHORT_SALE_BALANCE_MOM] = available_companies.groupby(CODE).apply(
         lambda x: (x[SHORT_SALE_BALANCE_RATIO] - x[SHORT_SALE_BALANCE_RATIO].shift(1)) / zero_to_nan(
             np.abs(x[SHORT_SALE_BALANCE_RATIO].shift(1)))).reset_index(drop=True)
-    available_companies[SHARE_LENDING_VOLUME_RATIO] = available_companies[SHARE_LENDING_VOLUME] / available_companies[OUTCST]
-    available_companies[SHARE_LENDING_BALANCE_RATIO] = available_companies[SHARE_LENDING_BALANCE] / available_companies[OUTCST]
+    available_companies[SHARE_LENDING_VOLUME_RATIO] = available_companies[SHARE_LENDING_VOLUME] / available_companies[
+        OUTCST]
+    available_companies[SHARE_LENDING_BALANCE_RATIO] = available_companies[SHARE_LENDING_BALANCE] / available_companies[
+        OUTCST]
     available_companies[SHARE_LENDING_BALANCE_MOM] = available_companies.groupby(CODE).apply(
         lambda x: (x[SHARE_LENDING_BALANCE_RATIO] - x[SHARE_LENDING_BALANCE_RATIO].shift(1)) / zero_to_nan(
             np.abs(x[SHARE_LENDING_BALANCE_RATIO].shift(1)))).reset_index(drop=True)
@@ -265,7 +293,8 @@ def process_benchmarks(unprocessed_benchmarks: DataFrame) -> DataFrame:
                                        ignore_index=True, sort=False)
 
     # 2001년 5월 31일 이후 데이터만 남기기
-    processed_benchmarks = unprocessed_benchmarks.loc[unprocessed_benchmarks[DATE] >= '2001-05-31', :].reset_index(drop=True)
+    processed_benchmarks = unprocessed_benchmarks.loc[unprocessed_benchmarks[DATE] >= '2001-05-31', :].reset_index(
+        drop=True)
 
     return processed_benchmarks
 
@@ -279,3 +308,117 @@ def _calculate_total(code, kospi, kosdaq):
     total[BENCHMARK_RET_12] = (total[BENCHMARK_RET_12 + KOSPI] + total[BENCHMARK_RET_12 + KOSDAQ]) / 2
 
     return total.loc[:, BENCHMARK_RESULT_COLUMNS]
+
+
+def process_macro_daily(raw_unprocessed_macros: DataFrame) -> DataFrame:
+    # Data re-formatting
+    raw_newcols = raw_unprocessed_macros.loc[:, "Symbol Name"] + "_" + raw_unprocessed_macros.loc[:, "Item Name "]
+    unprocessed_macros = raw_unprocessed_macros.T.copy(deep=True)
+
+    # get only data
+    unprocessed_macros = unprocessed_macros[
+        unprocessed_macros.reset_index()['index'].apply(lambda x: type(x) == datetime).values].copy(deep=True)
+    unprocessed_macros.columns = raw_newcols
+
+    # make percent to non-percent
+    unprocessed_macros = unprocessed_macros.apply(lambda x: x * 0.01 if "(%)" in x.name else x).copy(deep=True)
+
+    # generating meaningful macro variables
+    unprocessed_macros["*_*term_spread_kor"] = unprocessed_macros["ECO_시장금리:국고10년(%)"] - unprocessed_macros[
+        "ECO_시장금리:국고1년(%)"]
+    unprocessed_macros["*_*term_spread_us"] = unprocessed_macros["ECO_국채금리_미국국채(10년)(%)"] - unprocessed_macros[
+        "ECO_국채금리_미국국채(1년)(%)"]
+    unprocessed_macros["*_*credit_spread_kor"] = unprocessed_macros["ECO_시장금리:회사채(무보증3년BBB-)(%)"] - unprocessed_macros[
+        "ECO_시장금리:회사채(무보증3년AA-)(%)"]
+    unprocessed_macros["*_*log_usd2krw"] = unprocessed_macros["ECO_시장평균_미국(달러)(통화대원)"].apply(lambda x: np.log(x))
+    unprocessed_macros["*_*log_chy2krw"] = unprocessed_macros["ECO_시장평균_중국(위안)(통화대원)"].apply(lambda x: np.log(x))
+    unprocessed_macros["*_*log_euro2krw"] = unprocessed_macros["ECO_시장평균_EU(유로)(통화대원)"].apply(lambda x: np.log(x))
+    unprocessed_macros["*_*ted_spread"] = unprocessed_macros["ECO_리보(미 달러) 1개월(%)"] - unprocessed_macros[
+        "ECO_국채금리_미국국채(1개월)(%)"]
+    unprocessed_macros["*_*log_nyse"] = unprocessed_macros["ECO_미국 NYSE Composite(종가)(Pt)"].apply(lambda x: np.log(x))
+    unprocessed_macros["*_*log_nasdaq"] = unprocessed_macros["ECO_미국 Nasdaq Composite(종가)(Pt)"].apply(
+        lambda x: np.log(x))
+    unprocessed_macros["*_*log_semi_conductor"] = unprocessed_macros["ECO_NAND 8Gb 1Gx8 (MLC)(단기)($/개)"].apply(
+        lambda x: np.log(x))
+    unprocessed_macros["*_*log_dollar_index"] = unprocessed_macros["ECO_미국달러지수 (선물, NYBOT)(Pt)"].apply(
+        lambda x: np.log(x))
+    unprocessed_macros["*_*log_oil"] = unprocessed_macros["ECO_주요상품선물_WTI-1M($/bbl)"].apply(lambda x: np.log(x))
+
+    # columns to use
+    newcols = [col for col in unprocessed_macros.columns if col[0:3] == '*_*']
+
+    # get preprocessed macro
+    processed_macros_fromdaily = unprocessed_macros[newcols]
+    processed_macros_fromdaily.columns = [col.replace("*_*", "") for col in processed_macros_fromdaily.columns]
+
+    # get only last observations of each month
+    processed_macros_lastobs = processed_macros_fromdaily.resample("M").last()
+    processed_macros_lastobs.index.name = "date"
+
+    # calculate volatility
+    processed_macros_vol = processed_macros_fromdaily.resample("M").apply(lambda x: np.std(x))
+    processed_macros_vol.columns = [col + "_vol" for col in processed_macros_vol.columns]
+    processed_macros_vol.index.name = "date"
+
+    # merge monthly observations and volatility of each variable
+    macros_from_daily = processed_macros_lastobs.merge(processed_macros_vol, how="left", left_index=True,
+                                                       right_index=True)
+
+    return macros_from_daily
+
+
+def process_macro_monthly(raw_unprocessed_macros: DataFrame) -> DataFrame:
+    # Data re-formatting
+    raw_newcols = raw_unprocessed_macros.loc[:, "Symbol Name"] + "_" + raw_unprocessed_macros.loc[:, "Item Name "]
+    unprocessed_macros = raw_unprocessed_macros.T.copy(deep=True)
+
+    # get only data
+    unprocessed_macros = unprocessed_macros[
+        unprocessed_macros.reset_index()['index'].apply(lambda x: type(x) == datetime).values].copy(deep=True)
+    unprocessed_macros.columns = raw_newcols
+
+    # make percent to non-percent
+    unprocessed_macros = unprocessed_macros.apply(lambda x: x * 0.01 if "(%)" in x.name else x).copy(deep=True)
+
+    # generate meaningful varibles
+    unprocessed_macros["*_*log_export"] = unprocessed_macros["ECO_수출금액지수(총지수)(2010=100)"].apply(lambda x: np.log(x))
+    unprocessed_macros["*_*log_import"] = unprocessed_macros["ECO_수입금액지수(총지수)(2010=100)"].apply(lambda x: np.log(x))
+    unprocessed_macros["*_*log_industry_production_us"] = unprocessed_macros["ECO_미국(계절변동조정)(2010=100)"].apply(
+        lambda x: np.log(x))
+    unprocessed_macros["*_*log_industry_production_euro"] = unprocessed_macros["ECO_유로지역(계절변동조정 OECD)(2010=100)"].apply(
+        lambda x: np.log(x))
+    unprocessed_macros["*_*log_industry_production_kor"] = unprocessed_macros["ECO_산업생산지수(계절조정)(2010=100)"].apply(
+        lambda x: np.log(x))
+
+    newcols = [col for col in unprocessed_macros.columns if col[0:3] == '*_*']
+
+    # get only meaningful variables
+    macros_from_monthly = unprocessed_macros[newcols]
+    macros_from_monthly.columns = [col.replace("*_*", "") for col in macros_from_monthly.columns]
+    macros_from_monthly.index.name = "date"
+
+    return macros_from_monthly
+
+
+def merging_with_macros(companies, macro_from_daily, macro_from_monthly: DataFrame) -> DataFrame:
+    macro = macro_from_daily.merge(macro_from_monthly, how="left", left_index=True, right_index=True)
+
+    LAGGING_VARIABLES = [LOG_EXPORT, LOG_IMPORT, LOG_INDUSTRY_PRODUCTION_US, LOG_INDUSTRY_PRODUCTION_EURO,
+                         LOG_INDUSTRY_PRODUCTION_KOR]
+
+    CONTEMPORANEOUS_VARIABLES = list(set(list(macro.columns)) - set(LAGGING_VARIABLES))
+
+    macro_contemporaneous = macro[CONTEMPORANEOUS_VARIABLES].copy(deep=True)
+    macro_lagging = macro[LAGGING_VARIABLES].copy(deep=True)
+
+    companies = companies.merge(macro_contemporaneous, how='left', left_on="date", right_index=True)
+
+    macro_lagging['mdate_lag'] = macro_lagging.index + MonthEnd(-1)
+    macro_lagging = macro_lagging.reset_index().set_index('mdate_lag').copy(deep=True)
+    macro_lagging = macro_lagging.drop(columns='date').copy(deep=True)
+
+
+    # Lagging
+    companies = companies.merge(macro_lagging, how='left', left_on="date", right_index=True)
+
+    return companies
