@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name             = 'ksif',
-    version          = '2019.2.1',
+    version          = '2019.2.19',
     description      = 'Quantitative investment tools for KSIF',
     long_description = long_description,
     author           = 'KSIF Tech',

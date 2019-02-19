@@ -15,7 +15,7 @@ from preprocess.core.utils import zero_to_nan
 YEAR = 'year'
 MONTH_DAY = 'month_day'
 
-EV = 'ev'
+EV = 'ev'  # 시장가격
 AVG_EQUITY = 'avg_equity'
 AVG_ASSET = 'avg_asset'
 
