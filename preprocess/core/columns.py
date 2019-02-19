@@ -82,6 +82,25 @@ EQUITY = 'equity'  # 자본(*)(천원)
 TANG_ASSET = 'tang_asset'  # 유형자산(*)(천원)
 FIN_LIAB = 'fin_liab'  # *총금융부채(천원)
 
+TERM_SPREAD_KOR = "term_spread_kor"  # 장단기 국채 금리차이 10 - 1, 한국 국채; 장기 경제 전망
+TERM_SPREAD_US = "term_spread_us"  # 장단기 국채 금리차이 10 - 1, 미국 국채
+CREDIT_SPREAD_KOR = "credit_spread_kor"  # 회사채 BBB- - AA- ; 신용위험도
+LOG_USD2KRW = "log_usd2krw"  # 1달러 당 원화 가격의 로그
+LOG_CHY2KRW = "log_chy2krw"  # 1위안 당 원화 가격의 로그
+LOG_EURO2KRW = "log_euro2krw"  # 1유로 당 원화 가격의 로그
+TED_SPREAD = "ted_spread"  # 리보금리 - 미국 국채 스프레드 (1개월물) ; 미국 역외 달러 조달의 위험성 ; 무역과 internal banking system의 안정성 지표
+LOG_NYSE = "log_nyse"  # 뉴욕증권거래소 지수의 로그
+LOG_NASDAQ = "log_nasdaq"  # 나스닥 거래소 지수의 로그
+LOG_SEMI_CONDUCTOR = "log_semi_conductor"  # 반도체가의 로그
+LOG_DOLLAR_INDEX = "log_dollar_index"  # 달러 인덱스의 로그; 달러가 다른 통화대비 얼마나 강세인지 보여줌
+LOG_OIL = "log_oil"  # 유가의 로그
+
+LOG_EXPORT = "log_export"  # 한국의 수출량 로그
+LOG_IMPORT = "log_import"  # 한국의 수입량 로그
+LOG_INDUSTRY_PRODUCTION_US = "log_industry_production_us"  # 미국의 산업생산 로그
+LOG_INDUSTRY_PRODUCTION_EURO = "log_industry_production_euro"  # 유로지역의 산업생산 로그
+LOG_INDUSTRY_PRODUCTION_KOR = "log_industry_production_kor"  # 한국의 산업생산 로그
+
 QUARTERLY_DATA = [
     CODE, DATE, ASSETS, CUR_ASSETS, LIAB, CUR_LIAB, INV, SALES, GP, NI_OWNER, NI, INT_INC, INT_EXP, CFO, AR,
     ALLOWANCE_AR_, AP, EBIT, EBITDA, CASH, TAX, RES_EXP, DIVP, EQUITY, TANG_ASSET, FIN_LIAB,
