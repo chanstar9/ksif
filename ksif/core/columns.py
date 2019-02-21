@@ -192,6 +192,7 @@ KOSPI_SMALL = '코스피 소형주'
 TOTAL_LARGE = '코스피/코스닥 대형주 평균'
 TOTAL_MIDDLE = '코스피/코스닥 중형주 평균'
 TOTAL_SMALL = '코스피/코스닥 소형주 평균'
+CD91 = 'CD 91일'
 
 BENCHMARK_RET_1 = 'benchmark_return_1'
 BENCHMARK_RET_3 = 'benchmark_return_3'
@@ -203,4 +204,5 @@ BENCHMARKS = [
     KOSDAQ, KOSDAQ_LARGE, KOSDAQ_MIDDLE, KOSDAQ_SMALL,
     KOSPI, KOSPI_200, KOSPI_LARGE, KOSPI_MIDDLE, KOSPI_SMALL,
     TOTAL_LARGE, TOTAL_MIDDLE, TOTAL_SMALL,
+    CD91,
 ]
