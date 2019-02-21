@@ -19,11 +19,10 @@ SYMBOL_NAME = 'Symbol Name'
 
 DIR = 'data/{}.xlsx'
 COMPANY_UNNECESSARY_COLUMNS = [KIND, NAME, ITEM_NAME, ITEM, FREQUENCY]
-
-
 BENCHMARK_UNNECESSARY_COLUMNS = [SYMBOL, KIND, ITEM, ITEM_NAME, FREQUENCY]
-# noinspection PyShadowingNames
 
+
+# noinspection PyShadowingNames
 def read_companies(file_name: str) -> pd.DataFrame:
     """
     :param file_name: (String) A file name of the raw data Excel file, except '.xlsx'.
@@ -94,6 +93,8 @@ def read_companies(file_name: str) -> pd.DataFrame:
     melted_companies = melted_companies.sort_values([CODE, DATE]).reset_index(drop=True)
 
     return melted_companies
+
+
 # noinspection PyShadowingNames
 
 def read_benchmarks(file_name: str) -> pd.DataFrame:
@@ -107,16 +108,23 @@ def read_benchmarks(file_name: str) -> pd.DataFrame:
     """
     # Read excel file.
     raw_benchmarks = pd.read_excel(DIR.format(file_name), sheet_name=BENCHMARK, skiprows=8)
+    raw_macro_from_monthly = pd.read_excel(DIR.format(file_name), sheet_name=MACRO_MONTHLY, skiprows=8)
+
+    # Use only CD91
+    raw_risk_free = raw_macro_from_monthly.loc[raw_macro_from_monthly[ITEM_NAME] == '시장금리:CD유통수익률(91)(%)', :]
 
     # Remove unnecessary columns, for example, Symbol, Kind, Item, Item Name, Frequency
     raw_benchmarks = raw_benchmarks.drop(columns=BENCHMARK_UNNECESSARY_COLUMNS)
+    raw_risk_free = raw_risk_free.drop(columns=BENCHMARK_UNNECESSARY_COLUMNS)
+    raw_risk_free[SYMBOL_NAME] = CD91
 
     # Melt benchmarks. Symbole name -> code, column names -> date
-    melted_benchmarks = pd.melt(raw_benchmarks, id_vars=[SYMBOL_NAME], var_name=DATE, value_name=PRICE_INDEX)
-    melted_benchmarks[DATE] = pd.to_datetime(melted_benchmarks[DATE], format='%Y-$m-%D')
-    melted_benchmarks = melted_benchmarks.rename(columns={SYMBOL_NAME: CODE})
+    melted_benchmarks = _melt_benchmark(raw_benchmarks)
+    melted_risk_free = _melt_benchmark(raw_risk_free)
 
-    melted_benchmarks = melted_benchmarks.dropna()
+    # Calculate a risk free rate index
+    melted_risk_free[PRICE_INDEX] = (((melted_risk_free[PRICE_INDEX] / 100) + 1) ** (1 / 12)).cumprod()
+    melted_benchmarks = pd.concat([melted_benchmarks, melted_risk_free])
 
     # Sort by code and date
     melted_benchmarks = melted_benchmarks.sort_values([CODE, DATE]).reset_index(drop=True)
@@ -124,18 +132,23 @@ def read_benchmarks(file_name: str) -> pd.DataFrame:
     return melted_benchmarks
 
 
+def _melt_benchmark(raw):
+    melted = pd.melt(raw, id_vars=[SYMBOL_NAME], var_name=DATE, value_name=PRICE_INDEX)
+    melted[DATE] = pd.to_datetime(melted[DATE], format='%Y-$m-%D')
+    melted = melted.rename(columns={SYMBOL_NAME: CODE})
+    melted = melted.dropna()
+    return melted
+
+
 def read_macro_daily(file_name):
-
-    # Read excel file
-    #temp = pd.read_excel("data/181231.xlsx", sheet_name="macro_daily")
+    # Read excel file.
     raw_macro_from_daily = pd.read_excel(DIR.format(file_name), sheet_name=MACRO_DAILY, skiprows=8)
-
-    #macros_from_daily = process_macro_daily(raw_unprocessed_macros)
 
     return raw_macro_from_daily
 
+
 def read_macro_monthly(file_name):
-    
+    # Read excel file.
     raw_macro_from_monthly = pd.read_excel(DIR.format(file_name), sheet_name=MACRO_MONTHLY, skiprows=8)
 
     return raw_macro_from_monthly
