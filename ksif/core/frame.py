@@ -196,6 +196,8 @@ class Portfolio(DataFrame):
             sharpe_ratio                | (float) Sharpe ratio
             information_ratio           | (float) Average excess return / tracking error
             compound_annual_growth_rate | (float) Annual compound return of the portfolio
+            maximum_drawdown            | (float) The maximum loss from a peak to a trough of a portfolio,
+                                                  before a new peak is attained
         """
         if benchmark is not None and benchmark not in BENCHMARKS:
             raise ValueError('{} is not registered.'.format(benchmark))
@@ -224,11 +226,15 @@ class Portfolio(DataFrame):
                                       [DATE, CD91]
                                   ], on=DATE)
 
+        # Portfolio return, benchmark return
         portfolio_return = self._calculate_total_return(merged_returns[PORTFOLIO_RETURN])
         benchmark_return = self._calculate_total_return(merged_returns[BENCHMARK_RET_1])
 
+        # CAGR
         period_len = len(portfolio[DATE].unique())
         compound_annual_growth_rate = (portfolio_return + 1) ** (12 / period_len) - 1
+
+        # Active return, active risk, information ratio
         benchmark_excess_returns = merged_returns[PORTFOLIO_RETURN] - merged_returns[BENCHMARK_RET_1]
 
         average_excess_return = np.average(benchmark_excess_returns)
@@ -242,6 +248,10 @@ class Portfolio(DataFrame):
         risk_free_excess_returns = merged_returns[PORTFOLIO_RETURN] - merged_returns[CD91]
         sharpe_ratio = np.average(risk_free_excess_returns) / np.std(risk_free_excess_returns)
 
+        # Maximum drawdown
+        portfolio_cumulative_assets = merged_returns[PORTFOLIO_RETURN].add(1).cumprod()
+        maximum_drawdown = portfolio_cumulative_assets.div(portfolio_cumulative_assets.cummax()).sub(1).min()
+
         result = {
             PORTFOLIO_RETURN: portfolio_return,
             BENCHMARK_RETURN: benchmark_return,
@@ -250,6 +260,7 @@ class Portfolio(DataFrame):
             SR: sharpe_ratio,
             IR: information_ratio,
             CAGR: compound_annual_growth_rate,
+            MDD: maximum_drawdown,
         }
 
         if show_plot:
