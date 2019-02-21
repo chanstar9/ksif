@@ -189,18 +189,23 @@ class Portfolio(DataFrame):
         :param show_plot: (bool) If show_plot is True, show a performance summary graph.
 
         :return result: (dict)
-            portfolio_return            | (float) Total compound return of the portfolio.
-            benchmark_return            | (float) Total compound return of the benchmark.
-            active_return               | (float) Annualized average excess return.
-            active_risk                 | (float) Annualized tracking error.
+            portfolio_return            | (float) Total compound return of the portfolio
+            benchmark_return            | (float) Total compound return of the benchmark
+            active_return               | (float) Annualized average excess return
+            active_risk                 | (float) Annualized tracking error
+            sharpe_ratio                | (float) Sharpe ratio
             information_ratio           | (float) Average excess return / tracking error
-            compound_annual_growth_rate | (float) Annual compound return of the portfolio.
+            compound_annual_growth_rate | (float) Annual compound return of the portfolio
+            maximum_drawdown            | (float) The maximum loss from a peak to a trough of a portfolio,
+                                                  before a new peak is attained
         """
+        if benchmark is not None and benchmark not in BENCHMARKS:
+            raise ValueError('{} is not registered.'.format(benchmark))
+
         portfolio = dc(self)
 
-        if benchmark is not None:
-            if benchmark not in BENCHMARKS:
-                raise ValueError('{} is not registered.'.format(benchmark))
+        if benchmark is None:
+            benchmark = self._benchmark
 
         portfolio_returns = pd.DataFrame()
         if weighted:
@@ -213,16 +218,23 @@ class Portfolio(DataFrame):
             )
 
         portfolio_returns = portfolio_returns.reset_index()
-        merged_returns = pd.merge(portfolio_returns, portfolio.get_benchmark()[
+        merged_returns = pd.merge(portfolio_returns, portfolio.get_benchmark(benchmark=benchmark)[
             [DATE, BENCHMARK_RET_1]
         ], on=DATE)
+        merged_returns = pd.merge(merged_returns,
+                                  portfolio.get_benchmark(CD91).rename(columns={BENCHMARK_RET_1: CD91})[
+                                      [DATE, CD91]
+                                  ], on=DATE)
 
+        # Portfolio return, benchmark return
         portfolio_return = self._calculate_total_return(merged_returns[PORTFOLIO_RETURN])
-
         benchmark_return = self._calculate_total_return(merged_returns[BENCHMARK_RET_1])
 
+        # CAGR
         period_len = len(portfolio[DATE].unique())
         compound_annual_growth_rate = (portfolio_return + 1) ** (12 / period_len) - 1
+
+        # Active return, active risk, information ratio
         benchmark_excess_returns = merged_returns[PORTFOLIO_RETURN] - merged_returns[BENCHMARK_RET_1]
 
         average_excess_return = np.average(benchmark_excess_returns)
@@ -232,19 +244,34 @@ class Portfolio(DataFrame):
         active_risk = tracking_error * np.sqrt(12)
         information_ratio = average_excess_return / tracking_error
 
+        # Sharpe ratio
+        risk_free_excess_returns = merged_returns[PORTFOLIO_RETURN] - merged_returns[CD91]
+        sharpe_ratio = np.average(risk_free_excess_returns) / np.std(risk_free_excess_returns)
+
+        # Maximum drawdown
+        portfolio_cumulative_assets = merged_returns[PORTFOLIO_RETURN].add(1).cumprod()
+        maximum_drawdown = portfolio_cumulative_assets.div(portfolio_cumulative_assets.cummax()).sub(1).min()
+
         result = {
             PORTFOLIO_RETURN: portfolio_return,
             BENCHMARK_RETURN: benchmark_return,
             ACTIVE_RETURN: active_return,
             ACTIVE_RISK: active_risk,
+            SR: sharpe_ratio,
             IR: information_ratio,
             CAGR: compound_annual_growth_rate,
+            MDD: maximum_drawdown,
         }
 
         if show_plot:
-            merged_returns[DATE] = pd.to_datetime(merged_returns[DATE])
-            merged_returns.set_index(keys=[DATE], inplace=True)
-            create_performance_summary(merged_returns, other_cols=range(1, 2))
+            plotting_returns = dc(merged_returns).loc[:, [DATE, PORTFOLIO_RETURN, BENCHMARK_RET_1]]
+            plotting_returns.rename(columns={
+                PORTFOLIO_RETURN: 'Portfolio',
+                BENCHMARK_RET_1: benchmark
+            }, inplace=True)
+            plotting_returns[DATE] = pd.to_datetime(plotting_returns[DATE])
+            plotting_returns.set_index(keys=[DATE], inplace=True)
+            create_performance_summary(plotting_returns, other_cols=range(1, 2))
             plt.show()
 
         return result
