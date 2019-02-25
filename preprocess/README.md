@@ -19,7 +19,8 @@
     - 자료주기: 월간
     - 통화: KRW
     - 금액: Default
-    - 비영업일: Exclusive
+    - 비영업일: Previous
+    - 주말포함: NONE
 ### etf sheet
 - Code
     - KSE+KOSDAQ
@@ -35,7 +36,8 @@
     - 자료주기: 월간
     - 통화: KRW
     - 금액: Default
-    - 비영업일: Exclusive
+    - 비영업일: Previous
+    - 주말포함: NONE
 ### benchmark sheet
 - Code
     - benchmark
@@ -46,7 +48,8 @@
     - 자료주기: 월간
     - 통화: KRW
     - 금액: Default
-    - 비영업일: Exclusive
+    - 비영업일: Previous
+    - 주말포함: NONE
 ### macro_daily sheet
 - Code
     - 없음
@@ -57,7 +60,8 @@
     - 자료주기: 일간
     - 통화: KRW
     - 금액: Default
-    - 비영업일: Exclusive
+    - 비영업일: Previous
+    - 주말포함: NONE
 ### macro_monthly sheet
 - Code
     - 없음
@@ -68,7 +72,8 @@
     - 자료주기: 월간
     - 통화: KRW
     - 금액: Default
-    - 비영업일: Exclusive
+    - 비영업일: Previous
+    - 주말포함: NONE
 ### factor sheet
 - Code
     - factor
@@ -79,7 +84,8 @@
     - 자료주기: 월간
     - 통화: KRW
     - 금액: Default
-    - 비영업일: Exclusive
+    - 비영업일: Previous
+    - 주말포함: NONE
 ## 데이터무결성 검증 1
 0. 2019년 2월의 데이터 중 종가가 없는 회사코드와 회사명을 복사해
 data_catalog 구글스프레드시트의 check 시트에 붙여넣고 unfiltered column이 TRUE인
