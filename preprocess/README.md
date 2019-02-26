@@ -2,7 +2,7 @@
 ## 소스 데이터 다운로드
 (2019년 3월 1일 현재 기준)
 ### 파일명
-180831.xlsx
+190228.xlsx
 ### company sheet
 - Code
     - KSE+KOSDAQ
