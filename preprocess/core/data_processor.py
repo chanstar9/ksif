@@ -3,12 +3,14 @@
 :Author: Jaekyoung Kim
 :Date: 2018. 7. 6.
 """
-import pandas as pd
-from pandas import DataFrame
-import numpy as np
 from copy import copy
 from datetime import datetime
+
+import numpy as np
+import pandas as pd
+from pandas import DataFrame
 from pandas.tseries.offsets import MonthEnd
+
 from preprocess.core.columns import *
 from preprocess.core.utils import zero_to_nan
 
@@ -18,9 +20,6 @@ MONTH_DAY = 'month_day'
 EV = 'ev'  # 시장가격
 AVG_EQUITY = 'avg_equity'
 AVG_ASSET = 'avg_asset'
-
-KOSDAQ = '_kosdaq'
-KOSPI = '_kospi'
 
 
 def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
@@ -300,12 +299,15 @@ def process_benchmarks(unprocessed_benchmarks: DataFrame) -> DataFrame:
 
 
 def _calculate_total(code, kospi, kosdaq):
-    total = pd.merge(left=kospi, right=kosdaq, on=[DATE], suffixes=(KOSPI, KOSDAQ))
+    kosdaq_suffix = '_kosdaq'
+    kospi_suffix = '_kospi'
+
+    total = pd.merge(left=kospi, right=kosdaq, on=[DATE], suffixes=(kospi_suffix, kosdaq_suffix))
     total[CODE] = code
-    total[BENCHMARK_RET_1] = (total[BENCHMARK_RET_1 + KOSPI] + total[BENCHMARK_RET_1 + KOSDAQ]) / 2
-    total[BENCHMARK_RET_3] = (total[BENCHMARK_RET_3 + KOSPI] + total[BENCHMARK_RET_3 + KOSDAQ]) / 2
-    total[BENCHMARK_RET_6] = (total[BENCHMARK_RET_6 + KOSPI] + total[BENCHMARK_RET_6 + KOSDAQ]) / 2
-    total[BENCHMARK_RET_12] = (total[BENCHMARK_RET_12 + KOSPI] + total[BENCHMARK_RET_12 + KOSDAQ]) / 2
+    total[BENCHMARK_RET_1] = (total[BENCHMARK_RET_1 + kospi_suffix] + total[BENCHMARK_RET_1 + kosdaq_suffix]) / 2
+    total[BENCHMARK_RET_3] = (total[BENCHMARK_RET_3 + kospi_suffix] + total[BENCHMARK_RET_3 + kosdaq_suffix]) / 2
+    total[BENCHMARK_RET_6] = (total[BENCHMARK_RET_6 + kospi_suffix] + total[BENCHMARK_RET_6 + kosdaq_suffix]) / 2
+    total[BENCHMARK_RET_12] = (total[BENCHMARK_RET_12 + kospi_suffix] + total[BENCHMARK_RET_12 + kosdaq_suffix]) / 2
 
     return total.loc[:, BENCHMARK_RESULT_COLUMNS]
 
@@ -403,20 +405,19 @@ def process_macro_monthly(raw_unprocessed_macros: DataFrame) -> DataFrame:
 def merging_with_macros(companies, macro_from_daily, macro_from_monthly: DataFrame) -> DataFrame:
     macro = macro_from_daily.merge(macro_from_monthly, how="left", left_index=True, right_index=True)
 
-    LAGGING_VARIABLES = [LOG_EXPORT, LOG_IMPORT, LOG_INDUSTRY_PRODUCTION_US, LOG_INDUSTRY_PRODUCTION_EURO,
+    lagging_variables = [LOG_EXPORT, LOG_IMPORT, LOG_INDUSTRY_PRODUCTION_US, LOG_INDUSTRY_PRODUCTION_EURO,
                          LOG_INDUSTRY_PRODUCTION_KOR]
 
-    CONTEMPORANEOUS_VARIABLES = list(set(list(macro.columns)) - set(LAGGING_VARIABLES))
+    contemporaneous_variables = list(set(list(macro.columns)) - set(lagging_variables))
 
-    macro_contemporaneous = macro[CONTEMPORANEOUS_VARIABLES].copy(deep=True)
-    macro_lagging = macro[LAGGING_VARIABLES].copy(deep=True)
+    macro_contemporaneous = macro[contemporaneous_variables].copy(deep=True)
+    macro_lagging = macro[lagging_variables].copy(deep=True)
 
     companies = companies.merge(macro_contemporaneous, how='left', left_on="date", right_index=True)
 
     macro_lagging['mdate_lag'] = macro_lagging.index + MonthEnd(-1)
     macro_lagging = macro_lagging.reset_index().set_index('mdate_lag').copy(deep=True)
     macro_lagging = macro_lagging.drop(columns='date').copy(deep=True)
-
 
     # Lagging
     companies = companies.merge(macro_lagging, how='left', left_on="date", right_index=True)

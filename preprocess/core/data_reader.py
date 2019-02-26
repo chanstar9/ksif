@@ -3,8 +3,8 @@
 :Author: Jaekyoung Kim
 :Date: 2018. 6. 19.
 """
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from preprocess.core.columns import *
 
@@ -90,6 +90,10 @@ def read_companies(file_name: str) -> pd.DataFrame:
     # There are no SHORT_SALE_BALANCE before 2016-06-30
     melted_companies.loc[melted_companies[DATE] < '2016-06-30', SHORT_SALE_BALANCE] = np.nan
 
+    # Make the date the last day of the month
+    # melted_companies[DATE] = melted_companies[DATE].apply(last_day_of_month)
+
+    # Sort by code and date
     melted_companies = melted_companies.sort_values([CODE, DATE]).reset_index(drop=True)
 
     return melted_companies
