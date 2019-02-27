@@ -7,8 +7,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from ksif import Portfolio
-from ksif.core.columns import PER
+from ksif import *
 
 
 class TestPeriodicPercentage(TestCase):

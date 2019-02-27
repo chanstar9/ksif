@@ -11,6 +11,7 @@ import requests
 import urllib3
 
 from ..errors import GoogleQueryException
+from ..core.columns import DATE
 
 urllib3.disable_warnings()  # Ignore InsecureRequestWarning.
 
@@ -62,7 +63,7 @@ def query_google_csv_file(csv_file_id) -> DataFrame:
         params = {'id': csv_file_id, 'confirm': token}
         response = session.get(CSV_FILE_DOWNLOAD_REQUEST_URL, params=params, stream=True)
 
-    csv_file = pd.read_csv(StringIO(response.content.decode(encoding='UTF-8', errors='strict')))
+    csv_file = pd.read_csv(StringIO(response.content.decode(encoding='UTF-8', errors='strict')), parse_dates=[DATE])
     session.close()
     return csv_file
 

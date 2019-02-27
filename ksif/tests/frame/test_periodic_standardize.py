@@ -5,8 +5,7 @@
 """
 from unittest import TestCase
 
-from ksif import Portfolio, columns
-from ksif.core.columns import DATE
+from ksif import *
 
 
 class TestPeriodicStandardize(TestCase):
@@ -15,9 +14,9 @@ class TestPeriodicStandardize(TestCase):
         pf = Portfolio()
 
         prefix = 'std_'
-        std_per = prefix + columns.PER
+        std_per = prefix + PER
 
-        pf = pf.periodic_standardize(factor=columns.PER, prefix=prefix)
+        pf = pf.periodic_standardize(factor=PER, prefix=prefix)
 
         # Periodic means are almost 0.
         pf.groupby(by=DATE)[std_per].mean().apply(lambda x: self.assertAlmostEqual(x, 0))

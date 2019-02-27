@@ -5,11 +5,13 @@
 """
 from ksif.core.columns import *
 
+# Company
 # Names of raw excel sheets
 COMPANY = 'company'
 BENCHMARK = 'benchmark'
 MACRO_DAILY = 'macro_daily'
 MACRO_MONTHLY = 'macro_monthly'
+FACTOR = 'factor'
 
 # Special words for companies
 SPAC = '스팩'
@@ -87,7 +89,7 @@ QUARTERLY_DATA = [
     ALLOWANCE_AR_, AP, EBIT, EBITDA, CASH, TAX, RES_EXP, DIVP, EQUITY, TANG_ASSET, FIN_LIAB,
 ]
 
-RENAMES = {
+COMPANY_RENAMES = {
     'FnGuide Sector': FN_GUIDE_SECTOR,
     'FnGuide Industry Group 27': FN_GUIDE_INDUSTRY_GROUP_27,
     '수정주가 (현금배당반영)(원)': ADJP,
@@ -167,4 +169,17 @@ COMPANY_RESULT_COLUMNS = list(
     )
 )
 
+# Benchmark
 BENCHMARK_RESULT_COLUMNS = [CODE, DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]
+
+# Factor
+BIG_HIGH = 'Size & Book Value(2X3) 대형 - High'
+BIG_MEDIUM = 'Size & Book Value(2X3) 대형 - Medium'
+BIG_LOW = 'Size & Book Value(2X3) 대형 - Low'
+SMALL_HIGH = 'Size & Book Value(2X3) 소형 - High'
+SMALL_MEDIUM = 'Size & Book Value(2X3) 소형 - Medium'
+SMALL_LOW = 'Size & Book Value(2X3) 소형 - Low'
+
+FACTOR_RET = 'factor_return'
+
+FACTOR_RESULT_COLUMNS = [DATE, SMB, HML]

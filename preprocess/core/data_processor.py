@@ -66,8 +66,8 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     ).reset_index(drop=True)
 
     quarterly_companies['nopat12'] = (
-            quarterly_companies['op12'] - quarterly_companies.groupby(CODE)[TAX].rolling(4).sum().reset_index(
-        drop=True))
+            quarterly_companies['op12'] - quarterly_companies.groupby(CODE)[TAX].rolling(4).sum().reset_index(drop=True)
+    )
 
     quarterly_companies[AVG_ASSET] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(drop=True)
     quarterly_companies[AVG_EQUITY] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(drop=True)
@@ -238,7 +238,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
 
 def process_benchmarks(unprocessed_benchmarks: DataFrame) -> DataFrame:
     """
-    Calculate 1 month return of benchmarks.
+    Calculate returns of benchmarks.
 
     :param unprocessed_benchmarks: (DataFrame)
         code        | (String)
@@ -246,9 +246,12 @@ def process_benchmarks(unprocessed_benchmarks: DataFrame) -> DataFrame:
         price_index | (float)
 
     :return processed_benchmarks: (DataFrame)
-        code        | (String)
-        date        | (Datetime)
-        ret_1       | (float)
+        code                | (String)
+        date                | (Datetime)
+        benchmark_return_1  | (float)
+        benchmark_return_3  | (float)
+        benchmark_return_6  | (float)
+        benchmark_return_12 | (float)
     """
     unprocessed_benchmarks = unprocessed_benchmarks.reset_index(drop=True)
     unprocessed_benchmarks[BENCHMARK_RET_1] = unprocessed_benchmarks.groupby(CODE).apply(
@@ -298,6 +301,44 @@ def process_benchmarks(unprocessed_benchmarks: DataFrame) -> DataFrame:
     return processed_benchmarks
 
 
+def process_factors(transposed_factors: DataFrame) -> DataFrame:
+    """
+    Calculate SMB and HML.
+
+    :param transposed_factors: (DataFrame)
+        key
+            date            | (Datetime)
+        column
+            BIG_HIGH        | (float) Size & Book Value(2X3) 대형 - High
+            BIG_MEDIUM      | (float) Size & Book Value(2X3) 대형 - Medium
+            BIG_LOW         | (float) Size & Book Value(2X3) 대형 - Low
+            SMALL_HIGH      | (float) Size & Book Value(2X3) 소형 - High
+            SMALL_MEDIUM    | (float) Size & Book Value(2X3) 소형 - Medium
+            SMALL_LOW       | (float) Size & Book Value(2X3) 소형 - Low
+
+    :return processed_factors: (DataFrame)
+        code    | (String)
+        date    | (Datetime)
+        SMB     | (float)
+        HML     | (float)
+    """
+    transposed_factors.loc[:, SMB] = \
+        (transposed_factors.loc[:, SMALL_LOW] + transposed_factors.loc[:, SMALL_MEDIUM]
+         + transposed_factors.loc[:, SMALL_HIGH] - transposed_factors.loc[:, BIG_LOW]
+         - transposed_factors.loc[:, BIG_MEDIUM] - transposed_factors.loc[:, BIG_HIGH]) / 3
+    transposed_factors.loc[:, HML] = \
+        (transposed_factors.loc[:, SMALL_LOW] + transposed_factors.loc[:, BIG_LOW]
+         - transposed_factors.loc[:, SMALL_HIGH] - transposed_factors.loc[:, BIG_HIGH]) / 2
+
+    transposed_factors = transposed_factors.reset_index(drop=False)
+
+    # 2001년 5월 31일 이후 데이터만 남기기
+    processed_factors = transposed_factors.loc[transposed_factors[DATE] >= '2001-05-31', FACTOR_RESULT_COLUMNS] \
+        .reset_index(drop=True)
+
+    return processed_factors
+
+
 def _calculate_total(code, kospi, kosdaq):
     kosdaq_suffix = '_kosdaq'
     kospi_suffix = '_kospi'
@@ -312,15 +353,15 @@ def _calculate_total(code, kospi, kosdaq):
     return total.loc[:, BENCHMARK_RESULT_COLUMNS]
 
 
-def process_macro_daily(raw_unprocessed_macros: DataFrame) -> DataFrame:
+def process_macro_daily(unprocessed_macros: DataFrame) -> DataFrame:
     # Data re-formatting
-    raw_newcols = raw_unprocessed_macros.loc[:, "Symbol Name"] + "_" + raw_unprocessed_macros.loc[:, "Item Name "]
-    unprocessed_macros = raw_unprocessed_macros.T.copy(deep=True)
+    raw_cols = unprocessed_macros.loc[:, "Symbol Name"] + "_" + unprocessed_macros.loc[:, "Item Name "]
+    unprocessed_macros = unprocessed_macros.T.copy(deep=True)
 
     # get only data
     unprocessed_macros = unprocessed_macros[
         unprocessed_macros.reset_index()['index'].apply(lambda x: type(x) == datetime).values].copy(deep=True)
-    unprocessed_macros.columns = raw_newcols
+    unprocessed_macros.columns = raw_cols
 
     # make percent to non-percent
     unprocessed_macros = unprocessed_macros.apply(lambda x: x * 0.01 if "(%)" in x.name else x).copy(deep=True)
@@ -347,37 +388,37 @@ def process_macro_daily(raw_unprocessed_macros: DataFrame) -> DataFrame:
     unprocessed_macros["*_*log_oil"] = unprocessed_macros["ECO_주요상품선물_WTI-1M($/bbl)"].apply(lambda x: np.log(x))
 
     # columns to use
-    newcols = [col for col in unprocessed_macros.columns if col[0:3] == '*_*']
+    new_cols = [col for col in unprocessed_macros.columns if col[0:3] == '*_*']
 
     # get preprocessed macro
-    processed_macros_fromdaily = unprocessed_macros[newcols]
-    processed_macros_fromdaily.columns = [col.replace("*_*", "") for col in processed_macros_fromdaily.columns]
+    processed_macros_from_daily = unprocessed_macros[new_cols]
+    processed_macros_from_daily.columns = [col.replace("*_*", "") for col in processed_macros_from_daily.columns]
 
     # get only last observations of each month
-    processed_macros_lastobs = processed_macros_fromdaily.resample("M").last()
-    processed_macros_lastobs.index.name = "date"
+    processed_macros_last_obs = processed_macros_from_daily.resample("M").last()
+    processed_macros_last_obs.index.name = "date"
 
     # calculate volatility
-    processed_macros_vol = processed_macros_fromdaily.resample("M").apply(lambda x: np.std(x))
+    processed_macros_vol = processed_macros_from_daily.resample("M").apply(lambda x: np.std(x))
     processed_macros_vol.columns = [col + "_vol" for col in processed_macros_vol.columns]
     processed_macros_vol.index.name = "date"
 
     # merge monthly observations and volatility of each variable
-    macros_from_daily = processed_macros_lastobs.merge(processed_macros_vol, how="left", left_index=True,
-                                                       right_index=True)
+    macros_from_daily = processed_macros_last_obs.merge(processed_macros_vol, how="left", left_index=True,
+                                                        right_index=True)
 
     return macros_from_daily
 
 
-def process_macro_monthly(raw_unprocessed_macros: DataFrame) -> DataFrame:
+def process_macro_monthly(unprocessed_macros: DataFrame) -> DataFrame:
     # Data re-formatting
-    raw_newcols = raw_unprocessed_macros.loc[:, "Symbol Name"] + "_" + raw_unprocessed_macros.loc[:, "Item Name "]
-    unprocessed_macros = raw_unprocessed_macros.T.copy(deep=True)
+    raw_cols = unprocessed_macros.loc[:, "Symbol Name"] + "_" + unprocessed_macros.loc[:, "Item Name "]
+    unprocessed_macros = unprocessed_macros.T.copy(deep=True)
 
     # get only data
     unprocessed_macros = unprocessed_macros[
         unprocessed_macros.reset_index()['index'].apply(lambda x: type(x) == datetime).values].copy(deep=True)
-    unprocessed_macros.columns = raw_newcols
+    unprocessed_macros.columns = raw_cols
 
     # make percent to non-percent
     unprocessed_macros = unprocessed_macros.apply(lambda x: x * 0.01 if "(%)" in x.name else x).copy(deep=True)
@@ -392,18 +433,20 @@ def process_macro_monthly(raw_unprocessed_macros: DataFrame) -> DataFrame:
     unprocessed_macros["*_*log_industry_production_kor"] = unprocessed_macros["ECO_산업생산지수(계절조정)(2010=100)"].apply(
         lambda x: np.log(x))
 
-    newcols = [col for col in unprocessed_macros.columns if col[0:3] == '*_*']
+    new_cols = [col for col in unprocessed_macros.columns if col[0:3] == '*_*']
 
     # get only meaningful variables
-    macros_from_monthly = unprocessed_macros[newcols]
+    macros_from_monthly = unprocessed_macros[new_cols]
     macros_from_monthly.columns = [col.replace("*_*", "") for col in macros_from_monthly.columns]
     macros_from_monthly.index.name = "date"
 
     return macros_from_monthly
 
 
-def merging_with_macros(companies, macro_from_daily, macro_from_monthly: DataFrame) -> DataFrame:
-    macro = macro_from_daily.merge(macro_from_monthly, how="left", left_index=True, right_index=True)
+def merging_with_macros(processed_companies, processed_macro_from_daily,
+                        processed_macro_from_monthly: DataFrame) -> DataFrame:
+    macro = processed_macro_from_daily.merge(processed_macro_from_monthly, how="left", left_index=True,
+                                             right_index=True)
 
     lagging_variables = [LOG_EXPORT, LOG_IMPORT, LOG_INDUSTRY_PRODUCTION_US, LOG_INDUSTRY_PRODUCTION_EURO,
                          LOG_INDUSTRY_PRODUCTION_KOR]
@@ -413,13 +456,13 @@ def merging_with_macros(companies, macro_from_daily, macro_from_monthly: DataFra
     macro_contemporaneous = macro[contemporaneous_variables].copy(deep=True)
     macro_lagging = macro[lagging_variables].copy(deep=True)
 
-    companies = companies.merge(macro_contemporaneous, how='left', left_on="date", right_index=True)
+    processed_companies = processed_companies.merge(macro_contemporaneous, how='left', left_on="date", right_index=True)
 
     macro_lagging['mdate_lag'] = macro_lagging.index + MonthEnd(-1)
     macro_lagging = macro_lagging.reset_index().set_index('mdate_lag').copy(deep=True)
     macro_lagging = macro_lagging.drop(columns='date').copy(deep=True)
 
     # Lagging
-    companies = companies.merge(macro_lagging, how='left', left_on="date", right_index=True)
+    merged_companies = processed_companies.merge(macro_lagging, how='left', left_on="date", right_index=True)
 
-    return companies
+    return merged_companies
