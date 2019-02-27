@@ -95,5 +95,6 @@ data_catalog 구글스프레드시트의 check 시트에 붙여넣고 unfiltered
 ## 전처리 코드
 ksif/preprocess/core/__init__.py 파일을 실행하되, parameter로 엑셀의 파일명인 190228 입력
 ## 데이터업로드
-0. 위 코드의 결과로 저장된 190228_company.csv, 190228_etf.csv, 190228_benchmark.csv를 구글 드라이브에 업로드한다.
-0. 두 파일의 URL 중 key를 data_catalog 구글스프레드시트의 csv_files 시트에 날짜와 함께 저장한다.
+0. 위 코드의 결과로 저장된 190228_company.csv, 190228_etf.csv, 190228_benchmark.csv, 190228_factor.csv를 구글 드라이브에 업로드한다.
+0. 파일 우클릭 - 공유 가능한 링크 가져오기 - 공유 설정 - 엑세스 권한이 있는 사용자 - 링크 공유 사용 중 - 외부 엑세스 허용 체크
+0. 두 파일의 URL 중 key(예를 들어 https://drive.google.com/file/d/17g0rNXV-oplum164qDBCII8bGCkeaw9_/view?usp=sharing 중 17g0rNXV-oplum164qDBCII8bGCkeaw9_)를 data_catalog 구글스프레드시트의 csv_files 시트에 날짜와 함께 저장한다.
