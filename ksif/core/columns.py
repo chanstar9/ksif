@@ -206,3 +206,7 @@ BENCHMARKS = [
     TOTAL_LARGE, TOTAL_MIDDLE, TOTAL_SMALL,
     CD91,
 ]
+
+# Factors
+SMB = 'SMB'
+HML = 'HML'

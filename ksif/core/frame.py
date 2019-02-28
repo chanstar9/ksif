@@ -4,17 +4,18 @@
          Park Ji woo
 :Date: 2018. 7. 18
 """
+import platform
 import sys
 from copy import deepcopy as dc
 from datetime import datetime
 
-import matplotlib.pyplot as plt
 import matplotlib
-from matplotlib import font_manager, rc
-import platform
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pandas.core.common as com
+import statsmodels.api as sm
+from matplotlib import font_manager, rc
 from pandas import DataFrame
 from pandas import Series
 from pandas.core.index import (Index, MultiIndex)
@@ -51,6 +52,7 @@ class Portfolio(DataFrame):
     """
     _benchmark = KOSPI
     benchmarks = None
+    factors = None
 
     @property
     def _constructor(self):
@@ -76,7 +78,7 @@ class Portfolio(DataFrame):
             raise ValueError("Incorrect data format, end_date should be YYYY-MM-DD")
 
         if data is None:
-            data, self.benchmarks = download_latest_data()
+            data, self.benchmarks, self.factors = download_latest_data(download_company_data=True)
 
             if not include_holding:
                 data = data.loc[~data[HOLDING], :]
@@ -92,7 +94,7 @@ class Portfolio(DataFrame):
 
             data = data.loc[(start_date <= data[DATE]) & (data[DATE] <= end_date), :]
         else:
-            _, self.benchmarks = download_latest_data()
+            _, self.benchmarks, self.factors = download_latest_data(download_company_data=False)
 
         DataFrame.__init__(self=self, data=data, index=index, columns=columns, dtype=dtype, copy=copy)
 
@@ -155,6 +157,8 @@ class Portfolio(DataFrame):
                                                      (self.benchmarks[DATE] >= min(self[DATE])) &
                                                      (self.benchmarks[DATE] <= max(self[DATE])), :]
 
+        selected_benchmark.set_index(DATE, inplace=True)
+        selected_benchmark.drop(columns=[CODE], inplace=True)
         return selected_benchmark
 
     def set_benchmark(self, benchmark):
@@ -162,6 +166,16 @@ class Portfolio(DataFrame):
             raise ValueError('{} is not registered.'.format(benchmark))
         else:
             self._benchmark = benchmark
+
+    # noinspection PyPep8Naming
+    @property
+    def SMB(self) -> Series:
+        return self.factors.loc[:, SMB]
+
+    # noinspection PyPep8Naming
+    @property
+    def HML(self) -> Series:
+        return self.factors.loc[:, HML]
 
     @not_empty
     def to_dataframe(self, deepcopy: bool = True) -> DataFrame:
@@ -198,6 +212,11 @@ class Portfolio(DataFrame):
             compound_annual_growth_rate | (float) Annual compound return of the portfolio
             maximum_drawdown            | (float) The maximum loss from a peak to a trough of a portfolio,
                                                   before a new peak is attained
+            Fama_French_alpha           | (float) An abnormal return from Fama-French 3 Factor model
+                                                  (Fama and French, 1993)
+            Fama_French_alpha_p_value   | (float) A p-value of the the abnormal return
+            Fama_French_beta            | (float) A market beta from Fama-French 3 Factor model
+                                                  (Fama and French, 1993)
         """
         if benchmark is not None and benchmark not in BENCHMARKS:
             raise ValueError('{} is not registered.'.format(benchmark))
@@ -217,14 +236,11 @@ class Portfolio(DataFrame):
                 lambda x: np.average(x[RET_1])
             )
 
-        portfolio_returns = portfolio_returns.reset_index()
-        merged_returns = pd.merge(portfolio_returns, portfolio.get_benchmark(benchmark=benchmark)[
-            [DATE, BENCHMARK_RET_1]
-        ], on=DATE)
+        benchmarks = portfolio.get_benchmark(benchmark=benchmark).loc[:, [BENCHMARK_RET_1]]
+        merged_returns = pd.merge(portfolio_returns, benchmarks, on=DATE)
         merged_returns = pd.merge(merged_returns,
-                                  portfolio.get_benchmark(CD91).rename(columns={BENCHMARK_RET_1: CD91})[
-                                      [DATE, CD91]
-                                  ], on=DATE)
+                                  portfolio.get_benchmark(CD91).rename(columns={BENCHMARK_RET_1: CD91}).loc[:, [CD91]],
+                                  on=DATE)
 
         # Portfolio return, benchmark return
         portfolio_return = self._calculate_total_return(merged_returns[PORTFOLIO_RETURN])
@@ -252,6 +268,23 @@ class Portfolio(DataFrame):
         portfolio_cumulative_assets = merged_returns[PORTFOLIO_RETURN].add(1).cumprod()
         maximum_drawdown = portfolio_cumulative_assets.div(portfolio_cumulative_assets.cummax()).sub(1).min()
 
+        # Fama-French, 1993
+        market_excess_returns = merged_returns[BENCHMARK_RET_1] - merged_returns[CD91]
+        risk_free_excess_return = 'risk_free_excess_return'
+        market_excess_return = 'market_excess_return'
+        ff_data = pd.concat([
+            DataFrame(risk_free_excess_returns, columns=[risk_free_excess_return]),
+            DataFrame(market_excess_returns, columns=[market_excess_return]),
+            self.factors
+        ], axis=1, join='inner')
+        model = sm.OLS(
+            ff_data.loc[:, risk_free_excess_return],
+            sm.add_constant(ff_data.loc[:, [market_excess_return, SMB, HML]])
+        ).fit()
+        fama_french_alpha = model.params[0]
+        fama_french_alpha_p_value = model.pvalues[0]
+        fama_french_beta = model.params[1]
+
         result = {
             PORTFOLIO_RETURN: portfolio_return,
             BENCHMARK_RETURN: benchmark_return,
@@ -261,16 +294,17 @@ class Portfolio(DataFrame):
             IR: information_ratio,
             CAGR: compound_annual_growth_rate,
             MDD: maximum_drawdown,
+            FAMA_FRENCH_ALPHA: fama_french_alpha,
+            FAMA_FRENCH_ALPHA_P_VALUE: fama_french_alpha_p_value,
+            FAMA_FRENCH_BETA: fama_french_beta,
         }
 
         if show_plot:
-            plotting_returns = dc(merged_returns).loc[:, [DATE, PORTFOLIO_RETURN, BENCHMARK_RET_1]]
+            plotting_returns = dc(merged_returns).loc[:, [PORTFOLIO_RETURN, BENCHMARK_RET_1]]
             plotting_returns.rename(columns={
                 PORTFOLIO_RETURN: 'Portfolio',
                 BENCHMARK_RET_1: benchmark
             }, inplace=True)
-            plotting_returns[DATE] = pd.to_datetime(plotting_returns[DATE])
-            plotting_returns.set_index(keys=[DATE], inplace=True)
             create_performance_summary(plotting_returns, other_cols=range(1, 2))
             plt.show()
 
@@ -488,8 +522,7 @@ class Portfolio(DataFrame):
         plt.figure()
 
         if show_benchmark:
-            benchmark = self.get_benchmark()[[DATE, BENCHMARK_RET_1]]
-            benchmark = benchmark.set_index(keys=[DATE])
+            benchmark = self.get_benchmark().loc[:, [BENCHMARK_RET_1]]
             benchmark = self._cumulate(benchmark, cumulative).dropna().reset_index(drop=False)
             grouped_data = grouped_data.reset_index(drop=False)
             grouped_data = pd.merge(grouped_data, benchmark, on=[DATE])

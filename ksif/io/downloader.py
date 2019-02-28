@@ -21,6 +21,7 @@ TABLE = 'table'
 
 COMPANY = 'company'
 BENCHMARK = 'benchmark'
+FACTOR = 'factor'
 
 # CSV encoding type
 ENCODING = 'utf-8'
@@ -30,21 +31,28 @@ DATA_DIR = 'data'
 
 @memoize(copy=True)
 @retry(GoogleQueryException)
-def download_latest_data() -> (DataFrame, DataFrame):
+def download_latest_data(download_company_data) -> (DataFrame, DataFrame):
     csv_files_url = query_google_spreadsheet(CSV_FILES_GID)
     csv_files_url = csv_files_url.sort_values(by=DATE)
     latest_company_id = csv_files_url.iloc[-1][COMPANY]
     latest_company_file_name = csv_files_url.iloc[-1][DATE] + '_' + COMPANY
     latest_benchmark_id = csv_files_url.iloc[-1][BENCHMARK]
     latest_benchmark_file_name = csv_files_url.iloc[-1][DATE] + '_' + BENCHMARK
+    latest_factor_id = csv_files_url.iloc[-1][FACTOR]
+    latest_factor_file_name = csv_files_url.iloc[-1][DATE] + '_' + FACTOR
 
     if not Path(DATA_DIR).exists():
         os.makedirs(DATA_DIR)
 
-    latest_company_data = _download_data(latest_company_file_name, latest_company_id)
+    if download_company_data:
+        latest_company_data = _download_data(latest_company_file_name, latest_company_id)
+    else:
+        latest_company_data = None
     latest_benchmark_data = _download_data(latest_benchmark_file_name, latest_benchmark_id)
+    latest_factor_data = _download_data(latest_factor_file_name, latest_factor_id)
+    latest_factor_data.set_index(DATE, inplace=True)
 
-    return latest_company_data, latest_benchmark_data
+    return latest_company_data, latest_benchmark_data, latest_factor_data
 
 
 def _download_data(file_name, id):

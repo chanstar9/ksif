@@ -24,6 +24,8 @@ setup(
         'matplotlib',
         'scikit-learn',
         'scipy',
+        'statsmodels',
+        'patsy',
         'performanceanalytics',
         'tqdm',
         'requests',
