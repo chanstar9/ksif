@@ -5,8 +5,8 @@
 """
 from unittest import TestCase
 
-from ksif import Portfolio
-from ksif.core.columns import *
+from ksif import *
+from pandas.util.testing import assert_frame_equal
 
 
 class TestBenchmark(TestCase):
@@ -22,11 +22,13 @@ class TestBenchmark(TestCase):
 
         # The default benchmark is KOSPI.
         benchmark = pf.get_benchmark()
-        self.assertEqual(benchmark[CODE].values[0], KOSPI)
+        self.assertEqual(benchmark.columns.tolist(),
+                         [BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12])
 
         # If the benchmark is set, return the benchmark.
         benchmark = pf.get_benchmark(benchmark=KOSDAQ)
-        self.assertEqual(benchmark[CODE].values[0], KOSDAQ)
+        self.assertEqual(benchmark.columns.tolist(),
+                         [BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12])
 
         # If the benchmark is not exist, raise ValueError.
         with self.assertRaises(ValueError):
@@ -40,6 +42,8 @@ class TestBenchmark(TestCase):
             pf.set_benchmark(benchmark='There is no such a benchmark.')
 
         # If the benchmark is exist, change the default benchmark.
+        kosdaq_1 = pf.get_benchmark(benchmark=KOSDAQ)
         pf.set_benchmark(benchmark=KOSDAQ)
-        benchmark = pf.get_benchmark()
-        self.assertEqual(benchmark[CODE].values[0], KOSDAQ)
+        kosdaq_2 = pf.get_benchmark()
+
+        assert_frame_equal(kosdaq_1, kosdaq_2)

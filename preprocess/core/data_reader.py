@@ -3,8 +3,9 @@
 :Author: Jaekyoung Kim
 :Date: 2018. 6. 19.
 """
-import pandas as pd
 import numpy as np
+import pandas as pd
+from pandas.io.excel import ExcelFile
 
 from preprocess.core.columns import *
 
@@ -23,9 +24,9 @@ BENCHMARK_UNNECESSARY_COLUMNS = [SYMBOL, KIND, ITEM, ITEM_NAME, FREQUENCY]
 
 
 # noinspection PyShadowingNames
-def read_companies(file_name: str) -> pd.DataFrame:
+def read_companies(excel_file: ExcelFile) -> pd.DataFrame:
     """
-    :param file_name: (String) A file name of the raw data Excel file, except '.xlsx'.
+    :param excel_file: (ExcelFile)
 
     :return melted_companies: (DataFrame)
          code   | (String)
@@ -34,7 +35,7 @@ def read_companies(file_name: str) -> pd.DataFrame:
          ...
     """
     # Read excel file.
-    raw_companies = pd.read_excel(DIR.format(file_name), sheet_name=COMPANY, skiprows=8)
+    raw_companies = excel_file.parse(COMPANY, skiprows=8)
 
     # Rename Symbol -> code, Symbol Name -> name
     raw_companies = raw_companies.rename(columns={
@@ -62,7 +63,7 @@ def read_companies(file_name: str) -> pd.DataFrame:
         item_companies = item_companies.set_index([CODE, DATE])
         melted_companies = melted_companies.join(item_companies, how='outer')
 
-    melted_companies = melted_companies.rename(columns=RENAMES)
+    melted_companies = melted_companies.rename(columns=COMPANY_RENAMES)
 
     # Add the names of company.
     melted_companies = melted_companies.join(names)
@@ -90,16 +91,16 @@ def read_companies(file_name: str) -> pd.DataFrame:
     # There are no SHORT_SALE_BALANCE before 2016-06-30
     melted_companies.loc[melted_companies[DATE] < '2016-06-30', SHORT_SALE_BALANCE] = np.nan
 
+    # Sort by code and date
     melted_companies = melted_companies.sort_values([CODE, DATE]).reset_index(drop=True)
 
     return melted_companies
 
 
 # noinspection PyShadowingNames
-
-def read_benchmarks(file_name: str) -> pd.DataFrame:
+def read_benchmarks(excel_file: ExcelFile) -> pd.DataFrame:
     """
-    :param file_name: (String) A file name of the raw data Excel file, except '.xlsx'.
+    :param excel_file: (ExcelFile)
 
     :return melted_benchmarks: (DataFrame)
         code        | (String)
@@ -107,8 +108,8 @@ def read_benchmarks(file_name: str) -> pd.DataFrame:
         price_index | (float)
     """
     # Read excel file.
-    raw_benchmarks = pd.read_excel(DIR.format(file_name), sheet_name=BENCHMARK, skiprows=8)
-    raw_macro_from_monthly = pd.read_excel(DIR.format(file_name), sheet_name=MACRO_MONTHLY, skiprows=8)
+    raw_benchmarks = excel_file.parse(BENCHMARK, skiprows=8)
+    raw_macro_from_monthly = excel_file.parse(MACRO_MONTHLY, skiprows=8)
 
     # Use only CD91
     raw_risk_free = raw_macro_from_monthly.loc[raw_macro_from_monthly[ITEM_NAME] == '시장금리:CD유통수익률(91)(%)', :]
@@ -119,8 +120,8 @@ def read_benchmarks(file_name: str) -> pd.DataFrame:
     raw_risk_free[SYMBOL_NAME] = CD91
 
     # Melt benchmarks. Symbole name -> code, column names -> date
-    melted_benchmarks = _melt_benchmark(raw_benchmarks)
-    melted_risk_free = _melt_benchmark(raw_risk_free)
+    melted_benchmarks = _melt(raw_benchmarks, PRICE_INDEX)
+    melted_risk_free = _melt(raw_risk_free, PRICE_INDEX)
 
     # Calculate a risk free rate index
     melted_risk_free[PRICE_INDEX] = (((melted_risk_free[PRICE_INDEX] / 100) + 1) ** (1 / 12)).cumprod()
@@ -132,23 +133,56 @@ def read_benchmarks(file_name: str) -> pd.DataFrame:
     return melted_benchmarks
 
 
-def _melt_benchmark(raw):
-    melted = pd.melt(raw, id_vars=[SYMBOL_NAME], var_name=DATE, value_name=PRICE_INDEX)
+# noinspection PyShadowingNames
+def read_factors(excel_file: ExcelFile) -> pd.DataFrame:
+    """
+    :param excel_file: (ExcelFile)
+
+    :return transposed_factors: (DataFrame)
+        key
+            date            | (Datetime)
+        column
+            BIG_HIGH        | (float) Size & Book Value(2X3) 대형 - High
+            BIG_MEDIUM      | (float) Size & Book Value(2X3) 대형 - Medium
+            BIG_LOW         | (float) Size & Book Value(2X3) 대형 - Low
+            SMALL_HIGH      | (float) Size & Book Value(2X3) 소형 - High
+            SMALL_MEDIUM    | (float) Size & Book Value(2X3) 소형 - Medium
+            SMALL_LOW       | (float) Size & Book Value(2X3) 소형 - Low
+    """
+    # Read excel file.
+    raw_factors = excel_file.parse(FACTOR, skiprows=8)
+
+    # Remove unnecessary columns, for example, Symbol, Kind, Item, Item Name, Frequency
+    raw_factors = raw_factors.drop(columns=BENCHMARK_UNNECESSARY_COLUMNS)
+
+    raw_factors = raw_factors.set_index(SYMBOL_NAME)
+
+    transposed_factors = raw_factors.T
+    transposed_factors.index.name = DATE
+
+    # % to float
+    transposed_factors = transposed_factors / 100
+
+    return transposed_factors
+
+
+def _melt(raw, value_name):
+    melted = pd.melt(raw, id_vars=[SYMBOL_NAME], var_name=DATE, value_name=value_name)
     melted[DATE] = pd.to_datetime(melted[DATE], format='%Y-$m-%D')
     melted = melted.rename(columns={SYMBOL_NAME: CODE})
     melted = melted.dropna()
     return melted
 
 
-def read_macro_daily(file_name):
+def read_macro_daily(excel_file: ExcelFile):
     # Read excel file.
-    raw_macro_from_daily = pd.read_excel(DIR.format(file_name), sheet_name=MACRO_DAILY, skiprows=8)
+    raw_macro_from_daily = excel_file.parse(MACRO_DAILY, skiprows=8)
 
     return raw_macro_from_daily
 
 
-def read_macro_monthly(file_name):
+def read_macro_monthly(excel_file: ExcelFile):
     # Read excel file.
-    raw_macro_from_monthly = pd.read_excel(DIR.format(file_name), sheet_name=MACRO_MONTHLY, skiprows=8)
+    raw_macro_from_monthly = excel_file.parse(MACRO_MONTHLY, skiprows=8)
 
     return raw_macro_from_monthly

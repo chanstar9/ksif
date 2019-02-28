@@ -7,7 +7,7 @@ from unittest import TestCase
 
 import pandas as pd
 
-from ksif import Portfolio
+from ksif import *
 
 
 class TestOutcome(TestCase):

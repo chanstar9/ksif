@@ -10,7 +10,7 @@ with open("README.md", "r", encoding='utf-8') as fh:
 
 setup(
     name             = 'ksif',
-    version          = '2019.2.21',
+    version          = '2019.2.28',
     description      = 'Quantitative investment tools for KSIF',
     long_description = long_description,
     author           = 'KSIF Tech',
@@ -24,6 +24,8 @@ setup(
         'matplotlib',
         'scikit-learn',
         'scipy',
+        'statsmodels',
+        'patsy',
         'performanceanalytics',
         'tqdm',
         'requests',

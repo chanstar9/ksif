@@ -5,8 +5,7 @@
 """
 from unittest import TestCase
 
-from ksif import Portfolio
-from ksif.core.columns import DATE
+from ksif import *
 
 
 class TestPeriodicRank(TestCase):

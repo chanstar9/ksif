@@ -5,8 +5,7 @@
 """
 from unittest import TestCase
 
-from ksif import Portfolio
-from ksif.core.columns import *
+from ksif import *
 
 
 class TestQuantileDistributionRatio(TestCase):
