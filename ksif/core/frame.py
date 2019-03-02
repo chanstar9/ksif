@@ -28,11 +28,14 @@ from ..io.downloader import download_latest_data
 from ..util.checker import not_empty
 
 # Hangul font setting
+# noinspection PyProtectedMember
+font_manager._rebuild()
 if platform.system() == 'Windows':
     font_name = font_manager.FontProperties(fname='c:/Windows/Fonts/malgun.ttf').get_name()
     rc('font', family=font_name)
 else:
-    rc('font', family='AppleGothic')
+    font_name = font_manager.FontProperties(fname='/Library/Fonts/AppleGothic.ttf').get_name()
+    rc('font', family=font_name)
 
 # Minus sign
 matplotlib.rcParams['axes.unicode_minus'] = False
