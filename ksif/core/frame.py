@@ -32,10 +32,9 @@ from ..util.checker import not_empty
 font_manager._rebuild()
 if platform.system() == 'Windows':
     font_name = font_manager.FontProperties(fname='c:/Windows/Fonts/malgun.ttf').get_name()
-    rc('font', family=font_name)
 else:
     font_name = font_manager.FontProperties(fname='/Library/Fonts/AppleGothic.ttf').get_name()
-    rc('font', family=font_name)
+rc('font', family=font_name)
 
 # Minus sign
 matplotlib.rcParams['axes.unicode_minus'] = False
