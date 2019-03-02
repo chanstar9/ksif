@@ -4,6 +4,7 @@
          Park Ji woo
 :Date: 2018. 7. 18
 """
+import os
 import platform
 import sys
 from copy import deepcopy as dc
@@ -32,8 +33,13 @@ from ..util.checker import not_empty
 font_manager._rebuild()
 if platform.system() == 'Windows':
     font_name = font_manager.FontProperties(fname='c:/Windows/Fonts/malgun.ttf').get_name()
-else:
+elif platform.system() == 'Darwin':  # OS X
     font_name = font_manager.FontProperties(fname='/Library/Fonts/AppleGothic.ttf').get_name()
+else:  # Linux
+    fname = '/usr/share/fonts/truetype/nanum/NanumGothicOTF.ttf'
+    if not os.path.isfile(fname):
+        raise ResourceWarning("Please install NanumGothicOTF.ttf for plotting Hangul.")
+    font_name = font_manager.FontProperties(fname=fname).get_name()
 rc('font', family=font_name)
 
 # Minus sign

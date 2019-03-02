@@ -3,6 +3,7 @@
 :Author: Jaekyoung Kim
 :Date: 2018-09-16
 """
+from datetime import datetime
 from unittest import TestCase
 
 from ksif import *
@@ -11,7 +12,7 @@ from ksif import *
 class TestQuantileDistributionRatio(TestCase):
 
     def test_quantile_distribution_ratio(self):
-        pf = Portfolio(start_date='2017-01-01')
+        pf = Portfolio(start_date=datetime(year=2017, month=1, day=1))
 
         # When chunk_num is less than or equal to 1, raise an assertion error.
         with self.assertRaises(AssertionError):

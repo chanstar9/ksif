@@ -8,10 +8,10 @@ import math
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-from preprocess.core.columns import *
-from .utils import last_day_of_month
 from ksif.io.google_drive import query_google_spreadsheet, HOLDING_COMPANY_GID, DELISTED_COMPANY_GID, \
     MERGED_COMPANY_GID, RELISTED_COMPANY_GID
+from preprocess.core.columns import *
+from .utils import last_day_of_month
 
 
 def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
