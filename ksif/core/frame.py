@@ -39,7 +39,7 @@ matplotlib.rcParams['axes.unicode_minus'] = False
 
 PERCENTAGE = 'percentage'
 
-START_DATE = '2001-05-31'
+START_DATE = datetime(year=2001, month=5, day=31)
 
 QUANTILE = 'quantile'
 RANK = 'rank'
@@ -60,22 +60,12 @@ class Portfolio(DataFrame):
 
     @not_empty
     def __init__(self, data=None, index=None, columns=None, dtype=None, copy: bool = False,
-                 start_date: str = START_DATE, end_date: str = None,
+                 start_date: datetime = START_DATE, end_date: datetime = None,
                  include_holding: bool = False, include_finance: bool = False,
                  include_managed: bool = False, include_suspended: bool = False):
 
-        try:
-            datetime.strptime(start_date, '%Y-%m-%d')
-        except ValueError:
-            raise ValueError("Incorrect data format, start_date should be YYYY-MM-DD")
-
         if not end_date:
-            end_date = datetime.today().strftime('%Y-%m-%d')
-
-        try:
-            datetime.strptime(end_date, '%Y-%m-%d')
-        except ValueError:
-            raise ValueError("Incorrect data format, end_date should be YYYY-MM-DD")
+            end_date = datetime.today()
 
         if data is None:
             data, self.benchmarks, self.factors = download_latest_data(download_company_data=True)
@@ -93,8 +83,13 @@ class Portfolio(DataFrame):
                 data = data.loc[~data[IS_SUSPENDED], :]
 
             data = data.loc[(start_date <= data[DATE]) & (data[DATE] <= end_date), :]
+
         else:
             _, self.benchmarks, self.factors = download_latest_data(download_company_data=False)
+
+        self.benchmarks = self.benchmarks.loc[
+                          (start_date <= self.benchmarks[DATE]) & (self.benchmarks[DATE] <= end_date), :]
+        self.factors = self.factors.loc[(start_date <= self.factors.index) & (self.factors.index <= end_date), :]
 
         DataFrame.__init__(self=self, data=data, index=index, columns=columns, dtype=dtype, copy=copy)
 
@@ -221,7 +216,7 @@ class Portfolio(DataFrame):
         if benchmark is not None and benchmark not in BENCHMARKS:
             raise ValueError('{} is not registered.'.format(benchmark))
 
-        portfolio = dc(self)
+        portfolio = dc(self.loc[:, [DATE, CODE, RET_1]])
 
         if benchmark is None:
             benchmark = self._benchmark
