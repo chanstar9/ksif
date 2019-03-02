@@ -7,8 +7,8 @@ from unittest import TestCase
 
 import pandas as pd
 
-from ksif.util.checker import not_empty
 from ksif.errors import EmptyResultException
+from ksif.util.checker import not_empty
 
 
 class TestChecker(TestCase):

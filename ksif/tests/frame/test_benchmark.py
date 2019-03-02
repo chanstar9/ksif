@@ -5,8 +5,9 @@
 """
 from unittest import TestCase
 
-from ksif import *
 from pandas.util.testing import assert_frame_equal
+
+from ksif import *
 
 
 class TestBenchmark(TestCase):
