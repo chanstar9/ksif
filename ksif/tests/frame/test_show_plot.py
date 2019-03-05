@@ -3,11 +3,11 @@
 :Author: Jaekyoung Kim
 :Date: 2018-09-14
 """
+from datetime import datetime
 from unittest import TestCase
 
 from ksif import Portfolio
 from ksif.core.columns import *
-from datetime import datetime
 
 
 class TestShowPlot(TestCase):
