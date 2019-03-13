@@ -160,12 +160,16 @@ COMPANY_RENAMES = {
 }
 
 COMPANY_RESULT_COLUMNS = list(
-    itertools.chain(
-        # Base information
-        BASE_INFORMATION,
-        # Filter
-        FILTERS,
-        COMPANY_FACTORS
+    set(
+        itertools.chain(
+            # Base information
+            BASE_INFORMATION,
+            # Quarterly information,
+            QUARTERLY_DATA,
+            # Filter
+            FILTERS,
+            COMPANY_FACTORS
+        )
     )
 )
 
