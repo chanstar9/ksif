@@ -62,11 +62,11 @@ def _download_data(file_name, id):
     else:
         print("Downloading {} from web...".format(file_name))
         latest_company_data = query_google_csv_file(id)
-        latest_company_data.to_hdf(local_company_file_path, key=TABLE, format=TABLE, mode='w')
+        latest_company_data.to_hdf(local_company_file_path, key=TABLE, mode='w')
         print("{} is saved as {}.".format(file_name, local_company_file_path))
     return latest_company_data
 
 
 def custom_read_hdf(path):
-    latest_korea_data = read_hdf(path, key=TABLE, format=TABLE)
+    latest_korea_data = read_hdf(path, key=TABLE)
     return latest_korea_data
