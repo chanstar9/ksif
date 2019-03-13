@@ -9,6 +9,7 @@ import platform
 import sys
 from copy import deepcopy as dc
 from datetime import datetime
+from warnings import warn
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -197,12 +198,13 @@ class Portfolio(DataFrame):
 
         return dataframe
 
-    def outcome(self, benchmark: str = None, weighted: bool = False, show_plot: bool = False):
+    def outcome(self, benchmark: str = None, weighted: str = None, show_plot: bool = False):
         """
         Calculate various indices of the portfolio.
 
         :param benchmark: (str) The name of benchmark. If benchmark is None, use a default benchmark.
-        :param weighted: (bool) If weighted is True, use market capitalization to calculate weighted portfolio.
+        :param weighted: (str) If weighted is a string, use the string to calculate weighted portfolio.
+                                If there are negative weights, calculate long-short weighted portfolio.
         :param show_plot: (bool) If show_plot is True, show a performance summary graph.
 
         :return result: (dict)
@@ -224,16 +226,33 @@ class Portfolio(DataFrame):
         if benchmark is not None and benchmark not in BENCHMARKS:
             raise ValueError('{} is not registered.'.format(benchmark))
 
-        portfolio = dc(self.loc[:, [DATE, CODE, RET_1]])
+        portfolio = dc(self)
 
         if benchmark is None:
             benchmark = self._benchmark
 
         portfolio_returns = pd.DataFrame()
         if weighted:
-            portfolio_returns[PORTFOLIO_RETURN] = portfolio.dropna(subset=[RET_1]).groupby([DATE]).apply(
-                lambda x: np.average(x[RET_1], weights=x[MKTCAP])
+            if weighted not in self.columns:
+                raise ValueError('{} is not in Portfolio.columns.'.format(weighted))
+            long_portfolio = portfolio.loc[portfolio[weighted] > 0, :]
+            short_portfolio = portfolio.loc[portfolio[weighted] < 0, :]
+            short_portfolio.loc[:, RET_1] = -1 * short_portfolio.loc[:, RET_1]
+            short_portfolio.loc[:, weighted] = -short_portfolio.loc[:, weighted]
+            long_returns = long_portfolio.dropna(subset=[RET_1]).groupby([DATE]).apply(
+                lambda x: np.average(x[RET_1], weights=x[weighted])
             )
+            short_returns = short_portfolio.dropna(subset=[RET_1]).groupby([DATE]).apply(
+                lambda x: np.average(x[RET_1], weights=x[weighted])
+            )
+            if short_returns.empty:
+                portfolio_returns[PORTFOLIO_RETURN] = long_returns
+            else:
+                portfolio_returns[PORTFOLIO_RETURN] = long_returns.add(short_returns)
+                if pd.isna(portfolio_returns[PORTFOLIO_RETURN]).any():
+                    warn("When calculating long-short portfolio, weighted should have positive and negative values "
+                         "in same periods. Otherwise, the return of the period is not calculated.")
+                    portfolio_returns.dropna(inplace=True)
         else:
             portfolio_returns[PORTFOLIO_RETURN] = portfolio.dropna(subset=[RET_1]).groupby([DATE]).apply(
                 lambda x: np.average(x[RET_1])
