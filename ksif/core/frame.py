@@ -20,7 +20,7 @@ import statsmodels.api as sm
 from matplotlib import font_manager, rc
 from pandas import DataFrame
 from pandas import Series
-from pandas.core.index import (Index, MultiIndex)
+from pandas.core.index import MultiIndex
 from pandas.core.indexing import convert_to_index_sliceable
 from performanceanalytics.charts.performance_summary import create_performance_summary
 
@@ -47,6 +47,9 @@ rc('font', family=font_name)
 matplotlib.rcParams['axes.unicode_minus'] = False
 
 PERCENTAGE = 'percentage'
+
+WEIGHT = 'weight'
+WEIGHT_SUM = 'weight_sum'
 
 START_DATE = datetime(year=2001, month=5, day=31)
 
@@ -234,13 +237,17 @@ class Portfolio(DataFrame):
 
         return dataframe
 
-    def outcome(self, benchmark: str = None, weighted: str = None, show_plot: bool = False):
+    def outcome(self, benchmark: str = None, weighted: str = None,
+                long_transaction_cost_ratio: float = 0.01, short_transaction_cost_ratio: float = 0.01,
+                show_plot: bool = False):
         """
         Calculate various indices of the portfolio.
 
         :param benchmark: (str) The name of benchmark. If benchmark is None, use a default benchmark.
         :param weighted: (str) If weighted is a string, use the string to calculate weighted portfolio.
                                 If there are negative weights, calculate long-short weighted portfolio.
+        :param long_transaction_cost_ratio: (float) A transaction cost ratio for long investment
+        :param short_transaction_cost_ratio: (float) A transaction cost ratio for short investment
         :param show_plot: (bool) If show_plot is True, show a performance summary graph.
 
         :return result: (dict)
@@ -258,11 +265,12 @@ class Portfolio(DataFrame):
             Fama_French_alpha_p_value   | (float) A p-value of the the abnormal return
             Fama_French_beta            | (float) A market beta from Fama-French 3 Factor model
                                                   (Fama and French, 1993)
+            turnover                    | (float) Annual average turnover
         """
         if benchmark is not None and benchmark not in BENCHMARKS:
             raise ValueError('{} is not registered.'.format(benchmark))
 
-        portfolio = dc(self)
+        portfolio = self.dropna(subset=[RET_1])
 
         if benchmark is None:
             benchmark = self._benchmark
@@ -271,28 +279,42 @@ class Portfolio(DataFrame):
         if weighted:
             if weighted not in self.columns:
                 raise ValueError('{} is not in Portfolio.columns.'.format(weighted))
+            portfolio = portfolio.dropna(subset=[weighted])
             long_portfolio = portfolio.loc[portfolio[weighted] > 0, :]
             short_portfolio = portfolio.loc[portfolio[weighted] < 0, :]
             short_portfolio.loc[:, RET_1] = -1 * short_portfolio.loc[:, RET_1]
             short_portfolio.loc[:, weighted] = -short_portfolio.loc[:, weighted]
-            long_returns = long_portfolio.dropna(subset=[RET_1]).groupby([DATE]).apply(
+            long_returns = long_portfolio.groupby([DATE]).apply(
                 lambda x: np.average(x[RET_1], weights=x[weighted])
             )
-            short_returns = short_portfolio.dropna(subset=[RET_1]).groupby([DATE]).apply(
+            short_returns = short_portfolio.groupby([DATE]).apply(
                 lambda x: np.average(x[RET_1], weights=x[weighted])
             )
+            long_turnovers = _get_turnovers(long_portfolio, weighted)
+            short_turnovers = _get_turnovers(short_portfolio, weighted)
             if short_returns.empty:
-                portfolio_returns[PORTFOLIO_RETURN] = long_returns
+                portfolio_returns[PORTFOLIO_RETURN] = long_returns.subtract(
+                    long_turnovers.multiply(long_transaction_cost_ratio), fill_value=0)
+                turnovers = long_turnovers
             else:
-                portfolio_returns[PORTFOLIO_RETURN] = long_returns.add(short_returns)
+                portfolio_returns[PORTFOLIO_RETURN] = long_returns.subtract(
+                    long_turnovers.multiply(long_transaction_cost_ratio), fill_value=0
+                ).add(
+                    short_returns.subtract(
+                        short_turnovers.multiply(short_transaction_cost_ratio), fill_value=0)
+                )
                 if pd.isna(portfolio_returns[PORTFOLIO_RETURN]).any():
                     warn("When calculating long-short portfolio, weighted should have positive and negative values "
                          "in same periods. Otherwise, the return of the period is not calculated.")
                     portfolio_returns.dropna(inplace=True)
+                turnovers = long_turnovers.add(short_turnovers)
         else:
-            portfolio_returns[PORTFOLIO_RETURN] = portfolio.dropna(subset=[RET_1]).groupby([DATE]).apply(
+            turnovers = _get_turnovers(portfolio)
+            portfolio_returns[PORTFOLIO_RETURN] = portfolio.groupby([DATE]).apply(
                 lambda x: np.average(x[RET_1])
-            )
+            ).subtract(turnovers.multiply(short_transaction_cost_ratio), fill_value=0)
+
+        turnover = turnovers.mean() * 12
 
         benchmarks = portfolio.get_benchmark(benchmark=benchmark).loc[:, [BENCHMARK_RET_1]]
         merged_returns = pd.merge(portfolio_returns, benchmarks, on=DATE)
@@ -334,7 +356,7 @@ class Portfolio(DataFrame):
             DataFrame(risk_free_excess_returns, columns=[risk_free_excess_return]),
             DataFrame(market_excess_returns, columns=[market_excess_return]),
             self.factors
-        ], axis=1, join='inner')
+        ], axis=1, join='inner').dropna()
         model = sm.OLS(
             ff_data.loc[:, risk_free_excess_return],
             sm.add_constant(ff_data.loc[:, [market_excess_return, SMB, HML]])
@@ -355,6 +377,7 @@ class Portfolio(DataFrame):
             FAMA_FRENCH_ALPHA: fama_french_alpha,
             FAMA_FRENCH_ALPHA_P_VALUE: fama_french_alpha_p_value,
             FAMA_FRENCH_BETA: fama_french_beta,
+            TURNOVER: turnover,
         }
 
         if show_plot:
@@ -371,7 +394,7 @@ class Portfolio(DataFrame):
     @not_empty
     def _calculate_total_return(self, grouped_data):
         data = grouped_data.dropna()
-        total_return = self._cumulate(data).iloc[-1]
+        total_return = _cumulate(data).iloc[-1]
         return total_return
 
     @not_empty
@@ -507,7 +530,7 @@ class Portfolio(DataFrame):
             else:
                 grouped_data = labelled_data.groupby([DATE])[RET_1].mean()
             grouped_data = grouped_data.rename(label)
-            grouped_data = self._cumulate(grouped_data, cumulative)
+            grouped_data = _cumulate(grouped_data, cumulative)
             quantile_portfolio_returns = pd.concat([quantile_portfolio_returns, grouped_data], axis=1, sort=True)
 
         if show_plot:
@@ -575,13 +598,13 @@ class Portfolio(DataFrame):
             grouped_data = portfolio.groupby([DATE])[RET_1].mean()
 
         # noinspection PyProtectedMember
-        grouped_data = self._cumulate(grouped_data, cumulative)
+        grouped_data = _cumulate(grouped_data, cumulative)
 
         plt.figure()
 
         if show_benchmark:
             benchmark = self.get_benchmark().loc[:, [BENCHMARK_RET_1]]
-            benchmark = self._cumulate(benchmark, cumulative).dropna().reset_index(drop=False)
+            benchmark = _cumulate(benchmark, cumulative).dropna().reset_index(drop=False)
             grouped_data = grouped_data.reset_index(drop=False)
             grouped_data = pd.merge(grouped_data, benchmark, on=[DATE])
             grouped_data = grouped_data.rename(index=str, columns={
@@ -601,12 +624,41 @@ class Portfolio(DataFrame):
 
         plt.show()
 
-    @staticmethod
-    @not_empty
-    def _cumulate(ret, cumulative=True):
-        ret.iloc[0] = 0
-        if cumulative:
-            ret = ret + 1
-            ret = ret.cumprod()
-            ret = ret - 1
-        return ret
+
+def _cumulate(ret, cumulative=True):
+    ret.iloc[0] = 0
+    if cumulative:
+        ret = ret + 1
+        ret = ret.cumprod()
+        ret = ret - 1
+    return ret
+
+
+def _get_turnovers(portfolio: Portfolio, weight: str = None) -> Portfolio:
+    all_companies = Portfolio(
+        include_finance=True, include_holding=True, include_managed=True, include_suspended=True,
+        start_date=portfolio[DATE].min(), end_date=portfolio[DATE].max()
+    )[[DATE, CODE]]
+
+    if weight:
+        selected_portfolio = portfolio[[DATE, CODE, weight]]
+    else:
+        selected_portfolio = portfolio[[DATE, CODE]]
+        selected_portfolio.loc[:, WEIGHT] = 1
+        weight = WEIGHT
+
+    weight_sum = selected_portfolio.groupby(DATE)[weight].sum()
+    weight_sum.name = WEIGHT_SUM
+    selected_portfolio = selected_portfolio.merge(weight_sum, on=DATE)
+    selected_portfolio[weight] = selected_portfolio[weight] / selected_portfolio[WEIGHT_SUM]
+    selected_portfolio = selected_portfolio[[DATE, CODE, weight]]
+    selected_portfolio = selected_portfolio.merge(
+        all_companies, how='outer', on=[DATE, CODE]).fillna(0).sort_values([DATE, CODE])
+    selected_portfolio[TURNOVER] = selected_portfolio.groupby(CODE)[weight].apply(
+        lambda x: x - x.shift(-1)
+    )
+    selected_portfolio = selected_portfolio.loc[selected_portfolio[TURNOVER] >= 0, :]
+    selected_portfolio[TURNOVER] = selected_portfolio[TURNOVER].fillna(selected_portfolio[weight])
+    turnovers = selected_portfolio.groupby(DATE)[TURNOVER].sum()
+
+    return turnovers
