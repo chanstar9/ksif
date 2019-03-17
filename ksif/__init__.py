@@ -5,3 +5,4 @@
 """
 from .core.columns import *
 from .core.frame import Portfolio
+from .core.outcomes import *

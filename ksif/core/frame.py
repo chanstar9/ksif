@@ -270,49 +270,11 @@ class Portfolio(DataFrame):
         if benchmark is not None and benchmark not in BENCHMARKS:
             raise ValueError('{} is not registered.'.format(benchmark))
 
-        portfolio = self.dropna(subset=[RET_1])
-
         if benchmark is None:
             benchmark = self._benchmark
 
-        portfolio_returns = pd.DataFrame()
-        if weighted:
-            if weighted not in self.columns:
-                raise ValueError('{} is not in Portfolio.columns.'.format(weighted))
-            portfolio = portfolio.dropna(subset=[weighted])
-            long_portfolio = portfolio.loc[portfolio[weighted] > 0, :]
-            short_portfolio = portfolio.loc[portfolio[weighted] < 0, :]
-            short_portfolio.loc[:, RET_1] = -1 * short_portfolio.loc[:, RET_1]
-            short_portfolio.loc[:, weighted] = -short_portfolio.loc[:, weighted]
-            long_returns = long_portfolio.groupby([DATE]).apply(
-                lambda x: np.average(x[RET_1], weights=x[weighted])
-            )
-            short_returns = short_portfolio.groupby([DATE]).apply(
-                lambda x: np.average(x[RET_1], weights=x[weighted])
-            )
-            long_turnovers = _get_turnovers(long_portfolio, weighted)
-            short_turnovers = _get_turnovers(short_portfolio, weighted)
-            if short_returns.empty:
-                portfolio_returns[PORTFOLIO_RETURN] = long_returns.subtract(
-                    long_turnovers.multiply(long_transaction_cost_ratio), fill_value=0)
-                turnovers = long_turnovers
-            else:
-                portfolio_returns[PORTFOLIO_RETURN] = long_returns.subtract(
-                    long_turnovers.multiply(long_transaction_cost_ratio), fill_value=0
-                ).add(
-                    short_returns.subtract(
-                        short_turnovers.multiply(short_transaction_cost_ratio), fill_value=0)
-                )
-                if pd.isna(portfolio_returns[PORTFOLIO_RETURN]).any():
-                    warn("When calculating long-short portfolio, weighted should have positive and negative values "
-                         "in same periods. Otherwise, the return of the period is not calculated.")
-                    portfolio_returns.dropna(inplace=True)
-                turnovers = long_turnovers.add(short_turnovers)
-        else:
-            turnovers = _get_turnovers(portfolio)
-            portfolio_returns[PORTFOLIO_RETURN] = portfolio.groupby([DATE]).apply(
-                lambda x: np.average(x[RET_1])
-            ).subtract(turnovers.multiply(short_transaction_cost_ratio), fill_value=0)
+        portfolio, portfolio_returns, turnovers = self.get_returns_and_turnovers(long_transaction_cost_ratio,
+                                                                                 short_transaction_cost_ratio, weighted)
 
         turnover = turnovers.mean() * 12
 
@@ -390,6 +352,56 @@ class Portfolio(DataFrame):
             plt.show()
 
         return result
+
+    def get_returns(self, weighted: str = None,
+                    long_transaction_cost_ratio: float = 0.01,
+                    short_transaction_cost_ratio: float = 0.01) -> DataFrame:
+        _, returns, _ = self.get_returns_and_turnovers(
+            long_transaction_cost_ratio, short_transaction_cost_ratio, weighted
+        )
+        return returns
+
+    def get_returns_and_turnovers(self, long_transaction_cost_ratio, short_transaction_cost_ratio, weighted):
+        portfolio = self.dropna(subset=[RET_1])
+        returns = pd.DataFrame()
+        if weighted:
+            if weighted not in self.columns:
+                raise ValueError('{} is not in Portfolio.columns.'.format(weighted))
+            portfolio = portfolio.dropna(subset=[weighted])
+            long_portfolio = portfolio.loc[portfolio[weighted] > 0, :]
+            short_portfolio = portfolio.loc[portfolio[weighted] < 0, :]
+            short_portfolio.loc[:, RET_1] = -1 * short_portfolio.loc[:, RET_1]
+            short_portfolio.loc[:, weighted] = -short_portfolio.loc[:, weighted]
+            long_returns = long_portfolio.groupby([DATE]).apply(
+                lambda x: np.average(x[RET_1], weights=x[weighted])
+            )
+            short_returns = short_portfolio.groupby([DATE]).apply(
+                lambda x: np.average(x[RET_1], weights=x[weighted])
+            )
+            long_turnovers = _get_turnovers(long_portfolio, weighted)
+            short_turnovers = _get_turnovers(short_portfolio, weighted)
+            if short_returns.empty:
+                returns[PORTFOLIO_RETURN] = long_returns.subtract(
+                    long_turnovers.multiply(long_transaction_cost_ratio), fill_value=0)
+                turnovers = long_turnovers
+            else:
+                returns[PORTFOLIO_RETURN] = long_returns.subtract(
+                    long_turnovers.multiply(long_transaction_cost_ratio), fill_value=0
+                ).add(
+                    short_returns.subtract(
+                        short_turnovers.multiply(short_transaction_cost_ratio), fill_value=0)
+                )
+                if pd.isna(returns[PORTFOLIO_RETURN]).any():
+                    warn("When calculating long-short portfolio, weighted should have positive and negative values "
+                         "in same periods. Otherwise, the return of the period is not calculated.")
+                    returns.dropna(inplace=True)
+                turnovers = long_turnovers.add(short_turnovers)
+        else:
+            turnovers = _get_turnovers(portfolio)
+            returns[PORTFOLIO_RETURN] = portfolio.groupby([DATE]).apply(
+                lambda x: np.average(x[RET_1])
+            ).subtract(turnovers.multiply(short_transaction_cost_ratio), fill_value=0)
+        return portfolio, returns, turnovers
 
     @not_empty
     def _calculate_total_return(self, grouped_data):

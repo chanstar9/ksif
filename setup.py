@@ -9,15 +9,15 @@ with open("README.md", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
 setup(
-    name             = 'ksif',
-    version          = '2019.3.16',
-    description      = 'Quantitative investment tools for KSIF',
-    long_description = long_description,
-    author           = 'KSIF Tech',
-    author_email     = 'jaekyoungkim@kaist.ac.kr',
-    url              = 'https://github.com/willbelucky/ksif',
-    download_url     = 'https://github.com/willbelucky/ksif/archive/master.zip',
-    install_requires = [
+    name='ksif',
+    version='2019.3.17',
+    description='Quantitative investment tools for KSIF',
+    long_description=long_description,
+    author='KSIF Tech',
+    author_email='jaekyoungkim@kaist.ac.kr',
+    url='https://github.com/willbelucky/ksif',
+    download_url='https://github.com/willbelucky/ksif/archive/master.zip',
+    install_requires=[
         'h5py==2.8.0',
         'pandas',
         'numpy',
@@ -34,9 +34,9 @@ setup(
         'urllib3',
         'xlrd'
     ],
-    packages         = find_packages(exclude = ['tests*']),
-    keywords         = ['ksif', 'portfolio', 'backtest', 'finance'],
-    python_requires  = '>=3.5',
+    packages=find_packages(exclude=['tests*']),
+    keywords=['ksif', 'portfolio', 'backtest', 'finance'],
+    python_requires='>=3.5',
     classifiers=(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
