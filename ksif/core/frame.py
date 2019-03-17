@@ -355,10 +355,12 @@ class Portfolio(DataFrame):
 
     def get_returns(self, weighted: str = None,
                     long_transaction_cost_ratio: float = 0.01,
-                    short_transaction_cost_ratio: float = 0.01) -> DataFrame:
+                    short_transaction_cost_ratio: float = 0.01, cumulative=False) -> DataFrame:
         _, returns, _ = self.get_returns_and_turnovers(
             long_transaction_cost_ratio, short_transaction_cost_ratio, weighted
         )
+        if cumulative:
+            returns = _cumulate(returns)
         return returns
 
     def get_returns_and_turnovers(self, long_transaction_cost_ratio, short_transaction_cost_ratio, weighted):

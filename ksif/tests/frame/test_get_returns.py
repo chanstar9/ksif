@@ -20,6 +20,12 @@ class TestOutcome(TestCase):
         returns = pf.get_returns()
         self.assertFalse(pd.isna(all(returns[PORTFOLIO_RETURN])))
 
+    def test_cumulative(self):
+        pf = Portfolio()
+
+        returns = pf.get_returns(cumulative=True)
+        self.assertFalse(pd.isna(all(returns[PORTFOLIO_RETURN])))
+
     def test_long_short_weighted(self):
         pf = Portfolio()
         pf['weight'] = np.where(pf[PER] > 0, 1, -1)
