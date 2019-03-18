@@ -165,7 +165,7 @@ COMPANY_RESULT_COLUMNS = list(
             # Base information
             BASE_INFORMATION,
             # Quarterly information,
-            QUARTERLY_DATA,
+            QUARTERLY_DATA[2:],
             # Filter
             FILTERS,
             COMPANY_FACTORS
