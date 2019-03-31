@@ -39,6 +39,9 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
     # Remove Spac companies.
     unfiltered_companies = unfiltered_companies.loc[[SPAC not in name for name in unfiltered_companies[NAME]], :]
 
+    # Make all date into the last day of month.
+    unfiltered_companies[DATE] = unfiltered_companies[DATE].apply(last_day_of_month)
+
     # Read the list of holding companies.
     holdings = query_google_spreadsheet(HOLDING_COMPANY_GID)
 
@@ -72,16 +75,10 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
         unfiltered_companies.loc[(unfiltered_companies[CODE] == code) &
                                  (unfiltered_companies[DATE] >= start_date) &
                                  (unfiltered_companies[DATE] < end_date), IS_SUSPENDED] = True
-        unfiltered_companies.loc[(unfiltered_companies[CODE] == code) &
-                                 (unfiltered_companies[DATE] >= start_date) &
-                                 (unfiltered_companies[DATE] < end_date), WHY_SUSPENDED] = '상장폐지 후 재상장 전'
 
     # Remove 한미은행(A016830), 에스와이코퍼레이션(A008080) because of data corruption.
     unfiltered_companies = unfiltered_companies.loc[unfiltered_companies[CODE] != 'A016830', :]
     unfiltered_companies = unfiltered_companies.loc[unfiltered_companies[CODE] != 'A008080', :]
-
-    # Make all date into the last day of month.
-    unfiltered_companies[DATE] = unfiltered_companies[DATE].apply(last_day_of_month)
 
     # Check new relisted companies.
     post_last_day = sorted(unfiltered_companies[DATE].unique())[-1]

@@ -25,9 +25,7 @@ FN_GUIDE_INDUSTRY_GROUP_27 = 'fn_guide_industry_group_27'  # FN Guide 산업구�
 KRX_SECTOR = 'krx_sector'  # 한국거래소 섹터
 HOLDING = 'holding'  # 지주사 여부
 IS_MANAGED = 'is_managed'  # 관리종목 여부
-WHY_MANAGED = 'why_managed'  # 관리종목 지정사유, Not used now
 IS_SUSPENDED = 'is_suspended'  # 거래정지 여부
-WHY_SUSPENDED = 'why_suspended'  # 거래정지 지정사유, Not used now
 FILTERS = [EXCHANGE, FN_GUIDE_SECTOR, FN_GUIDE_INDUSTRY_GROUP_27, KRX_SECTOR, HOLDING, IS_MANAGED,
            IS_SUSPENDED]
 

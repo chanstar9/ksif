@@ -70,7 +70,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     )
 
     quarterly_companies[AVG_ASSET] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(drop=True)
-    quarterly_companies[AVG_EQUITY] = quarterly_companies.groupby(CODE)[ASSETS].rolling(4).mean().reset_index(drop=True)
+    quarterly_companies[AVG_EQUITY] = quarterly_companies.groupby(CODE)[EQUITY].rolling(4).mean().reset_index(drop=True)
 
     # Profit factors
     quarterly_companies[S_A] = quarterly_companies['sales12'] / zero_to_nan(quarterly_companies[AVG_ASSET])
