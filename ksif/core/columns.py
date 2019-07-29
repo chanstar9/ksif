@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-:Author: Jaekyoung Kim
-:Date: 2018. 7. 18.
+:Author: Jaekyung Kim, Sangheum Cho
+:Date: 2019. 7. 29.
 """
 import itertools
 
 # Base information
+DATADATE = 'datadate'
 CODE = 'code'
 NAME = 'name'
 DATE = 'date'
@@ -17,6 +18,51 @@ ADJP = 'adjp'  # 수정종가
 ENDP = 'endp'  # 종가
 MKTCAP = 'mktcap'  # 시가총액
 BASE_INFORMATION = [CODE, NAME, DATE, RET_1, RET_3, RET_6, RET_12, ADJP, ENDP, MKTCAP]
+
+# Fundamental
+REVTQ = 'revtq'
+REVT12 = 'revt12'
+GPQ = 'gpq'
+GP12 = 'gp12'
+OPQ = 'opq'
+OP12 = 'op12'
+NIQ = 'niq'
+NI12 = 'ni12'
+ATQ = 'atq'
+ATQ_MEAN4 = 'atq_mean4'
+SEQ = 'seq'
+SEQ_MEAN4 = 'seq_mean4'
+LTQ = 'ltq'
+
+CF_DEP = 'cf_dep'
+CFOQ = 'cfoq'
+CFO12 = 'cfo12'
+
+A_TANG = 'a_tang'
+A_TANG_MEAN12 = 'a_tang_mean12'
+A_CUR = 'a_cur'
+A_CUR_MEAN12 = 'a_cur_mean12'
+L_CUR = 'l_cur'
+L_CUR_MEAN12 = 'l_cur_mean12'
+
+
+# 수익성지표
+S_A = 's_a'  # 매출/자산 Sale over Assets
+GP_A = 'gp_a'  # 매출총이익/자산 Gross Profit over Assets
+OP_A = 'op_a'  # 영업이익/자산 EBIT over Assets
+CF_A = 'cf_a'  # 영업활동으로 인한 현금흐름/자산 Cash Flow from operation over Assets
+ROA = 'roa'  # 연간 순이익/자산 Return On Assets
+ROE = 'roe'  # 연간 순이익/자본 Return On Equity
+QROA = 'qroa'  # 분기간 순이익/자산
+QROE = 'qroe'  # 분기간 순이익/자본
+EBT_E = 'ebt_e'  # (순이익+세금)/자본
+ROIC = 'roic'  # 투하자본수익률 Return On Invested Capital
+GP_S = 'gp_s'  # 매출총이익/매출
+DIVP = 'divp'  # 배당률 Dividend rate(12 month rolling)
+PROFIT_FACTORS = [S_A, GP_A, OP_A, CF_A, ROA, ROE, QROA, QROE, EBT_E, ROIC, GP_S, DIVP]
+
+
+
 
 # Filter
 EXCHANGE = 'exchange'  # 거래소
@@ -48,20 +94,9 @@ GP_P = 'gp_p'  # 1/PGPR
 OP_P = 'op_p'  # 1/POPR
 VALUE_FACTORS = [PER, PBR, PSR, PCR, PGPR, POPR, EV_EBITDA, EBIT_EV, CF_EV, S_EV, E_P, B_P, C_P, S_P, GP_P, OP_P]
 
-# Profit factors
-S_A = 's_a'  # 매출/자산 Sale over Assets
-GP_A = 'gp_a'  # 매출총이익/자산 Gross Profit over Assets
-OP_A = 'op_a'  # 영업이익/자산 EBIT over Assets
-CF_A = 'cf_a'  # 영업활동으로 인한 현금흐름/자산 Cash Flow from operation over Assets
-ROA = 'roa'  # 연간 순이익/자산 Return On Assets
-ROE = 'roe'  # 연간 순이익/자본 Return On Equity
-QROA = 'qroa'  # 분기간 순이익/자산
-QROE = 'qroe'  # 분기간 순이익/자본
-EBT_E = 'ebt_e'  # (순이익+세금)/자본
-ROIC = 'roic'  # 투하자본수익률 Return On Invested Capital
-GP_S = 'gp_s'  # 매출총이익/매출
-DIVP = 'divp'  # 배당률 Dividend rate(12 month rolling)
-PROFIT_FACTORS = [S_A, GP_A, OP_A, CF_A, ROA, ROE, QROA, QROE, EBT_E, ROIC, GP_S, DIVP]
+# market
+PRCC = 'prcc'
+RET = 'ret'
 
 # Growth factors
 SALESQOQ = 'salesqoq'  # 분기간 매출 변화율
@@ -118,7 +153,7 @@ NET_ETC_CORPORATION_PURCHASE_RATIO = 'net_etc_corporation_purchase_ratio'  # 기
 NET_FOREIGN_PURCHASE_RATIO = 'net_foreign_purchase_ratio'  # 외국인순매수비율
 NET_REGISTERED_FOREIGN_PURCHASE_RATIO = 'net_registered_foreign_purchase_ratio'  # 등록외국인순매수비율
 NET_ETC_FOREIGN_PURCHASE_RATIO = 'net_etc_foreign_purchase_ratio'  # 기타외국인순매수비율
-FOREIGN_OWNERSHIP_RATIO = 'foreign_ownership_ratio'  # 외국인보유비중
+FOREIGN_OWNERSHIP_RATIO = 'foreign'  # 외국인보유비중
 SHORT_SALE_VOLUME_RATIO = 'short_sale_volume_ratio'  # 공매도거래비율
 SHORT_SALE_BALANCE_RATIO = 'short_sale_balance_ratio'  # 공매도잔고비율
 SHORT_SALE_BALANCE_MOM = 'short_sale_balance_mom'  # 월간 공매도잔고변화율

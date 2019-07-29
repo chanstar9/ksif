@@ -28,6 +28,8 @@ from .columns import *
 from .outcomes import *
 from ..io.downloader import download_latest_data
 from ..util.checker import not_empty
+import dropbox
+import io
 
 # Hangul font setting
 # noinspection PyProtectedMember
@@ -80,21 +82,31 @@ class Portfolio(DataFrame):
             end_date = datetime.today()
 
         if data is None:
-            data, self.benchmarks, self.factors = download_latest_data(download_company_data=True)
+            print('Data is being downloaded from KSIF DROPBOX DATA STORAGE')
+            dbx = dropbox.Dropbox(
+                oauth2_access_token='TVRotgoEpxAAAAAAAAAAMyxLV0OXl61S_mXAzvj7tynmAbUz6J2mgIDYvAh-XxHG')
 
-            if not include_holding:
-                data = data.loc[~data[HOLDING], :]
+            metadata, f = dbx.files_download('/preprocessed/final_msf.csv')
+            # metadata, f = dbx.files_download('/preprocessed/merged.csv')
+            binary_file = f.content
+            data = pd.read_csv(io.BytesIO(binary_file))
 
-            if not include_finance:
-                data = data.loc[data[FN_GUIDE_SECTOR] != '금융', :]
-
-            if not include_managed:
-                data = data.loc[~data[IS_MANAGED], :]
-
-            if not include_suspended:
-                data = data.loc[~data[IS_SUSPENDED], :]
-
-            data = data.loc[(start_date <= data[DATE]) & (data[DATE] <= end_date), :]
+            #
+            _, self.benchmarks, self.factors = download_latest_data(download_company_data=False)
+            #
+            # if not include_holding:
+            #     data = data.loc[~data[HOLDING], :]
+            #
+            # if not include_finance:
+            #     data = data.loc[data[FN_GUIDE_SECTOR] != '금융', :]
+            #
+            # if not include_managed:
+            #     data = data.loc[~data[IS_MANAGED], :]
+            #
+            # if not include_suspended:
+            #     data = data.loc[~data[IS_SUSPENDED], :]
+            #
+            # data = data.loc[(start_date <= data[DATE]) & (data[DATE] <= end_date), :]
 
         else:
             _, self.benchmarks, self.factors = download_latest_data(download_company_data=False)
@@ -103,7 +115,8 @@ class Portfolio(DataFrame):
                           (start_date <= self.benchmarks[DATE]) & (self.benchmarks[DATE] <= end_date), :]
         self.factors = self.factors.loc[(start_date <= self.factors.index) & (self.factors.index <= end_date), :]
 
-        DataFrame.__init__(self=self, data=data, index=index, columns=columns, dtype=dtype, copy=copy)
+        super(Portfolio, self).__init__(data=data) #, index=index, columns=columns, dtype=dtype, copy=copy)
+        # self.data = data
 
     def __getitem__(self, key):
         from pandas.core.dtypes.common import is_list_like, is_integer, is_iterator
