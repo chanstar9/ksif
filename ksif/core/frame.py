@@ -45,7 +45,7 @@ else:  # Linux
     font_name = font_manager.FontProperties(fname=fname).get_name()
 rc('font', family=font_name)
 
-# Minus sign
+# for fix broken Minus sign
 matplotlib.rcParams['axes.unicode_minus'] = False
 
 PERCENTAGE = 'percentage'
@@ -161,8 +161,7 @@ class Portfolio(DataFrame):
             if is_iterator(key):
                 key = list(key)
             # noinspection PyProtectedMember
-            indexer = self.loc._convert_to_indexer(key, axis=1,
-                                                   raise_missing=True)
+            indexer = self.loc._convert_to_indexer(key, axis=1, raise_missing=True)
 
         # take() does not accept boolean indexers
         if getattr(indexer, "dtype", None) == bool:
@@ -251,7 +250,7 @@ class Portfolio(DataFrame):
         return dataframe
 
     def outcome(self, benchmark: str = None, weighted: str = None,
-                long_transaction_cost_ratio: float = 0.01, short_transaction_cost_ratio: float = 0.01,
+                long_transaction_cost_ratio: float = 0.0025, short_transaction_cost_ratio: float = 0.0025,
                 show_plot: bool = False):
         """
         Calculate various indices of the portfolio.
@@ -367,8 +366,8 @@ class Portfolio(DataFrame):
         return result
 
     def get_returns(self, weighted: str = None,
-                    long_transaction_cost_ratio: float = 0.01,
-                    short_transaction_cost_ratio: float = 0.01, cumulative=False) -> DataFrame:
+                    long_transaction_cost_ratio: float = 0.0025,
+                    short_transaction_cost_ratio: float = 0.0025, cumulative=False) -> DataFrame:
         _, returns, _ = self.get_returns_and_turnovers(
             long_transaction_cost_ratio, short_transaction_cost_ratio, weighted
         )
@@ -545,7 +544,7 @@ class Portfolio(DataFrame):
             portfolio = portfolio.loc[portfolio[factor] > 0, :]
 
         portfolio[QUANTILE] = portfolio.groupby(by=[DATE])[factor].transform(
-            lambda x: pd.qcut(x, chunk_num, labels=labels)
+            lambda x: pd.qcut(x, chunk_num, labels=labels, duplicates='drop')
         )
         portfolio[QUANTILE] = portfolio[QUANTILE].apply(int).apply(str)
 
@@ -616,7 +615,7 @@ class Portfolio(DataFrame):
         return rank_ic
 
     def show_plot(self, cumulative: bool = True, weighted: bool = False, title: str = None,
-                  show_benchmark: bool = True):
+                  show_benchmark: bool = True, save: bool = False):
         portfolio = self.dropna(subset=[RET_1])
 
         if weighted:
@@ -648,6 +647,10 @@ class Portfolio(DataFrame):
             plt.title("Portfolio Simulation")
         plt.ylabel("Return")
         plt.xlabel("Date")
+
+        # save figure
+        if save:
+            plt.savefig(title)
 
         plt.show()
 
