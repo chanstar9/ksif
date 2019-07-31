@@ -84,7 +84,7 @@ class Portfolio(DataFrame):
         if data is None:
             print('Data is being downloaded from KSIF DROPBOX DATA STORAGE')
             dbx = dropbox.Dropbox(
-                oauth2_access_token='TVRotgoEpxAAAAAAAAAAMyxLV0OXl61S_mXAzvj7tynmAbUz6J2mgIDYvAh-XxHG')
+                oauth2_access_token='TVRotgoEpxAAAAAAAAAAMyxLV0OXl61S_mXAzvj7tynmAbUz6J2mgIDYvAh-XxHG', timeout=None)
 
             metadata, f = dbx.files_download('/preprocessed/final_msf.csv')
             # metadata, f = dbx.files_download('/preprocessed/merged.csv')
