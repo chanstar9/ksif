@@ -253,15 +253,44 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
         lambda x: ta.SMA(x[ADJ_CLOSE_P], 60)).reset_index(drop=True)
     available_companies[TRADING_VOLUME_MA20] = available_companies.groupby(CODE).apply(
         lambda x: ta.SMA(x[ADJ_TRADING_VOLUME], 20)).reset_index(drop=True)
+    available_companies[TRADING_VOLUME_MA5] = available_companies.groupby(CODE).apply(
+        lambda x: ta.SMA(x[ADJ_TRADING_VOLUME], 5)).reset_index(drop=True)
     # candle
-    # available_companies[BIG_BULL_CANDLE] = available_companies[]
     available_companies[DOJI_CANDLE] = available_companies.groupby(CODE).apply(
         lambda x: ta.CDLDOJI(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
     available_companies[HAMMER_CANDLE] = available_companies.groupby(CODE).apply(
         lambda x: ta.CDLHAMMER(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
+    available_companies.set_index([CODE, DATE], inplace=True)
+    available_companies[BIG_BULL_CANDLE] = (available_companies[ADJ_TRADING_VOLUME].shift(1) * 2 < available_companies[
+        ADJ_TRADING_VOLUME]) & ((available_companies[ADJ_CLOSE_P] - available_companies[ADJ_OPEN_P]) /
+                                available_companies[ADJ_OPEN_P] >= 0.1) & (
+                                                   available_companies[ADJ_CLOSE_P] > available_companies[
+                                               ADJ_CLOSE_P].shift(1)) & (
+                                                   available_companies[ADJ_CLOSE_P] > available_companies[
+                                               ADJ_CLOSE_P].shift(2)) & (
+                                                   available_companies[ADJ_CLOSE_P] > available_companies[
+                                               ADJ_CLOSE_P].shift(3)) & (
+                                                   available_companies[ADJ_CLOSE_P] > available_companies[
+                                               ADJ_CLOSE_P].shift(4)) & (
+                                                   available_companies[ADJ_CLOSE_P] > available_companies[
+                                               ADJ_CLOSE_P].shift(5)) & (
+                                                       available_companies[ADJ_CLOSE_P] > available_companies[
+                                                   ADJ_OPEN_P].shift(1)) & (
+                                                       available_companies[ADJ_CLOSE_P] > available_companies[
+                                                   ADJ_OPEN_P].shift(2)) & (
+                                                       available_companies[ADJ_CLOSE_P] > available_companies[
+                                                   ADJ_OPEN_P].shift(3)) & (
+                                                       available_companies[ADJ_CLOSE_P] > available_companies[
+                                                   ADJ_OPEN_P].shift(4)) & (
+                                                       available_companies[ADJ_CLOSE_P] > available_companies[
+                                                   ADJ_OPEN_P].shift(5))
     available_companies[ACCUMULATION_CANDLE] = (available_companies[ADJ_TRADING_VOLUME].shift(1) * 2 <
-        available_companies[ADJ_TRADING_VOLUME]) * ((available_companies[ADJ_CLOSE_P] - available_companies[ADJ_OPEN_P])
-        / available_companies[ADJ_OPEN_P] <= 0.08)
+                                                available_companies[ADJ_TRADING_VOLUME]) & (
+                                                       (available_companies[ADJ_CLOSE_P] - available_companies[
+                                                           ADJ_OPEN_P]) / available_companies[ADJ_OPEN_P] <= 0.08) & (
+                                                       0 <= (available_companies[ADJ_CLOSE_P] - available_companies[
+                                                   ADJ_OPEN_P]) / available_companies[ADJ_OPEN_P])
+    available_companies.reset_index(inplace=True)
 
     # Select result columns
     processed_companies = copy(available_companies[COMPANY_RESULT_COLUMNS])

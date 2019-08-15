@@ -144,11 +144,12 @@ LIQUIDITY_FACTORS = [
 # average
 PRICE_MA20 = 'price_ma20'  # 20일 가격 이동평균
 PRICE_MA60 = 'price_ma60'  # 60일 가격 이동평균
+TRADING_VOLUME_MA5 = 'trading_volume_ma5'  # 20일 거래량 이동평균
 TRADING_VOLUME_MA20 = 'trading_volume_ma20'  # 20일 거래량 이동평균
 # candle
-BIG_BULL_CANDLE = 'big_bull_candle'  # 장대양봉
 DOJI_CANDLE = 'doji_candle'  # 도지형 캔들
 HAMMER_CANDLE = 'hammer_candle'  # 망치형 캔들
+BIG_BULL_CANDLE = 'big_bull_candle'  # 장대양봉
 ACCUMULATION_CANDLE = 'accumulation_candle'  # 매집봉
 # sub
 BOLLINGER_BAND = 'bollinger_band'  # 볼린저밴드
