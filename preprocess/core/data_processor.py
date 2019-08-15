@@ -43,8 +43,8 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
 
     # outstanding shares = # of common stocks - (# of largest shareholder's stocks + # of major shareholder's stocks)
     unprocessed_companies.loc[:, OS_SHARES] = unprocessed_companies[LISTED_SHARES] - (
-                unprocessed_companies[LS_SHARES] + unprocessed_companies[
-            OVER_10_QUARTILE_SHARES + unprocessed_companies[OVER_20_QUARTILE_SHARES]])
+            unprocessed_companies[LS_SHARES] + unprocessed_companies[OVER_10_QUARTILE_SHARES] + unprocessed_companies[
+        OVER_20_QUARTILE_SHARES])
 
     # Calculate fiscal quarters of daily data.
     daily_companies = unprocessed_companies.loc[:, DAILY_DATA].reset_index(drop=True)

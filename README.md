@@ -8,5 +8,7 @@ Set the root directory as your working directory like 'C:\Users\willbe\PycharmPr
 Pass a parameter indicating a file name in data folder like '180730'.
 After running 'core/__init__.py', the result files are saved in the root directory.
 
+daily frequency로 수정완료
 거시경제 변수를 사용할 수 있음.
 타임래그도 다 맞춰져 있음.
+기술적지표 추가
