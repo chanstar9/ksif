@@ -77,7 +77,7 @@ class TestDataFilter(TestCase):
         # Check whether the last price of TEST_BANKRUPT is 0 or not.
         test_bankrupt_companies = filtered_companies[filtered_companies[NAME] == TEST_BANKRUPT]
         merge_last_price = test_bankrupt_companies.iloc[-1][ENDP]
-        merge_last_adjusted_price = test_bankrupt_companies.iloc[-1][ADJP]
+        merge_last_adjusted_price = test_bankrupt_companies.iloc[-1][ADJ_CLOSE_P]
         self.assertEqual(0, merge_last_price)
         self.assertEqual(0, merge_last_adjusted_price)
 
@@ -92,8 +92,8 @@ class TestDataFilter(TestCase):
         test_merge_companies = filtered_companies[filtered_companies[NAME] == TEST_MERGE]
         merge_last_price = test_merge_companies.iloc[-1][ENDP]
         merge_second_last_price = test_merge_companies.iloc[-2][ENDP]
-        merge_last_adjusted_price = test_merge_companies.iloc[-1][ADJP]
-        merge_second_last_adjusted_price = test_merge_companies.iloc[-2][ADJP]
+        merge_last_adjusted_price = test_merge_companies.iloc[-1][ADJ_CLOSE_P]
+        merge_second_last_adjusted_price = test_merge_companies.iloc[-2][ADJ_CLOSE_P]
         self.assertIsNotNone(merge_last_price)
         self.assertIsNotNone(merge_last_adjusted_price)
         self.assertEqual(merge_last_price, merge_second_last_price)

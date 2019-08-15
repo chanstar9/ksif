@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 :Author: Jaekyoung Kim
+         Chankyu Choi
 :Date: 2018. 6. 19.
 """
 import numpy as np
@@ -46,7 +47,7 @@ def read_companies(excel_file: ExcelFile) -> pd.DataFrame:
     # Save symbol names and item names.
     names = raw_companies.drop_duplicates(subset=CODE, keep='last').loc[:, [CODE, NAME]]
     names = names.set_index(CODE)
-    item_name_num = len(raw_companies.loc[:1000, ITEM_NAME].unique())
+    item_name_num = len(raw_companies.loc[:, ITEM_NAME].unique())
     item_names = raw_companies.loc[:item_name_num - 1, ITEM_NAME]
 
     # Remove unnecessary columns, for example, Symbol, Kind, Item, Item Name, Frequency
@@ -79,8 +80,8 @@ def read_companies(excel_file: ExcelFile) -> pd.DataFrame:
 
     # nan -> 0
     to_zero_columns = [
-        CFO, ALLOWANCE_AR_, TRADING_VOLUME, RES_EXP, AR, DIVP, AP,
-        NET_PERSONAL_PURCHASE, NET_NATIONAL_PURCHASE, NET_FINANCIAL_INVESTMENT_PURCHASE,
+        LS_SHARES, OVER_10_QUARTILE_SHARES, OVER_20_QUARTILE_SHARES, CFO, ALLOWANCE_AR_, TRADING_VOLUME, RES_EXP, AR,
+        DIVP, AP, NET_PERSONAL_PURCHASE, NET_NATIONAL_PURCHASE, NET_FINANCIAL_INVESTMENT_PURCHASE,
         NET_INSTITUTIONAL_FOREIGN_PURCHASE, NET_INSTITUTIONAL_PURCHASE, NET_ETC_FINANCE_PURCHASE,
         NET_ETC_CORPORATION_PURCHASE, NET_ETC_FOREIGN_PURCHASE, NET_REGISTERED_FOREIGN_PURCHASE,
         NET_INSURANCE_PURCHASE, NET_PRIVATE_FUND_PURCHASE, NET_PENSION_PURCHASE, NET_FOREIGN_PURCHASE,

@@ -10,13 +10,13 @@ with open("README.md", "r", encoding='utf-8') as fh:
 
 setup(
     name='ksif',
-    version='2019.3.18',
+    version='2019.8.1',
     description='Quantitative investment tools for KSIF',
     long_description=long_description,
     author='KSIF Tech',
-    author_email='jaekyoungkim@kaist.ac.kr',
-    url='https://github.com/willbelucky/ksif',
-    download_url='https://github.com/willbelucky/ksif/archive/master.zip',
+    author_email='traintion9@kaist.ac.kr',
+    url='https://github.com/chanstar9/ksif',
+    download_url='https://github.com/chanstar9/ksif/archive/master.zip',
     install_requires=[
         'h5py==2.8.0',
         'pandas',

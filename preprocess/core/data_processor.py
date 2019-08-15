@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 :Author: Jaekyoung Kim
+         Chankyu Choi
 :Date: 2018. 7. 6.
 """
 from copy import copy
@@ -24,11 +25,27 @@ AVG_ASSET = 'avg_asset'
 
 def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     """
-
     :param unprocessed_companies: (DataFrame)
-
     :return processed_companies: (DataFrame)
     """
+    # price and volume adjustment
+    unprocessed_companies[ADJ_C] = unprocessed_companies[ADJ_C][::-1].cumprod()
+    unprocessed_companies[ADJ_OPEN_P] = unprocessed_companies[OPEN_P] / unprocessed_companies[ADJ_C]
+    unprocessed_companies[ADJ_HIGH_P] = unprocessed_companies[HIGH_P] / unprocessed_companies[ADJ_C]
+    unprocessed_companies[ADJ_LOW_P] = unprocessed_companies[LOW_P] / unprocessed_companies[ADJ_C]
+    unprocessed_companies[ADJ_CLOSE_P] = unprocessed_companies[CLOSE_P] / unprocessed_companies[ADJ_C]
+    unprocessed_companies[CONSENSUS] = unprocessed_companies[CONSENSUS] / unprocessed_companies[ADJ_C]
+    unprocessed_companies[ADJ_TRADING_VOLUME] = unprocessed_companies[TRADING_VOLUME] * unprocessed_companies[ADJ_C]
+
+    # market capital = # of common stocks * # of common stocks
+    unprocessed_companies.loc[:, MKTCAP] = unprocessed_companies[ADJ_CLOSE_P] * (
+            unprocessed_companies[LISTED_SHARES] + unprocessed_companies[CS_TOBEPUB])
+
+    # outstanding shares = # of common stocks - (# of largest shareholder's stocks + # of major shareholder's stocks)
+    unprocessed_companies.loc[:, OS_SHARES] = unprocessed_companies[LISTED_SHARES] - (
+                unprocessed_companies[LS_SHARES] + unprocessed_companies[
+            OVER_10_QUARTILE_SHARES + unprocessed_companies[OVER_20_QUARTILE_SHARES]])
+
     # Calculate fiscal quarters of daily data.
     daily_companies = unprocessed_companies.loc[:, DAILY_DATA].reset_index(drop=True)
     daily_companies.loc[:, MONTH_DAY] = daily_companies[DATE].dt.month * 100 + daily_companies[DATE].dt.day
@@ -43,9 +60,6 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     daily_companies.loc[(daily_companies[MONTH_DAY] < 402) | (daily_companies[MONTH_DAY] >= 1114), FISCAL_QUARTER] = \
         daily_companies[YEAR] * 10 + 3
     daily_companies.loc[(daily_companies[MONTH_DAY] < 515), FISCAL_QUARTER] += -10
-
-    # market capital = $ of common stocks * # of common stocks
-    daily_companies.loc[:, MKTCAP] = daily_companies[ENDP] * (daily_companies[OUTCST] + daily_companies[CS_TOBEPUB])
 
     # Calculate fiscal quarters of quarterly data.
     quarterly_companies = unprocessed_companies.loc[
@@ -65,7 +79,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
             quarterly_companies.groupby(CODE)[TAX].rolling(4).sum()
     ).reset_index(drop=True)
 
-    quarterly_companies['nopat12'] = (
+    quarterly_companies['noplat12'] = (
             quarterly_companies['op12'] - quarterly_companies.groupby(CODE)[TAX].rolling(4).sum().reset_index(drop=True)
     )
 
@@ -126,13 +140,13 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
 
     # Return
     available_companies[RET_1] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJP].shift(-1) - x[ADJP]) / zero_to_nan(x[ADJP])).reset_index(drop=True)
+        lambda x: (x[ADJ_CLOSE_P].shift(-1) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
     available_companies[RET_3] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJP].shift(-3) - x[ADJP]) / zero_to_nan(x[ADJP])).reset_index(drop=True)
+        lambda x: (x[ADJ_CLOSE_P].shift(-3) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
     available_companies[RET_6] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJP].shift(-6) - x[ADJP]) / zero_to_nan(x[ADJP])).reset_index(drop=True)
+        lambda x: (x[ADJ_CLOSE_P].shift(-6) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
     available_companies[RET_12] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJP].shift(-12) - x[ADJP]) / zero_to_nan(x[ADJP])).reset_index(drop=True)
+        lambda x: (x[ADJ_CLOSE_P].shift(-12) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
 
     # Value factors
     available_companies[PER] = available_companies[MKTCAP] / zero_to_nan(available_companies.ni12) / 1000
@@ -160,65 +174,78 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
 
     # Momentum factors
     available_companies[MOM12_1] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJP].shift(1) - x[ADJP].shift(12)) / zero_to_nan(x[ADJP].shift(12))).reset_index(drop=True)
+        lambda x: (x[ADJ_CLOSE_P].shift(1) - x[ADJ_CLOSE_P].shift(12)) / zero_to_nan(
+            x[ADJ_CLOSE_P].shift(12))).reset_index(
+        drop=True)
     available_companies[MOM6_1] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJP].shift(1) - x[ADJP].shift(6)) / zero_to_nan(x[ADJP].shift(6))).reset_index(drop=True)
+        lambda x: (x[ADJ_CLOSE_P].shift(1) - x[ADJ_CLOSE_P].shift(6)) / zero_to_nan(
+            x[ADJ_CLOSE_P].shift(6))).reset_index(
+        drop=True)
     available_companies[MOM12] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJP] - x[ADJP].shift(12)) / zero_to_nan(x[ADJP].shift(12))).reset_index(drop=True)
+        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(12)) / zero_to_nan(x[ADJ_CLOSE_P].shift(12))).reset_index(
+        drop=True)
     available_companies[MOM6] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJP] - x[ADJP].shift(6)) / zero_to_nan(x[ADJP].shift(6))).reset_index(drop=True)
+        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(6)) / zero_to_nan(x[ADJ_CLOSE_P].shift(6))).reset_index(
+        drop=True)
     available_companies[MOM3] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJP] - x[ADJP].shift(3)) / zero_to_nan(x[ADJP].shift(3))).reset_index(drop=True)
+        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(3)) / zero_to_nan(x[ADJ_CLOSE_P].shift(3))).reset_index(
+        drop=True)
     available_companies[MOM1] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJP] - x[ADJP].shift(1)) / zero_to_nan(x[ADJP].shift(1))).reset_index(drop=True)
+        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(1)) / zero_to_nan(x[ADJ_CLOSE_P].shift(1))).reset_index(
+        drop=True)
 
     # Liquidity factors
-    available_companies[TRADING_VOLUME_RATIO] = available_companies[TRADING_VOLUME] / available_companies[OUTCST]
+    available_companies[TRADING_VOLUME_RATIO] = available_companies[TRADING_VOLUME] / available_companies[LISTED_SHARES]
     available_companies[NET_PERSONAL_PURCHASE_RATIO] = available_companies[NET_PERSONAL_PURCHASE] / available_companies[
-        OUTCST]
+        LISTED_SHARES]
     available_companies[NET_INSTITUTIONAL_FOREIGN_PURCHASE_RATIO] = available_companies[
                                                                         NET_INSTITUTIONAL_FOREIGN_PURCHASE] / \
-                                                                    available_companies[OUTCST]
+                                                                    available_companies[LISTED_SHARES]
     available_companies[NET_INSTITUTIONAL_PURCHASE_RATIO] = available_companies[NET_INSTITUTIONAL_PURCHASE] / \
-                                                            available_companies[OUTCST]
+                                                            available_companies[LISTED_SHARES]
     available_companies[NET_FINANCIAL_INVESTMENT_PURCHASE_RATIO] = available_companies[
                                                                        NET_FINANCIAL_INVESTMENT_PURCHASE] / \
-                                                                   available_companies[OUTCST]
+                                                                   available_companies[LISTED_SHARES]
     available_companies[NET_INSURANCE_PURCHASE_RATIO] = available_companies[NET_INSURANCE_PURCHASE] / \
-                                                        available_companies[OUTCST]
+                                                        available_companies[LISTED_SHARES]
     available_companies[NET_TRUST_PURCHASE_RATIO] = available_companies[NET_TRUST_PURCHASE] / available_companies[
-        OUTCST]
+        LISTED_SHARES]
     available_companies[NET_PRIVATE_FUND_PURCHASE_RATIO] = available_companies[NET_PRIVATE_FUND_PURCHASE] / \
-                                                           available_companies[OUTCST]
-    available_companies[NET_BANK_PURCHASE_RATIO] = available_companies[NET_BANK_PURCHASE] / available_companies[OUTCST]
+                                                           available_companies[LISTED_SHARES]
+    available_companies[NET_BANK_PURCHASE_RATIO] = available_companies[NET_BANK_PURCHASE] / available_companies[
+        LISTED_SHARES]
     available_companies[NET_ETC_FINANCE_PURCHASE_RATIO] = available_companies[NET_ETC_FINANCE_PURCHASE] / \
-                                                          available_companies[OUTCST]
+                                                          available_companies[LISTED_SHARES]
     available_companies[NET_PENSION_PURCHASE_RATIO] = available_companies[NET_PENSION_PURCHASE] / available_companies[
-        OUTCST]
+        LISTED_SHARES]
     available_companies[NET_NATIONAL_PURCHASE_RATIO] = available_companies[NET_NATIONAL_PURCHASE] / available_companies[
-        OUTCST]
+        LISTED_SHARES]
     available_companies[NET_ETC_CORPORATION_PURCHASE_RATIO] = available_companies[NET_ETC_CORPORATION_PURCHASE] / \
-                                                              available_companies[OUTCST]
+                                                              available_companies[LISTED_SHARES]
     available_companies[NET_FOREIGN_PURCHASE_RATIO] = available_companies[NET_FOREIGN_PURCHASE] / available_companies[
-        OUTCST]
+        LISTED_SHARES]
     available_companies[NET_REGISTERED_FOREIGN_PURCHASE_RATIO] = available_companies[NET_REGISTERED_FOREIGN_PURCHASE] / \
-                                                                 available_companies[OUTCST]
+                                                                 available_companies[LISTED_SHARES]
     available_companies[NET_ETC_FOREIGN_PURCHASE_RATIO] = available_companies[NET_ETC_FOREIGN_PURCHASE] / \
-                                                          available_companies[OUTCST]
+                                                          available_companies[LISTED_SHARES]
     available_companies[FOREIGN_OWNERSHIP_RATIO] = available_companies[FOREIGN_OWNERSHIP_RATIO] / 100
-    available_companies[SHORT_SALE_VOLUME_RATIO] = available_companies[SHORT_SALE_VOLUME] / available_companies[OUTCST]
+    available_companies[SHORT_SALE_VOLUME_RATIO] = available_companies[SHORT_SALE_VOLUME] / available_companies[
+        LISTED_SHARES]
     available_companies[SHORT_SALE_BALANCE_RATIO] = available_companies[SHORT_SALE_BALANCE] / available_companies[
-        OUTCST]
+        LISTED_SHARES]
     available_companies[SHORT_SALE_BALANCE_MOM] = available_companies.groupby(CODE).apply(
         lambda x: (x[SHORT_SALE_BALANCE_RATIO] - x[SHORT_SALE_BALANCE_RATIO].shift(1)) / zero_to_nan(
             np.abs(x[SHORT_SALE_BALANCE_RATIO].shift(1)))).reset_index(drop=True)
     available_companies[SHARE_LENDING_VOLUME_RATIO] = available_companies[SHARE_LENDING_VOLUME] / available_companies[
-        OUTCST]
+        LISTED_SHARES]
     available_companies[SHARE_LENDING_BALANCE_RATIO] = available_companies[SHARE_LENDING_BALANCE] / available_companies[
-        OUTCST]
+        LISTED_SHARES]
     available_companies[SHARE_LENDING_BALANCE_MOM] = available_companies.groupby(CODE).apply(
         lambda x: (x[SHARE_LENDING_BALANCE_RATIO] - x[SHARE_LENDING_BALANCE_RATIO].shift(1)) / zero_to_nan(
             np.abs(x[SHARE_LENDING_BALANCE_RATIO].shift(1)))).reset_index(drop=True)
+
+    # Technical Indicator factors
+    # available_companies[]
 
     # Select result columns
     processed_companies = copy(available_companies[COMPANY_RESULT_COLUMNS])

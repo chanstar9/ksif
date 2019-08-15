@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 :Author: Jaekyoung Kim
+         Chankyu Choi
 :Date: 2018. 7. 18.
 """
 import itertools
@@ -13,21 +14,25 @@ RET_1 = 'return_1'  # 1개월 수익
 RET_3 = 'return_3'  # 3개월 수익
 RET_6 = 'return_6'  # 6개월 수익
 RET_12 = 'return_12'  # 12개월 수익
-ADJP = 'adjp'  # 수정종가
-ENDP = 'endp'  # 종가
+ADJ_OPEN_P = 'adj_open_p'  # 수정시가
+ADJ_HIGH_P = 'adj_high_p'  # 수정고가
+ADJ_LOW_P = 'adj_low_p'  # 수정고가
+ADJ_CLOSE_P = 'adj_close_p'  # 수정종가
+ADJ_TRADING_VOLUME = 'adj_trading_volume'   # 수정거래량
 MKTCAP = 'mktcap'  # 시가총액
-BASE_INFORMATION = [CODE, NAME, DATE, RET_1, RET_3, RET_6, RET_12, ADJP, ENDP, MKTCAP]
+OS_SHARES = 'ut_shares'  # 유통 주식수 (보통)(주)
+BASE_INFORMATION = [CODE, NAME, DATE, RET_1, RET_3, RET_6, RET_12, ADJ_OPEN_P, ADJ_HIGH_P, ADJ_LOW_P, ADJ_CLOSE_P,
+                    MKTCAP]
 
 # Filter
 EXCHANGE = 'exchange'  # 거래소
-FN_GUIDE_SECTOR = 'fn_guide_sector'  # FN Guide 섹트
+FN_GUIDE_SECTOR = 'fn_guide_sector'  # FN Guide 섹터
 FN_GUIDE_INDUSTRY_GROUP_27 = 'fn_guide_industry_group_27'  # FN Guide 산업구분
 KRX_SECTOR = 'krx_sector'  # 한국거래소 섹터
 HOLDING = 'holding'  # 지주사 여부
 IS_MANAGED = 'is_managed'  # 관리종목 여부
 IS_SUSPENDED = 'is_suspended'  # 거래정지 여부
-FILTERS = [EXCHANGE, FN_GUIDE_SECTOR, FN_GUIDE_INDUSTRY_GROUP_27, KRX_SECTOR, HOLDING, IS_MANAGED,
-           IS_SUSPENDED]
+FILTERS = [EXCHANGE, FN_GUIDE_SECTOR, FN_GUIDE_INDUSTRY_GROUP_27, KRX_SECTOR, HOLDING, IS_MANAGED, IS_SUSPENDED]
 
 # Value factors
 PER = 'per'  # 주가수익률 Per Earnings Ratio
@@ -134,6 +139,30 @@ LIQUIDITY_FACTORS = [
     NET_ETC_FOREIGN_PURCHASE_RATIO, FOREIGN_OWNERSHIP_RATIO, SHORT_SALE_VOLUME_RATIO, SHORT_SALE_BALANCE_RATIO,
     SHORT_SALE_BALANCE_MOM, SHARE_LENDING_VOLUME_RATIO, SHARE_LENDING_BALANCE_RATIO, SHARE_LENDING_BALANCE_MOM,
 ]
+
+# Technical Indicator Factor
+# average
+PRICE_MA20 = 'price_ma20'  # 20일 가격 이동평균
+PRICE_MA60 = 'price_ma60'  # 60일 가격 이동평균
+TRADING_VOLUME_MA20 = 'trading_volume_ma20'  # 20일 거래량 이동평균
+# candle
+BIG_BULL_CANDLE = 'big_bull_candle'  # 장대양봉
+DOJI_CANDLE = 'doji_candle'  # 도지형 캔들
+HAMMER_CANDLE = 'hammer_candle'  # 망치형 캔들
+ACCUMULATION_CANDLE = 'accumulation_candle'  # 매집봉
+# sub
+BOLLINGER_BAND = 'bollinger_band'  # 볼린저밴드
+STOCHASTIC = 'stochastic'  # 스토케스틱
+OBV = 'obv'  # OBV
+DISPARITY = 'disparity'  # 이격도
+TRIX = 'trix'   # trix
+# pattern
+GAP_RISE = 'gap_rise'  # 갭상승
+RISE_DIVERGENCE = 'rise_divergence'  # 상승 다이버젼스
+DOUBLE_BOTTOM = 'double_bottom'  # 쌍바닥
+GOLDEN_CROSS = 'golden_cross'  # 골든크로스
+
+# Consensus Factor
 
 COMPANY_FACTORS = list(
     itertools.chain(

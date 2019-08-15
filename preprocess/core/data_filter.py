@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 :Author: Jaekyoung Kim
+         Chankyu Choi
 :Date: 2018. 6. 21.
 """
 import math
@@ -25,26 +26,23 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
 
     :return filtered_companies: (DataFrame)
     """
-    # Select rows which OUTCST > 0.
-    unfiltered_companies = unfiltered_companies.loc[unfiltered_companies[OUTCST] > 0, :].reset_index(drop=True)
+    # Select rows which LISTED_SHARES > 0.
+    unfiltered_companies = unfiltered_companies.loc[unfiltered_companies[LISTED_SHARES] > 0, :].reset_index(drop=True)
 
-    # Select rows which ENDP is not nan.
-    unfiltered_companies = unfiltered_companies.loc[~pd.isnull(unfiltered_companies[ENDP]), :].reset_index(drop=True)
+    # Select rows which CLOSE_P is not nan.
+    unfiltered_companies = unfiltered_companies.loc[~pd.isnull(unfiltered_companies[CLOSE_P]), :].reset_index(drop=True)
 
     # Remove delisted rows.
-    unfiltered_companies = unfiltered_companies.loc[[not math.isnan(price) for price in unfiltered_companies[ENDP]]]
-    unfiltered_companies = unfiltered_companies.loc[
-        [not math.isnan(price) for price in unfiltered_companies[ADJP]]]
+    unfiltered_companies = unfiltered_companies.loc[[not math.isnan(price) for price in unfiltered_companies[CLOSE_P]]]
 
     # Remove Spac companies.
     unfiltered_companies = unfiltered_companies.loc[[SPAC not in name for name in unfiltered_companies[NAME]], :]
 
     # Make all date into the last day of month.
-    unfiltered_companies[DATE] = unfiltered_companies[DATE].apply(last_day_of_month)
+    # unfiltered_companies[DATE] = unfiltered_companies[DATE].apply(last_day_of_month)
 
     # Read the list of holding companies.
     holdings = query_google_spreadsheet(HOLDING_COMPANY_GID)
-
     unfiltered_companies[HOLDING] = [code in list(holdings[CODE]) for code in unfiltered_companies[CODE]]
 
     # Save the last day for check new relisted companies.
@@ -56,8 +54,8 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
         [code in delisted_companies[CODE].unique() for code in unfiltered_companies[CODE]]
     ]
     delisted_records = delisted_records.groupby(CODE).last().reset_index()
-    delisted_records[DATE] = delisted_records[DATE].apply(lambda x: x + relativedelta(months=1))
-    delisted_records[[ENDP, ADJP]] = 0
+    # delisted_records[DATE] = delisted_records[DATE].apply(lambda x: x + relativedelta(months=1))
+    delisted_records[[OPEN_P, HIGH_P, LOW_P, CLOSE_P, ADJ_C]] = 0
     unfiltered_companies = pd.concat([unfiltered_companies, delisted_records], axis=0, ignore_index=True)
 
     # Set the next price to the current price when a company is delisted due to M&A.
@@ -66,7 +64,7 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
         [code in merged_companies[CODE].unique() for code in unfiltered_companies[CODE]]
     ]
     merged_records = merged_records.groupby(CODE).last().reset_index()
-    merged_records[DATE] = merged_records[DATE].apply(lambda x: x + relativedelta(months=1))
+    # merged_records[DATE] = merged_records[DATE].apply(lambda x: x + relativedelta(months=1))
     unfiltered_companies = pd.concat([unfiltered_companies, merged_records], axis=0, ignore_index=True)
 
     # Set is_suspended of a delisted period to True when a company had been delisted and was listed again.

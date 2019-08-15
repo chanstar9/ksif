@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 :Author: Jaekyoung Kim
+         Chankyu Choi
 :Date: 2018. 6. 19.
 """
 import argparse
@@ -54,4 +55,3 @@ if __name__ == '__main__':
         processed_factors = process_factors(transposed_factors)
         processed_factors.to_csv('data/{}_factor.csv'.format(file_name), index=False, encoding=ENCODING)
         progress_bar.update(10)
-

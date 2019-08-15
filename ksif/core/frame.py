@@ -2,6 +2,7 @@
 """
 :Author: Jaekyoung Kim
          Park Ji woo
+         Chankyu Choi
 :Date: 2018. 7. 18
 """
 import os
