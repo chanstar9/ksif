@@ -9,6 +9,7 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+import talib as ta
 from pandas import DataFrame
 from pandas.tseries.offsets import MonthEnd
 
@@ -245,9 +246,18 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
             np.abs(x[SHARE_LENDING_BALANCE_RATIO].shift(1)))).reset_index(drop=True)
 
     # Technical Indicator factors
-    # available_companies[]
+    # MA
+    available_companies[PRICE_MA20] = available_companies.groupby(CODE).apply(
+        lambda x: ta.SMA(x[ADJ_CLOSE_P], 20)).reset_index(drop=True)
+    available_companies[PRICE_MA60] = available_companies.groupby(CODE).apply(
+        lambda x: ta.SMA(x[ADJ_CLOSE_P], 60)).reset_index(drop=True)
+    available_companies[TRADING_VOLUME_MA20] = available_companies.groupby(CODE).apply(
+        lambda x: ta.SMA(x[ADJ_TRADING_VOLUME], 20)).reset_index(drop=True)
+    # candle
+    # if available_companies.groupby(CODE)[]
+    #     available_companies[BIG_BULL_CANDLE] =
 
-    # Select result columns
+        # Select result columns
     processed_companies = copy(available_companies[COMPANY_RESULT_COLUMNS])
 
     # Select rows which RET_1 is not nan before the last month.
