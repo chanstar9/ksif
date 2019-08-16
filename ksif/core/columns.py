@@ -151,8 +151,11 @@ DOJI_CANDLE = 'doji_candle'  # 도지형 캔들
 HAMMER_CANDLE = 'hammer_candle'  # 망치형 캔들
 ACCUMULATION_CANDLE = 'accumulation_candle'  # 매집봉
 # sub
-BOLLINGER_BAND = 'bollinger_band'  # 볼린저밴드
-STOCHASTIC = 'stochastic'  # 스토케스틱
+BOLLINGER_UPPERBAND = 'bollinger_upperband'  # 볼린저밴드
+BOLLINGER_MIDBAND = 'bollinger_midband'  # 볼린저밴드
+BOLLINGER_LOWERBAND = 'bollinger_lowerband'  # 볼린저밴드
+STOCHASTIC_SLOWK = 'stochastic_slowk'  # 스토케스틱
+STOCHASTIC_SLOWD = 'stochastic_slowd'  # 스토케스틱
 OBV = 'obv'  # OBV
 DISPARITY = 'disparity'  # 이격도
 TRIX = 'trix'   # trix

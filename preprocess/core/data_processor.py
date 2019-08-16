@@ -14,7 +14,7 @@ from pandas import DataFrame
 from pandas.tseries.offsets import MonthEnd
 
 from preprocess.core.columns import *
-from preprocess.core.utils import zero_to_nan
+from preprocess.core.utils import *
 
 YEAR = 'year'
 MONTH_DAY = 'month_day'
@@ -253,11 +253,34 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
         lambda x: ta.SMA(x[ADJ_CLOSE_P], 60)).reset_index(drop=True)
     available_companies[TRADING_VOLUME_MA20] = available_companies.groupby(CODE).apply(
         lambda x: ta.SMA(x[ADJ_TRADING_VOLUME], 20)).reset_index(drop=True)
-    # candle
-    # if available_companies.groupby(CODE)[]
-    #     available_companies[BIG_BULL_CANDLE] =
 
-        # Select result columns
+    # sub
+    available_companies[BOLLINGER_UPPERBAND] = available_companies.groupby(CODE).apply(
+        lambda x: ta.BBANDS(x[ADJ_CLOSE_P])[0]).reset_index(drop=True)
+    available_companies[BOLLINGER_MIDBAND] = available_companies.groupby(CODE).apply(
+        lambda x: ta.BBANDS(x[ADJ_CLOSE_P])[1]).reset_index(drop=True)
+    available_companies[BOLLINGER_LOWERBAND] = available_companies.groupby(CODE).apply(
+        lambda x: ta.BBANDS(x[ADJ_CLOSE_P])[2]).reset_index(drop=True)
+    available_companies[STOCHASTIC_SLOWK] = available_companies.groupby(CODE).apply(
+        lambda x: ta.STOCH(x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P])[0]).reset_index(drop=True)
+    available_companies[STOCHASTIC_SLOWD] = available_companies.groupby(CODE).apply(
+        lambda x: ta.STOCH(x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P])[1]).reset_index(drop=True)
+    available_companies[OBV] = available_companies.groupby(CODE).apply(
+        lambda x: ta.OBV(x[ADJ_CLOSE_P], x[ADJ_TRADING_VOLUME])).reset_index(drop=True)
+    available_companies[DISPARITY] = available_companies.groupby(CODE).apply(
+        lambda x: disparity(x[ADJ_CLOSE_P],x[PRICE_MA20])).reset_index(drop=True)
+    available_companies[TRIX] = available_companies.groupby(CODE).apply(
+        lambda x: ta.TRIX(x[ADJ_CLOSE_P], 30)).reset_index(drop=True)
+
+    # pattern
+    available_companies[GAP_RISE] = available_companies.groupby(CODE).apply(
+        lambda x: gap_rise(x[ADJ_CLOSE_P], x[ADJ_OPEN_P])).reset_index(drop=True)
+    RISE_DIVERGENCE = 'rise_divergence'  # 상승 다이버젼스
+    DOUBLE_BOTTOM = 'double_bottom'  # 쌍바닥
+    available_companies[GOLDEN_CROSS] = available_companies.groupby(CODE).apply(
+        lambda x: golden_cross(x[PRICE_MA20], x[PRICE_MA60])).reset_index(drop=True)
+
+    # Select result columns
     processed_companies = copy(available_companies[COMPANY_RESULT_COLUMNS])
 
     # Select rows which RET_1 is not nan before the last month.
