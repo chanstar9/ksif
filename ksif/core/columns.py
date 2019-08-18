@@ -11,19 +11,17 @@ DATADATE = 'datadate'
 CODE = 'code'
 NAME = 'name'
 DATE = 'date'
-RET_1 = 'return_1'  # 1개월 수익
-RET_3 = 'return_3'  # 3개월 수익
-RET_6 = 'return_6'  # 6개월 수익
-RET_12 = 'return_12'  # 12개월 수익
+RET_D = 'daily_return'  # 1일 수익률
+RET_W = 'weekly_return'  # 1주일 수익률
+RET_M = 'monthly_return'  # 1개월 수익률
 ADJ_OPEN_P = 'adj_open_p'  # 수정시가
 ADJ_HIGH_P = 'adj_high_p'  # 수정고가
 ADJ_LOW_P = 'adj_low_p'  # 수정고가
 ADJ_CLOSE_P = 'adj_close_p'  # 수정종가
-ADJ_TRADING_VOLUME = 'adj_trading_volume'   # 수정거래량
+ADJ_TRADING_VOLUME = 'adj_trading_volume'  # 수정거래량
 MKTCAP = 'mktcap'  # 시가총액
 OS_SHARES = 'ut_shares'  # 유통 주식수 (보통)(주)
-BASE_INFORMATION = [CODE, NAME, DATE, RET_1, RET_3, RET_6, RET_12, ADJ_OPEN_P, ADJ_HIGH_P, ADJ_LOW_P, ADJ_CLOSE_P,
-                    MKTCAP]
+BASE_INFORMATION = [CODE, NAME, DATE, RET_M, RET_W, RET_M, ADJ_OPEN_P, ADJ_HIGH_P, ADJ_LOW_P, ADJ_CLOSE_P, MKTCAP]
 
 # Fundamental
 REVTQ = 'revtq'
@@ -207,21 +205,44 @@ THREE_OUTSIDE_UP = 'three_outside_up'
 UPSIDE_GAP_TWO_CROWS = 'upside_gap_two_crows'
 
 # sub
-BOLLINGER_UPPERBAND = 'bollinger_upperband'  # 볼린저밴드
-BOLLINGER_MIDBAND = 'bollinger_midband'  # 볼린저밴드
-BOLLINGER_LOWERBAND = 'bollinger_lowerband'  # 볼린저밴드
-STOCHASTIC_SLOWK = 'stochastic_slowk'  # 스토케스틱
-STOCHASTIC_SLOWD = 'stochastic_slowd'  # 스토케스틱
+BOLLINGER_UPPERBAND = 'bollinger_upperband'  # 볼린저밴드 상한선
+BOLLINGER_MIDBAND = 'bollinger_midband'  # 볼린저밴드 중심선
+BOLLINGER_LOWERBAND = 'bollinger_lowerband'  # 볼린저밴드 하한선
+STOCHASTIC_SLOWK = 'stochastic_slowk'  # 스토케스틱 K
+STOCHASTIC_SLOWD = 'stochastic_slowd'  # 스토케스틱 D
 OBV = 'obv'  # OBV
 DISPARITY = 'disparity'  # 이격도
-TRIX = 'trix'   # trix
+TRIX = 'trix'  # trix
 # pattern
 GAP_RISE = 'gap_rise'  # 갭상승
+GOLDEN_CROSS = 'golden_cross'  # 골든크로스
+EVENING_STAR = 'evening_star'
+EVENING_DOJI_STAR = 'evening_doji_star'
+ABANDONED_BABY = 'abandoned_baby'
+THREE_INSIDE_DOWN = 'three_inside_down'
+THREE_OUTSIDE_DOWN = 'three_outside_down'
+UPSIDE_GAP_TWO_CROWS = 'upside_gap_two_crows'
 RISE_DIVERGENCE = 'rise_divergence'  # 상승 다이버젼스
 DOUBLE_BOTTOM = 'double_bottom'  # 쌍바닥
-GOLDEN_CROSS = 'golden_cross'  # 골든크로스
+
+TA_FACTOR = []
 
 # Consensus Factor
+CONSENSUS_MEAN = 'consensus_mean'
+CONSENSUS_CHG = 'consensus_chg'
+CONSENSUS_MAX = 'consensus_max'
+CONSENSUS_MIN = 'consensus_min'
+CONSENSUS_MID = 'consensus_mid'
+CONSENSUS_CV = 'consensus_cv'
+CONSENSUS_DIS = 'consensus_dis'
+CONSENSUS_UP = 'consensus_up'
+CONSENSUS_STAY = 'consensus_stay'
+CONSENSUS_STD = 'consensus_std'
+CONSENSUS_DOWN = 'consensus_down'
+CONSENSUS_ADJ_CHG = 'consensus_adj_chg'
+
+CONSENSUS_FACTOR = [CONSENSUS_MEAN, CONSENSUS_CHG, CONSENSUS_MAX, CONSENSUS_MIN, CONSENSUS_MID, CONSENSUS_CV,
+                    CONSENSUS_DIS, CONSENSUS_UP, CONSENSUS_DOWN, CONSENSUS_STAY, CONSENSUS_STD, CONSENSUS_ADJ_CHG]
 
 COMPANY_FACTORS = list(
     itertools.chain(

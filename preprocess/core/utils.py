@@ -17,7 +17,6 @@ def last_day_of_month(any_day):
 def zero_to_nan(series: Series) -> Series:
     return series.apply(lambda x: np.where(x == 0, np.nan, x))
 
-
 def disparity(adj_close_p: Series, price_ma: Series):
     return adj_close_p / price_ma * 100
 
@@ -59,3 +58,14 @@ def golden_cross(price_ma20: Series, price_ma60: Series):
     pre_position = pre_position.fillna(method='bfill')
     cross = (df != pre_position) * 1
     return cross.to_frame()
+
+# technical indicator
+def big_bull_candle(open, high, low, close, volume):
+    if volume.shift(-1) * 2 < volume:
+        return 1
+    else:
+        return 0
+
+
+def accumulation_candle(open, close, volume):
+    return (volume.shift(1) * 2 < volume) & ((close - open) / open <= 0.08) & (0 <= (close - open) / open)

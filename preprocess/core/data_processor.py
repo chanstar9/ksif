@@ -30,16 +30,23 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     :return processed_companies: (DataFrame)
     """
     # price and volume adjustment
-    unprocessed_companies[ADJ_C] = unprocessed_companies[ADJ_C][::-1].cumprod()
-    unprocessed_companies[ADJ_OPEN_P] = unprocessed_companies[OPEN_P] / unprocessed_companies[ADJ_C]
-    unprocessed_companies[ADJ_HIGH_P] = unprocessed_companies[HIGH_P] / unprocessed_companies[ADJ_C]
-    unprocessed_companies[ADJ_LOW_P] = unprocessed_companies[LOW_P] / unprocessed_companies[ADJ_C]
-    unprocessed_companies[ADJ_CLOSE_P] = unprocessed_companies[CLOSE_P] / unprocessed_companies[ADJ_C]
-    unprocessed_companies[CONSENSUS] = unprocessed_companies[CONSENSUS] / unprocessed_companies[ADJ_C]
     unprocessed_companies[ADJ_TRADING_VOLUME] = unprocessed_companies[TRADING_VOLUME] * unprocessed_companies[ADJ_C]
+    unprocessed_companies[CONSENSUS_MEAN] = unprocessed_companies[CONSENSUS_MEAN] / unprocessed_companies[ADJ_C]
+    unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[ADJ_C] * unprocessed_companies[DIV_ADJ_C]
+    unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[::-1].groupby(CODE)[DIV_ADJ_C].apply(lambda x: x.cumprod())
+    unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[::-1].groupby(CODE)[DIV_ADJ_C].shift(1)
+    unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[DIV_ADJ_C].fillna(1)
+    unprocessed_companies[ADJ_OPEN_P] = unprocessed_companies.groupby(CODE).apply(
+        lambda x: x[OPEN_P] / x[DIV_ADJ_C]).reset_index(drop=True)
+    unprocessed_companies[ADJ_HIGH_P] = unprocessed_companies.groupby(CODE).apply(
+        lambda x: x[HIGH_P] / x[DIV_ADJ_C]).reset_index(drop=True)
+    unprocessed_companies[ADJ_LOW_P] = unprocessed_companies.groupby(CODE).apply(
+        lambda x: x[LOW_P] / x[DIV_ADJ_C]).reset_index(drop=True)
+    unprocessed_companies[ADJ_CLOSE_P] = unprocessed_companies.groupby(CODE).apply(
+        lambda x: x[CLOSE_P] / x[DIV_ADJ_C]).reset_index(drop=True)
 
-    # market capital = # of common stocks * # of common stocks
-    unprocessed_companies.loc[:, MKTCAP] = unprocessed_companies[ADJ_CLOSE_P] * (
+    # market capital = price of common stocks * # of common stocks
+    unprocessed_companies.loc[:, MKTCAP] = unprocessed_companies[CLOSE_P] * (
             unprocessed_companies[LISTED_SHARES] + unprocessed_companies[CS_TOBEPUB])
 
     # outstanding shares = # of common stocks - (# of largest shareholder's stocks + # of major shareholder's stocks)
@@ -100,7 +107,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
         quarterly_companies.groupby(CODE)[EQUITY].rolling(2).mean()).reset_index(drop=True)
     quarterly_companies[EBT_E] = quarterly_companies['ebt12'] / zero_to_nan(
         quarterly_companies.groupby(CODE)[EQUITY].rolling(4).mean()).reset_index(drop=True)
-    quarterly_companies[ROIC] = quarterly_companies.nopat12 / zero_to_nan(
+    quarterly_companies[ROIC] = quarterly_companies.noplat12 / zero_to_nan(
         quarterly_companies[TANG_ASSET] + quarterly_companies[INV] + quarterly_companies[AR] -
         quarterly_companies[ALLOWANCE_AR_] - quarterly_companies[AP]
     )
@@ -140,14 +147,12 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
         drop=True)
 
     # Return
-    available_companies[RET_1] = available_companies.groupby(CODE).apply(
+    available_companies[RET_D] = available_companies.groupby(CODE).apply(
         lambda x: (x[ADJ_CLOSE_P].shift(-1) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
-    available_companies[RET_3] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJ_CLOSE_P].shift(-3) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
-    available_companies[RET_6] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJ_CLOSE_P].shift(-6) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
-    available_companies[RET_12] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJ_CLOSE_P].shift(-12) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
+    available_companies[RET_W] = available_companies.groupby(CODE).apply(
+        lambda x: (x[ADJ_CLOSE_P].shift(-5) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
+    available_companies[RET_M] = available_companies.groupby(CODE).apply(
+        lambda x: (x[ADJ_CLOSE_P].shift(-20) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
 
     # Value factors
     available_companies[PER] = available_companies[MKTCAP] / zero_to_nan(available_companies.ni12) / 1000
@@ -274,16 +279,16 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
                                                ADJ_CLOSE_P].shift(4)) & (
                                                    available_companies[ADJ_CLOSE_P] > available_companies[
                                                ADJ_CLOSE_P].shift(5)) & (
-                                                       available_companies[ADJ_CLOSE_P] > available_companies[
-                                                   ADJ_OPEN_P].shift(1)) & (
-                                                       available_companies[ADJ_CLOSE_P] > available_companies[
-                                                   ADJ_OPEN_P].shift(2)) & (
-                                                       available_companies[ADJ_CLOSE_P] > available_companies[
-                                                   ADJ_OPEN_P].shift(3)) & (
-                                                       available_companies[ADJ_CLOSE_P] > available_companies[
-                                                   ADJ_OPEN_P].shift(4)) & (
-                                                       available_companies[ADJ_CLOSE_P] > available_companies[
-                                                   ADJ_OPEN_P].shift(5))
+                                                   available_companies[ADJ_CLOSE_P] > available_companies[
+                                               ADJ_OPEN_P].shift(1)) & (
+                                                   available_companies[ADJ_CLOSE_P] > available_companies[
+                                               ADJ_OPEN_P].shift(2)) & (
+                                                   available_companies[ADJ_CLOSE_P] > available_companies[
+                                               ADJ_OPEN_P].shift(3)) & (
+                                                   available_companies[ADJ_CLOSE_P] > available_companies[
+                                               ADJ_OPEN_P].shift(4)) & (
+                                                   available_companies[ADJ_CLOSE_P] > available_companies[
+                                               ADJ_OPEN_P].shift(5))
     available_companies[ACCUMULATION_CANDLE] = (available_companies[ADJ_TRADING_VOLUME].shift(1) * 2 <
                                                 available_companies[ADJ_TRADING_VOLUME]) & (
                                                        (available_companies[ADJ_CLOSE_P] - available_companies[
@@ -308,38 +313,62 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
 
     # sub
     available_companies[BOLLINGER_UPPERBAND] = available_companies.groupby(CODE).apply(
-        lambda x: ta.BBANDS(x[ADJ_CLOSE_P])[0]).reset_index(drop=True)
+        lambda x: ta.BBANDS(x[ADJ_CLOSE_P], timeperiod=12, nbdevup=2, nbdevdn=2)[0]).reset_index(drop=True)
     available_companies[BOLLINGER_MIDBAND] = available_companies.groupby(CODE).apply(
-        lambda x: ta.BBANDS(x[ADJ_CLOSE_P])[1]).reset_index(drop=True)
+        lambda x: ta.BBANDS(x[ADJ_CLOSE_P], timeperiod=12, nbdevup=2, nbdevdn=2)[1]).reset_index(drop=True)
     available_companies[BOLLINGER_LOWERBAND] = available_companies.groupby(CODE).apply(
-        lambda x: ta.BBANDS(x[ADJ_CLOSE_P])[2]).reset_index(drop=True)
+        lambda x: ta.BBANDS(x[ADJ_CLOSE_P], timeperiod=12, nbdevup=2, nbdevdn=2)[2]).reset_index(drop=True)
     available_companies[STOCHASTIC_SLOWK] = available_companies.groupby(CODE).apply(
-        lambda x: ta.STOCH(x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P])[0]).reset_index(drop=True)
+        lambda x:
+        ta.STOCH(x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P], fastk_period=10, slowk_period=5, slowd_period=5)[
+            0]).reset_index(drop=True)
     available_companies[STOCHASTIC_SLOWD] = available_companies.groupby(CODE).apply(
-        lambda x: ta.STOCH(x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P])[1]).reset_index(drop=True)
+        lambda x:
+        ta.STOCH(x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P], fastk_period=10, slowk_period=5, slowd_period=5)[
+            1]).reset_index(drop=True)
     available_companies[OBV] = available_companies.groupby(CODE).apply(
         lambda x: ta.OBV(x[ADJ_CLOSE_P], x[ADJ_TRADING_VOLUME])).reset_index(drop=True)
     available_companies[DISPARITY] = available_companies.groupby(CODE).apply(
-        lambda x: disparity(x[ADJ_CLOSE_P],x[PRICE_MA20])).reset_index(drop=True)
+        lambda x: disparity(x[ADJ_CLOSE_P], x[PRICE_MA20])).reset_index(drop=True)
     available_companies[TRIX] = available_companies.groupby(CODE).apply(
         lambda x: ta.TRIX(x[ADJ_CLOSE_P], 30)).reset_index(drop=True)
 
     # pattern
     available_companies[GAP_RISE] = available_companies.groupby(CODE).apply(
         lambda x: gap_rise(x[ADJ_CLOSE_P], x[ADJ_OPEN_P])).reset_index(drop=True)
+    available_companies[GOLDEN_CROSS] = available_companies.groupby(CODE).apply(
+        lambda x: golden_cross(x[PRICE_MA20], x[PRICE_MA60])).reset_index(drop=True)
+    available_companies[EVENING_STAR] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDLEVENINGSTAR(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
+        drop=True)
+    available_companies[EVENING_DOJI_STAR] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDLEVENINGDOJISTAR(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
+        drop=True)
+    available_companies[ABANDONED_BABY] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDLABANDONEDBABY(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
+        drop=True)
+    available_companies[THREE_INSIDE_DOWN] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDL3INSIDE(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
+        drop=True)
+    available_companies[THREE_OUTSIDE_DOWN] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDL3OUTSIDE(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
+        drop=True)
+    available_companies[UPSIDE_GAP_TWO_CROWS] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDLUPSIDEGAP2CROWS(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
+        drop=True)
     available_companies[RISE_DIVERGENCE] = available_companies.groupby(CODE).apply(
         lambda x: rise_divergence(x[MORNING_STAR], x[OBV])).reset_index(drop=True)
     available_companies[DOUBLE_BOTTOM] = available_companies.groupby(CODE).apply(
         lambda x: double_bottom(x[THREE_INSIDE_UP],30)).reset_index(drop=True)
-    available_companies[GOLDEN_CROSS] = available_companies.groupby(CODE).apply(
-        lambda x: golden_cross(x[PRICE_MA20], x[PRICE_MA60])).reset_index(drop=True)
+
+    # True -> 1, False -> 0 으로 바꾸는 작업
 
     # Select result columns
     processed_companies = copy(available_companies[COMPANY_RESULT_COLUMNS])
 
     # Select rows which RET_1 is not nan before the last month.
     processed_companies.loc[
-        (processed_companies[RET_1].isnull()) &
+        (processed_companies[RET_M].isnull()) &
         (processed_companies[DATE] != sorted(processed_companies[DATE].unique())[-1]),
         IS_SUSPENDED
     ] = True
@@ -537,7 +566,7 @@ def process_macro_monthly(unprocessed_macros: DataFrame) -> DataFrame:
     # make percent to non-percent
     unprocessed_macros = unprocessed_macros.apply(lambda x: x * 0.01 if "(%)" in x.name else x).copy(deep=True)
 
-    # generate meaningful varibles
+    # generate meaningful variables
     unprocessed_macros["*_*log_export"] = unprocessed_macros["ECO_수출금액지수(총지수)(2010=100)"].apply(lambda x: np.log(x))
     unprocessed_macros["*_*log_import"] = unprocessed_macros["ECO_수입금액지수(총지수)(2010=100)"].apply(lambda x: np.log(x))
     unprocessed_macros["*_*log_industry_production_us"] = unprocessed_macros["ECO_미국(계절변동조정)(2010=100)"].apply(
