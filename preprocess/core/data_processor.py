@@ -291,6 +291,20 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
                                                        0 <= (available_companies[ADJ_CLOSE_P] - available_companies[
                                                    ADJ_OPEN_P]) / available_companies[ADJ_OPEN_P])
     available_companies.reset_index(inplace=True)
+    available_companies[MORNING_STAR] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDLMORNINGSTAR(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
+    available_companies[MORNING_DOJI_STAR] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDLMORNINGDOJISTAR(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
+    available_companies[ABANDONED_BABY] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDLABANDONEDBABY(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
+    available_companies[THREE_INSIDE_UP] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDL3INSIDE(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
+    available_companies[THREE_OUTSIDE_UP] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDL3OUTSIDE(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
+        drop=True)
+    available_companies[UPSIDE_GAP_TWO_CROWS] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDLUPSIDEGAP2CROWS(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
+        drop=True)
 
     # sub
     available_companies[BOLLINGER_UPPERBAND] = available_companies.groupby(CODE).apply(
@@ -313,8 +327,10 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     # pattern
     available_companies[GAP_RISE] = available_companies.groupby(CODE).apply(
         lambda x: gap_rise(x[ADJ_CLOSE_P], x[ADJ_OPEN_P])).reset_index(drop=True)
-    RISE_DIVERGENCE = 'rise_divergence'  # 상승 다이버젼스
-    DOUBLE_BOTTOM = 'double_bottom'  # 쌍바닥
+    available_companies[RISE_DIVERGENCE] = available_companies.groupby(CODE).apply(
+        lambda x: rise_divergence(x[THREE_OUTSIDE_UP], x[OBV])).reset_index(drop=True)
+    available_companies['double_holy1'] = available_companies.groupby(CODE).apply(
+        lambda x: double_bottom(x[THREE_OUTSIDE_UP],30)).reset_index(drop=True)
     available_companies[GOLDEN_CROSS] = available_companies.groupby(CODE).apply(
         lambda x: golden_cross(x[PRICE_MA20], x[PRICE_MA60])).reset_index(drop=True)
 
