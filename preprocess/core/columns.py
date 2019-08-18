@@ -11,7 +11,6 @@ from ksif.core.columns import *
 COMPANY = 'company'
 BENCHMARK = 'benchmark'
 MACRO_DAILY = 'macro_daily'
-MACRO_MONTHLY = 'macro_monthly'
 FACTOR = 'factor'
 
 # Special words for companies
@@ -57,17 +56,31 @@ SHORT_SALE_VOLUME = 'short_sale_volume'  # 공매도거래량 (20일)(주)
 SHORT_SALE_BALANCE = 'short_sale_balance'  # 공매도잔고량(주)
 SHARE_LENDING_VOLUME = 'share_lending_volume'  # 대차거래 체결 (20일)(주)
 SHARE_LENDING_BALANCE = 'share_lending_balance'  # 대차거래 잔고(주)
+CONSENSUS_MEAN = 'consensus_mean'  # 적정주가 (E1)(원)
+CONSENSUS_CHG = 'consensus_chg'  # 적정주가 (E1, 1W Chg)(%)
+CONSENSUS_MAX = 'consensus_max'  # 적정주가 (E1, 최대)(원)
+CONSENSUS_MIN = 'consensus_min'  # 적정주가 (E1, 최소)(원)
+CONSENSUS_MID = 'consensus_mid'  # 적정주가 (E1,중간)(원)
+CONSENSUS_CV = 'consensus_cv'  # 적정주가 CV (E1)
+CONSENSUS_DIS = 'consensus_dis'  # 적정주가 괴리율 (E1)(%)
+CONSENSUS_UP = 'consensus_up'  # 적정주가 상향수 (E1)
+CONSENSUS_STAY = 'consensus_stay'  # 적정주가 유지수 (E1)
+CONSENSUS_STD = 'consensus_std'  # 적정주가 표준편차 (E1)
+CONSENSUS_DOWN = 'consensus_down'  # 적정주가 하향수 (E1)
+CONSENSUS_ADJ_CHG = 'consensus_adj_chg'  # 적정주가(상향-하향)/(전체)(E1)
 
 DAILY_DATA = [
     CODE, DATE, NAME, FN_GUIDE_SECTOR, FN_GUIDE_INDUSTRY_GROUP_27, ADJ_CLOSE_P, LISTED_SHARES, CS_TOBEPUB, ADJ_OPEN_P,
-    ADJ_HIGH_P, ADJ_LOW_P, ADJ_CLOSE_P, BETA_1D, BETA_1W, BETA_2W, BETA_3M, BETA_5M, VOL_1D, VOL_1W, VOL_2W, VOL_3M,
-    VOL_5M, IS_MANAGED, IS_SUSPENDED, TRADING_VOLUME, EXCHANGE, KRX_SECTOR, HOLDING,
+    ADJ_HIGH_P, ADJ_LOW_P, ADJ_CLOSE_P, ADJ_TRADING_VOLUME, BETA_1D, BETA_1W, BETA_2W, BETA_3M, BETA_5M, VOL_1D, VOL_1W,
+    VOL_2W, VOL_3M, VOL_5M, IS_MANAGED, IS_SUSPENDED, TRADING_VOLUME, EXCHANGE, KRX_SECTOR, HOLDING,
     NET_PERSONAL_PURCHASE, NET_NATIONAL_PURCHASE, NET_FINANCIAL_INVESTMENT_PURCHASE,
     NET_INSTITUTIONAL_FOREIGN_PURCHASE, NET_INSTITUTIONAL_PURCHASE, NET_ETC_FINANCE_PURCHASE,
     NET_ETC_CORPORATION_PURCHASE, NET_ETC_FOREIGN_PURCHASE, NET_REGISTERED_FOREIGN_PURCHASE,
     NET_INSURANCE_PURCHASE, NET_PRIVATE_FUND_PURCHASE, NET_PENSION_PURCHASE, NET_FOREIGN_PURCHASE,
     NET_BANK_PURCHASE, NET_TRUST_PURCHASE, FOREIGN_OWNERSHIP_RATIO, SHORT_SALE_VOLUME, SHORT_SALE_BALANCE,
-    SHARE_LENDING_VOLUME, SHARE_LENDING_BALANCE
+    SHARE_LENDING_VOLUME, SHARE_LENDING_BALANCE, CONSENSUS_MEAN, CONSENSUS_CHG, CONSENSUS_MAX, CONSENSUS_MIN,
+    CONSENSUS_MID, CONSENSUS_CV, CONSENSUS_DIS, CONSENSUS_UP, CONSENSUS_DOWN, CONSENSUS_STAY, CONSENSUS_STD,
+    CONSENSUS_ADJ_CHG
 ]
 
 # Quarterly columns
@@ -84,7 +97,7 @@ INT_INC = 'int_inc'  # 이자수익(비영업)(천원)
 INT_EXP = 'int_exp'  # 이자비용(비영업)(천원)
 CFO = 'cfo'  # 영업활동으로인한현금흐름(천원)
 AR = 'ar'  # 매출채권(천원)
-ALLOWANCE_AR_ = '(allowance_ar)'  # (대손충당금)(천원)
+ALLOWANCE_AR_ = 'allowance_ar'  # (대손충당금)(천원)
 AP = 'ap'  # 매입채무(천원)
 EBIT = 'ebit'  # EBIT(천원)
 EBITDA = 'ebitda'  # EBITDA(천원)
@@ -94,18 +107,6 @@ RES_EXP = 'res_exp'  # 연구개발비(천원)
 EQUITY = 'equity'  # 자본(*)(천원)
 TANG_ASSET = 'tang_asset'  # 유형자산(*)(천원)
 FIN_LIAB = 'fin_liab'  # *총금융부채(천원)
-CONSENSUS = 'consensus'  # 적정주가 (E1)(원)
-CONSENSUS_CHG = 'consensus_chg'  # 적정주가 (E1, 1W Chg)(%)
-CONSENSUS_MAX = 'consensus_max'  # 적정주가 (E1, 최대)(원)
-CONSENSUS_MIN = 'consensus_min'  # 적정주가 (E1, 최소)(원)
-CONSENSUS_MID = 'consensus_mid'  # 적정주가 (E1,중간)(원)
-CONSENSUS_CV = 'consensus_cv'  # 적정주가 CV (E1)
-CONSENSUS_DIS = 'consensus_dis'  # 적정주가 괴리율 (E1)(%)
-CONSENSUS_UP = 'consensus_up'  # 적정주가 상향수 (E1)
-CONSENSUS_STAY = 'consensus_stay'  # 적정주가 유지수 (E1)
-CONSENSUS_STD = 'consensus_std'  # 적정주가 표준편차 (E1)
-CONSENSUS_DOWN = 'consensus_down'  # 적정주가 하향수 (E1)
-CONSENSUS_ADJ_CHG = 'consensus_adj_chg'  # 적정주가(상향-하향)/(전체)(E1)
 
 QUARTERLY_DATA = [
     CODE, DATE, ASSETS, CUR_ASSETS, LIAB, CUR_LIAB, INV, SALES, GP, NI_OWNER, NI, INT_INC, INT_EXP, CFO, AR,
@@ -186,7 +187,7 @@ COMPANY_RENAMES = {
     '거래대금(원)': TRADING_VOLUME_P,
     '대차거래 체결(주)': SHARE_LENDING_VOLUME,
     '대차거래 잔고(주)': SHARE_LENDING_BALANCE,
-    '적정주가 (E1)(원)': CONSENSUS,
+    '적정주가 (E1)(원)': CONSENSUS_MEAN,
     '적정주가 (E1, 1W Chg)(%)': CONSENSUS_CHG,
     '적정주가 (E1, 최대)(원)': CONSENSUS_MAX,
     '적정주가 (E1, 최소)(원)': CONSENSUS_MIN,
