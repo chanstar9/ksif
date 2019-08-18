@@ -328,9 +328,9 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     available_companies[GAP_RISE] = available_companies.groupby(CODE).apply(
         lambda x: gap_rise(x[ADJ_CLOSE_P], x[ADJ_OPEN_P])).reset_index(drop=True)
     available_companies[RISE_DIVERGENCE] = available_companies.groupby(CODE).apply(
-        lambda x: rise_divergence(x[THREE_OUTSIDE_UP], x[OBV])).reset_index(drop=True)
-    available_companies['double_holy1'] = available_companies.groupby(CODE).apply(
-        lambda x: double_bottom(x[THREE_OUTSIDE_UP],30)).reset_index(drop=True)
+        lambda x: rise_divergence(x[MORNING_STAR], x[OBV])).reset_index(drop=True)
+    available_companies[DOUBLE_BOTTOM] = available_companies.groupby(CODE).apply(
+        lambda x: double_bottom(x[THREE_INSIDE_UP],30)).reset_index(drop=True)
     available_companies[GOLDEN_CROSS] = available_companies.groupby(CODE).apply(
         lambda x: golden_cross(x[PRICE_MA20], x[PRICE_MA60])).reset_index(drop=True)
 

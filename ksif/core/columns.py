@@ -198,6 +198,14 @@ DOJI_CANDLE = 'doji_candle'  # 도지형 캔들
 HAMMER_CANDLE = 'hammer_candle'  # 망치형 캔들
 BIG_BULL_CANDLE = 'big_bull_candle'  # 장대양봉
 ACCUMULATION_CANDLE = 'accumulation_candle'  # 매집봉
+
+MORNING_STAR = 'morning_star'
+MORNING_DOJI_STAR = 'morning_doji_star'
+ABANDONED_BABY = 'abandoned_baby'
+THREE_INSIDE_UP = 'trhee_inside_up'
+THREE_OUTSIDE_UP = 'three_outside_up'
+UPSIDE_GAP_TWO_CROWS = 'upside_gap_two_crows'
+
 # sub
 BOLLINGER_UPPERBAND = 'bollinger_upperband'  # 볼린저밴드
 BOLLINGER_MIDBAND = 'bollinger_midband'  # 볼린저밴드
