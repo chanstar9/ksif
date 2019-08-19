@@ -7,6 +7,7 @@
 import itertools
 
 # Base information
+DATADATE = 'datadate'
 CODE = 'code'
 NAME = 'name'
 DATE = 'date'
@@ -22,6 +23,51 @@ MKTCAP = 'mktcap'  # 시가총액
 OS_SHARES = 'ut_shares'  # 유통 주식수 (보통)(주)
 BASE_INFORMATION = [CODE, NAME, DATE, RET_M, RET_W, RET_M, ADJ_OPEN_P, ADJ_HIGH_P, ADJ_LOW_P, ADJ_CLOSE_P, MKTCAP]
 
+# Fundamental
+REVTQ = 'revtq'
+REVT12 = 'revt12'
+GPQ = 'gpq'
+GP12 = 'gp12'
+OPQ = 'opq'
+OP12 = 'op12'
+NIQ = 'niq'
+NI12 = 'ni12'
+ATQ = 'atq'
+ATQ_MEAN4 = 'atq_mean4'
+SEQ = 'seq'
+SEQ_MEAN4 = 'seq_mean4'
+LTQ = 'ltq'
+
+CF_DEP = 'cf_dep'
+CFOQ = 'cfoq'
+CFO12 = 'cfo12'
+
+A_TANG = 'a_tang'
+A_TANG_MEAN12 = 'a_tang_mean12'
+A_CUR = 'a_cur'
+A_CUR_MEAN12 = 'a_cur_mean12'
+L_CUR = 'l_cur'
+L_CUR_MEAN12 = 'l_cur_mean12'
+
+
+# 수익성지표
+S_A = 's_a'  # 매출/자산 Sale over Assets
+GP_A = 'gp_a'  # 매출총이익/자산 Gross Profit over Assets
+OP_A = 'op_a'  # 영업이익/자산 EBIT over Assets
+CF_A = 'cf_a'  # 영업활동으로 인한 현금흐름/자산 Cash Flow from operation over Assets
+ROA = 'roa'  # 연간 순이익/자산 Return On Assets
+ROE = 'roe'  # 연간 순이익/자본 Return On Equity
+QROA = 'qroa'  # 분기간 순이익/자산
+QROE = 'qroe'  # 분기간 순이익/자본
+EBT_E = 'ebt_e'  # (순이익+세금)/자본
+ROIC = 'roic'  # 투하자본수익률 Return On Invested Capital
+GP_S = 'gp_s'  # 매출총이익/매출
+DIVP = 'divp'  # 배당률 Dividend rate(12 month rolling)
+PROFIT_FACTORS = [S_A, GP_A, OP_A, CF_A, ROA, ROE, QROA, QROE, EBT_E, ROIC, GP_S, DIVP]
+
+
+
+
 # Filter
 EXCHANGE = 'exchange'  # 거래소
 FN_GUIDE_SECTOR = 'fn_guide_sector'  # FN Guide 섹터
@@ -30,7 +76,8 @@ KRX_SECTOR = 'krx_sector'  # 한국거래소 섹터
 HOLDING = 'holding'  # 지주사 여부
 IS_MANAGED = 'is_managed'  # 관리종목 여부
 IS_SUSPENDED = 'is_suspended'  # 거래정지 여부
-FILTERS = [EXCHANGE, FN_GUIDE_SECTOR, FN_GUIDE_INDUSTRY_GROUP_27, KRX_SECTOR, HOLDING, IS_MANAGED, IS_SUSPENDED]
+FILTERS = [EXCHANGE, FN_GUIDE_SECTOR, FN_GUIDE_INDUSTRY_GROUP_27, KRX_SECTOR, HOLDING, IS_MANAGED,
+           IS_SUSPENDED]
 
 # Value factors
 PER = 'per'  # 주가수익률 Per Earnings Ratio
@@ -149,6 +196,14 @@ DOJI_CANDLE = 'doji_candle'  # 도지형 캔들
 HAMMER_CANDLE = 'hammer_candle'  # 망치형 캔들
 BIG_BULL_CANDLE = 'big_bull_candle'  # 장대양봉
 ACCUMULATION_CANDLE = 'accumulation_candle'  # 매집봉
+
+MORNING_STAR = 'morning_star'
+MORNING_DOJI_STAR = 'morning_doji_star'
+ABANDONED_BABY = 'abandoned_baby'
+THREE_INSIDE_UP = 'trhee_inside_up'
+THREE_OUTSIDE_UP = 'three_outside_up'
+UPSIDE_GAP_TWO_CROWS = 'upside_gap_two_crows'
+
 # sub
 BOLLINGER_UPPERBAND = 'bollinger_upperband'  # 볼린저밴드 상한선
 BOLLINGER_MIDBAND = 'bollinger_midband'  # 볼린저밴드 중심선
@@ -216,7 +271,7 @@ LOG_EURO2KRW = "log_euro2krw"  # 1유로 당 원화 가격의 로그
 TED_SPREAD = "ted_spread"  # 리보금리 - 미국 국채 스프레드 (1개월물) ; 미국 역외 달러 조달의 위험성 ; 무역과 internal banking system의 안정성 지표
 LOG_NYSE = "log_nyse"  # 뉴욕증권거래소 지수의 로그
 LOG_NASDAQ = "log_nasdaq"  # 나스닥 거래소 지수의 로그
-LOG_SEMI_CONDUCTOR = "log_semi_conductor"  # 반도체가의 로그
+LOG_SEMI_CONDUCTOR = "log_semi_conductor"  # 반도체가격의 로그
 LOG_DOLLAR_INDEX = "log_dollar_index"  # 달러 인덱스의 로그; 달러가 다른 통화대비 얼마나 강세인지 보여줌
 LOG_OIL = "log_oil"  # 유가의 로그
 LOG_EXPORT = "log_export"  # 한국의 수출량 로그

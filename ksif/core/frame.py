@@ -149,7 +149,8 @@ class Portfolio(DataFrame):
             if is_iterator(key):
                 key = list(key)
             # noinspection PyProtectedMember
-            indexer = self.loc._convert_to_indexer(key, axis=1, raise_missing=True)
+            indexer = self.loc._convert_to_indexer(key, axis=1,
+                                                   raise_missing=True)
 
         # take() does not accept boolean indexers
         if getattr(indexer, "dtype", None) == bool:
@@ -238,7 +239,7 @@ class Portfolio(DataFrame):
         return dataframe
 
     def outcome(self, benchmark: str = None, weighted: str = None,
-                long_transaction_cost_ratio: float = 0.0025, short_transaction_cost_ratio: float = 0.0025,
+                long_transaction_cost_ratio: float = 0.01, short_transaction_cost_ratio: float = 0.01,
                 show_plot: bool = False):
         """
         Calculate various indices of the portfolio.
@@ -353,8 +354,9 @@ class Portfolio(DataFrame):
 
         return result
 
-    def get_returns(self, weighted: str = None, long_transaction_cost_ratio: float = 0.0025,
-                    short_transaction_cost_ratio: float = 0.0025, cumulative=False) -> DataFrame:
+    def get_returns(self, weighted: str = None,
+                    long_transaction_cost_ratio: float = 0.01,
+                    short_transaction_cost_ratio: float = 0.01, cumulative=False) -> DataFrame:
         _, returns, _ = self.get_returns_and_turnovers(
             long_transaction_cost_ratio, short_transaction_cost_ratio, weighted
         )
