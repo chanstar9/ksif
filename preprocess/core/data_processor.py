@@ -31,19 +31,19 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     """
     # price and volume adjustment
     unprocessed_companies[ADJ_TRADING_VOLUME] = unprocessed_companies[TRADING_VOLUME] * unprocessed_companies[ADJ_C]
-    unprocessed_companies[CONSENSUS_MEAN] = unprocessed_companies[CONSENSUS_MEAN] / unprocessed_companies[ADJ_C]
+    unprocessed_companies[CONSENSUS_MEAN] = unprocessed_companies[CONSENSUS_MEAN] / zero_to_nan(unprocessed_companies[ADJ_C])
     unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[ADJ_C] * unprocessed_companies[DIV_ADJ_C]
     unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[::-1].groupby(CODE)[DIV_ADJ_C].apply(lambda x: x.cumprod())
     unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[::-1].groupby(CODE)[DIV_ADJ_C].shift(1)
     unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[DIV_ADJ_C].fillna(1)
     unprocessed_companies[ADJ_OPEN_P] = unprocessed_companies.groupby(CODE).apply(
-        lambda x: x[OPEN_P] / x[DIV_ADJ_C]).reset_index(drop=True)
+        lambda x: x[OPEN_P] / zero_to_nan(x[DIV_ADJ_C])).reset_index(drop=True)
     unprocessed_companies[ADJ_HIGH_P] = unprocessed_companies.groupby(CODE).apply(
-        lambda x: x[HIGH_P] / x[DIV_ADJ_C]).reset_index(drop=True)
+        lambda x: x[HIGH_P] / zero_to_nan(x[DIV_ADJ_C])).reset_index(drop=True)
     unprocessed_companies[ADJ_LOW_P] = unprocessed_companies.groupby(CODE).apply(
-        lambda x: x[LOW_P] / x[DIV_ADJ_C]).reset_index(drop=True)
+        lambda x: x[LOW_P] / zero_to_nan(x[DIV_ADJ_C])).reset_index(drop=True)
     unprocessed_companies[ADJ_CLOSE_P] = unprocessed_companies.groupby(CODE).apply(
-        lambda x: x[CLOSE_P] / x[DIV_ADJ_C]).reset_index(drop=True)
+        lambda x: x[CLOSE_P] / zero_to_nan(x[DIV_ADJ_C])).reset_index(drop=True)
 
     # market capital = price of common stocks * # of common stocks
     unprocessed_companies.loc[:, MKTCAP] = unprocessed_companies[CLOSE_P] * (
@@ -150,12 +150,16 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
         drop=True)
 
     # Return
-    available_companies[RET_D] = available_companies.groupby(CODE).apply(
+    available_companies[RET_1] = available_companies.groupby(CODE).apply(
         lambda x: (x[ADJ_CLOSE_P].shift(-1) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
-    available_companies[RET_W] = available_companies.groupby(CODE).apply(
+    available_companies[RET_5] = available_companies.groupby(CODE).apply(
         lambda x: (x[ADJ_CLOSE_P].shift(-5) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
-    available_companies[RET_M] = available_companies.groupby(CODE).apply(
+    available_companies[RET_20] = available_companies.groupby(CODE).apply(
         lambda x: (x[ADJ_CLOSE_P].shift(-20) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
+    available_companies[RET_60] = available_companies.groupby(CODE).apply(
+        lambda x: (x[ADJ_CLOSE_P].shift(-60) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
+    available_companies[RET_120] = available_companies.groupby(CODE).apply(
+        lambda x: (x[ADJ_CLOSE_P].shift(-120) - x[ADJ_CLOSE_P]) / zero_to_nan(x[ADJ_CLOSE_P])).reset_index(drop=True)
 
     # Value factors
     available_companies[PER] = available_companies[MKTCAP] / zero_to_nan(available_companies.ni12) / 1000
@@ -182,22 +186,17 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     available_companies[OP_P] = 1 / zero_to_nan(available_companies[POPR]).reset_index(drop=True)
 
     # Momentum factors
-    available_companies[MOM12_1] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJ_CLOSE_P].shift(1) - x[ADJ_CLOSE_P].shift(12)) / zero_to_nan(
-            x[ADJ_CLOSE_P].shift(12))).reset_index(
+    available_companies[MOM120] = available_companies.groupby(CODE).apply(
+        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(120)) / zero_to_nan(x[ADJ_CLOSE_P].shift(120))).reset_index(
         drop=True)
-    available_companies[MOM6_1] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJ_CLOSE_P].shift(1) - x[ADJ_CLOSE_P].shift(6)) / zero_to_nan(
-            x[ADJ_CLOSE_P].shift(6))).reset_index(
+    available_companies[MOM60] = available_companies.groupby(CODE).apply(
+        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(60)) / zero_to_nan(x[ADJ_CLOSE_P].shift(60))).reset_index(
         drop=True)
-    available_companies[MOM12] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(12)) / zero_to_nan(x[ADJ_CLOSE_P].shift(12))).reset_index(
+    available_companies[MOM20] = available_companies.groupby(CODE).apply(
+        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(20)) / zero_to_nan(x[ADJ_CLOSE_P].shift(20))).reset_index(
         drop=True)
-    available_companies[MOM6] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(6)) / zero_to_nan(x[ADJ_CLOSE_P].shift(6))).reset_index(
-        drop=True)
-    available_companies[MOM3] = available_companies.groupby(CODE).apply(
-        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(3)) / zero_to_nan(x[ADJ_CLOSE_P].shift(3))).reset_index(
+    available_companies[MOM5] = available_companies.groupby(CODE).apply(
+        lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(5)) / zero_to_nan(x[ADJ_CLOSE_P].shift(5))).reset_index(
         drop=True)
     available_companies[MOM1] = available_companies.groupby(CODE).apply(
         lambda x: (x[ADJ_CLOSE_P] - x[ADJ_CLOSE_P].shift(1)) / zero_to_nan(x[ADJ_CLOSE_P].shift(1))).reset_index(
@@ -271,7 +270,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     available_companies.set_index([CODE, DATE], inplace=True)
     available_companies[BIG_BULL_CANDLE] = (available_companies[ADJ_TRADING_VOLUME].shift(1) * 2 < available_companies[
         ADJ_TRADING_VOLUME]) & ((available_companies[ADJ_CLOSE_P] - available_companies[ADJ_OPEN_P]) /
-                                available_companies[ADJ_OPEN_P] >= 0.1) & (
+                                zero_to_nan(available_companies[ADJ_OPEN_P]) >= 0.1) & (
                                                    available_companies[ADJ_CLOSE_P] > available_companies[
                                                ADJ_CLOSE_P].shift(1)) & (
                                                    available_companies[ADJ_CLOSE_P] > available_companies[
@@ -295,24 +294,10 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     available_companies[ACCUMULATION_CANDLE] = (available_companies[ADJ_TRADING_VOLUME].shift(1) * 2 <
                                                 available_companies[ADJ_TRADING_VOLUME]) & (
                                                        (available_companies[ADJ_CLOSE_P] - available_companies[
-                                                           ADJ_OPEN_P]) / available_companies[ADJ_OPEN_P] <= 0.08) & (
+                                                           ADJ_OPEN_P]) / zero_to_nan(available_companies[ADJ_OPEN_P]) <= 0.08) & (
                                                        0 <= (available_companies[ADJ_CLOSE_P] - available_companies[
-                                                   ADJ_OPEN_P]) / available_companies[ADJ_OPEN_P])
+                                                   ADJ_OPEN_P]) / zero_to_nan(available_companies[ADJ_OPEN_P]))
     available_companies.reset_index(inplace=True)
-    available_companies[MORNING_STAR] = available_companies.groupby(CODE).apply(
-        lambda x: ta.CDLMORNINGSTAR(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
-    available_companies[MORNING_DOJI_STAR] = available_companies.groupby(CODE).apply(
-        lambda x: ta.CDLMORNINGDOJISTAR(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
-    available_companies[ABANDONED_BABY] = available_companies.groupby(CODE).apply(
-        lambda x: ta.CDLABANDONEDBABY(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
-    available_companies[THREE_INSIDE_UP] = available_companies.groupby(CODE).apply(
-        lambda x: ta.CDL3INSIDE(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
-    available_companies[THREE_OUTSIDE_UP] = available_companies.groupby(CODE).apply(
-        lambda x: ta.CDL3OUTSIDE(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
-        drop=True)
-    available_companies[UPSIDE_GAP_TWO_CROWS] = available_companies.groupby(CODE).apply(
-        lambda x: ta.CDLUPSIDEGAP2CROWS(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
-        drop=True)
 
     # sub
     available_companies[BOLLINGER_UPPERBAND] = available_companies.groupby(CODE).apply(
@@ -347,6 +332,12 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     available_companies[EVENING_DOJI_STAR] = available_companies.groupby(CODE).apply(
         lambda x: ta.CDLEVENINGDOJISTAR(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
         drop=True)
+    available_companies[MORNING_STAR] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDLMORNINGSTAR(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
+        drop=True)
+    available_companies[MORNING_DOJI_STAR] = available_companies.groupby(CODE).apply(
+        lambda x: ta.CDLMORNINGDOJISTAR(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
+        drop=True)
     available_companies[ABANDONED_BABY] = available_companies.groupby(CODE).apply(
         lambda x: ta.CDLABANDONEDBABY(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
         drop=True)
@@ -359,19 +350,17 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     available_companies[UPSIDE_GAP_TWO_CROWS] = available_companies.groupby(CODE).apply(
         lambda x: ta.CDLUPSIDEGAP2CROWS(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(
         drop=True)
-    available_companies[RISE_DIVERGENCE] = available_companies.groupby(CODE).apply(
-        lambda x: rise_divergence(x[MORNING_STAR], x[OBV])).reset_index(drop=True)
-    available_companies[DOUBLE_BOTTOM] = available_companies.groupby(CODE).apply(
-        lambda x: double_bottom(x[THREE_INSIDE_UP],30)).reset_index(drop=True)
-
     # True -> 1, False -> 0 으로 바꾸는 작업
+    available_companies.loc[:, [BIG_BULL_CANDLE, ACCUMULATION_CANDLE, GAP_RISE]] = \
+        available_companies.loc[:, [BIG_BULL_CANDLE, ACCUMULATION_CANDLE, GAP_RISE]].apply(lambda x: x.replace(True, 1))
 
     # Select result columns
     processed_companies = copy(available_companies[COMPANY_RESULT_COLUMNS])
+    processed_companies.sort_values(by=[CODE, DATE])
 
-    # Select rows which RET_1 is not nan before the last month.
+    # Select rows which RET_1 is not nan before the last day.
     processed_companies.loc[
-        (processed_companies[RET_M].isnull()) &
+        (processed_companies[RET_1].isnull()) &
         (processed_companies[DATE] != sorted(processed_companies[DATE].unique())[-1]),
         IS_SUSPENDED
     ] = True
@@ -395,43 +384,47 @@ def process_benchmarks(unprocessed_benchmarks: DataFrame) -> DataFrame:
         code                | (String)
         date                | (Datetime)
         benchmark_return_1  | (float)
-        benchmark_return_3  | (float)
-        benchmark_return_6  | (float)
-        benchmark_return_12 | (float)
+        benchmark_return_5  | (float)
+        benchmark_return_20  | (float)
+        benchmark_return_60 | (float)
+        benchmark_return_120 | (float)
     """
     unprocessed_benchmarks = unprocessed_benchmarks.reset_index(drop=True)
     unprocessed_benchmarks[BENCHMARK_RET_1] = unprocessed_benchmarks.groupby(CODE).apply(
         lambda x: (x[PRICE_INDEX].shift(-1) - x[PRICE_INDEX]) / x[PRICE_INDEX]
     ).reset_index(level=0)[PRICE_INDEX]
-    unprocessed_benchmarks[BENCHMARK_RET_3] = unprocessed_benchmarks.groupby(CODE).apply(
-        lambda x: (x[PRICE_INDEX].shift(-3) - x[PRICE_INDEX]) / x[PRICE_INDEX]
+    unprocessed_benchmarks[BENCHMARK_RET_5] = unprocessed_benchmarks.groupby(CODE).apply(
+        lambda x: (x[PRICE_INDEX].shift(-5) - x[PRICE_INDEX]) / x[PRICE_INDEX]
     ).reset_index(level=0)[PRICE_INDEX]
-    unprocessed_benchmarks[BENCHMARK_RET_6] = unprocessed_benchmarks.groupby(CODE).apply(
-        lambda x: (x[PRICE_INDEX].shift(-6) - x[PRICE_INDEX]) / x[PRICE_INDEX]
+    unprocessed_benchmarks[BENCHMARK_RET_20] = unprocessed_benchmarks.groupby(CODE).apply(
+        lambda x: (x[PRICE_INDEX].shift(-20) - x[PRICE_INDEX]) / x[PRICE_INDEX]
     ).reset_index(level=0)[PRICE_INDEX]
-    unprocessed_benchmarks[BENCHMARK_RET_12] = unprocessed_benchmarks.groupby(CODE).apply(
-        lambda x: (x[PRICE_INDEX].shift(-12) - x[PRICE_INDEX]) / x[PRICE_INDEX]
+    unprocessed_benchmarks[BENCHMARK_RET_60] = unprocessed_benchmarks.groupby(CODE).apply(
+        lambda x: (x[PRICE_INDEX].shift(-60) - x[PRICE_INDEX]) / x[PRICE_INDEX]
+    ).reset_index(level=0)[PRICE_INDEX]
+    unprocessed_benchmarks[BENCHMARK_RET_120] = unprocessed_benchmarks.groupby(CODE).apply(
+        lambda x: (x[PRICE_INDEX].shift(-120) - x[PRICE_INDEX]) / x[PRICE_INDEX]
     ).reset_index(level=0)[PRICE_INDEX]
     unprocessed_benchmarks = unprocessed_benchmarks[BENCHMARK_RESULT_COLUMNS].sort_values(by=[CODE, DATE])
 
     kospi_large = unprocessed_benchmarks.loc[
         unprocessed_benchmarks[CODE] == KOSPI_LARGE,
-        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60, BENCHMARK_RET_120]]
     kospi_middle = unprocessed_benchmarks.loc[
         unprocessed_benchmarks[CODE] == KOSPI_MIDDLE,
-        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60, BENCHMARK_RET_120]]
     kospi_small = unprocessed_benchmarks.loc[
         unprocessed_benchmarks[CODE] == KOSPI_SMALL,
-        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60, BENCHMARK_RET_120]]
     kosdaq_large = unprocessed_benchmarks.loc[
         unprocessed_benchmarks[CODE] == KOSDAQ_LARGE,
-        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60, BENCHMARK_RET_120]]
     kosdaq_middle = unprocessed_benchmarks.loc[
         unprocessed_benchmarks[CODE] == KOSDAQ_MIDDLE,
-        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60, BENCHMARK_RET_120]]
     kosdaq_small = unprocessed_benchmarks.loc[
         unprocessed_benchmarks[CODE] == KOSDAQ_SMALL,
-        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]]
+        [DATE, BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60, BENCHMARK_RET_120]]
 
     total_large = _calculate_total(TOTAL_LARGE, kospi_large, kosdaq_large)
     total_middle = _calculate_total(TOTAL_MIDDLE, kospi_middle, kosdaq_middle)
@@ -492,25 +485,28 @@ def _calculate_total(code, kospi, kosdaq):
     total = pd.merge(left=kospi, right=kosdaq, on=[DATE], suffixes=(kospi_suffix, kosdaq_suffix))
     total[CODE] = code
     total[BENCHMARK_RET_1] = (total[BENCHMARK_RET_1 + kospi_suffix] + total[BENCHMARK_RET_1 + kosdaq_suffix]) / 2
-    total[BENCHMARK_RET_3] = (total[BENCHMARK_RET_3 + kospi_suffix] + total[BENCHMARK_RET_3 + kosdaq_suffix]) / 2
-    total[BENCHMARK_RET_6] = (total[BENCHMARK_RET_6 + kospi_suffix] + total[BENCHMARK_RET_6 + kosdaq_suffix]) / 2
-    total[BENCHMARK_RET_12] = (total[BENCHMARK_RET_12 + kospi_suffix] + total[BENCHMARK_RET_12 + kosdaq_suffix]) / 2
+    total[BENCHMARK_RET_5] = (total[BENCHMARK_RET_5 + kospi_suffix] + total[BENCHMARK_RET_5 + kosdaq_suffix]) / 2
+    total[BENCHMARK_RET_20] = (total[BENCHMARK_RET_20 + kospi_suffix] + total[BENCHMARK_RET_20 + kosdaq_suffix]) / 2
+    total[BENCHMARK_RET_60] = (total[BENCHMARK_RET_60 + kospi_suffix] + total[BENCHMARK_RET_60 + kosdaq_suffix]) / 2
+    total[BENCHMARK_RET_120] = (total[BENCHMARK_RET_120 + kospi_suffix] + total[BENCHMARK_RET_120 + kosdaq_suffix]) / 2
 
     return total.loc[:, BENCHMARK_RESULT_COLUMNS]
 
 
-def process_macro_daily(unprocessed_macros: DataFrame) -> DataFrame:
+def process_macro(unprocessed_macros: DataFrame) -> DataFrame:
     # Data re-formatting
     raw_cols = unprocessed_macros.loc[:, "Symbol Name"] + "_" + unprocessed_macros.loc[:, "Item Name "]
     unprocessed_macros = unprocessed_macros.T.copy(deep=True)
 
     # get only data
     unprocessed_macros = unprocessed_macros[
-        unprocessed_macros.reset_index()['index'].apply(lambda x: type(x) == datetime).values].copy(deep=True)
+        unprocessed_macros.reset_index()['index'].apply(lambda x: type(x) == datetime.datetime).values].copy(deep=True)
     unprocessed_macros.columns = raw_cols
 
     # make percent to non-percent
     unprocessed_macros = unprocessed_macros.apply(lambda x: x * 0.01 if "(%)" in x.name else x).copy(deep=True)
+    # fill nan
+    unprocessed_macros.fillna(method='ffill', inplace=True)
 
     # generating meaningful macro variables
     unprocessed_macros["*_*term_spread_kor"] = unprocessed_macros["ECO_시장금리:국고10년(%)"] - unprocessed_macros[
@@ -532,44 +528,6 @@ def process_macro_daily(unprocessed_macros: DataFrame) -> DataFrame:
     unprocessed_macros["*_*log_dollar_index"] = unprocessed_macros["ECO_미국달러지수 (선물, NYBOT)(Pt)"].apply(
         lambda x: np.log(x))
     unprocessed_macros["*_*log_oil"] = unprocessed_macros["ECO_주요상품선물_WTI-1M($/bbl)"].apply(lambda x: np.log(x))
-
-    # columns to use
-    new_cols = [col for col in unprocessed_macros.columns if col[0:3] == '*_*']
-
-    # get preprocessed macro
-    processed_macros_from_daily = unprocessed_macros[new_cols]
-    processed_macros_from_daily.columns = [col.replace("*_*", "") for col in processed_macros_from_daily.columns]
-
-    # get only last observations of each month
-    processed_macros_last_obs = processed_macros_from_daily.resample("M").last()
-    processed_macros_last_obs.index.name = "date"
-
-    # calculate volatility
-    processed_macros_vol = processed_macros_from_daily.resample("M").apply(lambda x: np.std(x))
-    processed_macros_vol.columns = [col + "_vol" for col in processed_macros_vol.columns]
-    processed_macros_vol.index.name = "date"
-
-    # merge monthly observations and volatility of each variable
-    macros_from_daily = processed_macros_last_obs.merge(processed_macros_vol, how="left", left_index=True,
-                                                        right_index=True)
-
-    return macros_from_daily
-
-
-def process_macro_monthly(unprocessed_macros: DataFrame) -> DataFrame:
-    # Data re-formatting
-    raw_cols = unprocessed_macros.loc[:, "Symbol Name"] + "_" + unprocessed_macros.loc[:, "Item Name "]
-    unprocessed_macros = unprocessed_macros.T.copy(deep=True)
-
-    # get only data
-    unprocessed_macros = unprocessed_macros[
-        unprocessed_macros.reset_index()['index'].apply(lambda x: type(x) == datetime).values].copy(deep=True)
-    unprocessed_macros.columns = raw_cols
-
-    # make percent to non-percent
-    unprocessed_macros = unprocessed_macros.apply(lambda x: x * 0.01 if "(%)" in x.name else x).copy(deep=True)
-
-    # generate meaningful variables
     unprocessed_macros["*_*log_export"] = unprocessed_macros["ECO_수출금액지수(총지수)(2010=100)"].apply(lambda x: np.log(x))
     unprocessed_macros["*_*log_import"] = unprocessed_macros["ECO_수입금액지수(총지수)(2010=100)"].apply(lambda x: np.log(x))
     unprocessed_macros["*_*log_industry_production_us"] = unprocessed_macros["ECO_미국(계절변동조정)(2010=100)"].apply(
@@ -579,36 +537,24 @@ def process_macro_monthly(unprocessed_macros: DataFrame) -> DataFrame:
     unprocessed_macros["*_*log_industry_production_kor"] = unprocessed_macros["ECO_산업생산지수(계절조정)(2010=100)"].apply(
         lambda x: np.log(x))
 
+    # columns to use
     new_cols = [col for col in unprocessed_macros.columns if col[0:3] == '*_*']
 
-    # get only meaningful variables
-    macros_from_monthly = unprocessed_macros[new_cols]
-    macros_from_monthly.columns = [col.replace("*_*", "") for col in macros_from_monthly.columns]
-    macros_from_monthly.index.name = "date"
+    # get preprocessed macro
+    processed_macros = unprocessed_macros[new_cols]
+    processed_macros.columns = [col.replace("*_*", "") for col in processed_macros.columns]
 
-    return macros_from_monthly
+    # get only last observations of each month
+    # processed_macros_last_obs = processed_macros.resample("M").last()
+    # processed_macros_last_obs.index.name = "date"
+    processed_macros.index.name = 'date'
 
+    # calculate volatility
+    processed_macros_vol = processed_macros.rolling(20).apply(lambda x: np.std(x), raw=False)
+    processed_macros_vol.columns = [col + "_monthly_vol" for col in processed_macros_vol.columns]
+    processed_macros_vol.index.name = "date"
 
-def merging_with_macros(processed_companies, processed_macro_from_daily,
-                        processed_macro_from_monthly: DataFrame) -> DataFrame:
-    macro = processed_macro_from_daily.merge(processed_macro_from_monthly, how="left", left_index=True,
-                                             right_index=True)
-
-    lagging_variables = [LOG_EXPORT, LOG_IMPORT, LOG_INDUSTRY_PRODUCTION_US, LOG_INDUSTRY_PRODUCTION_EURO,
-                         LOG_INDUSTRY_PRODUCTION_KOR]
-
-    contemporaneous_variables = list(set(list(macro.columns)) - set(lagging_variables))
-
-    macro_contemporaneous = macro[contemporaneous_variables].copy(deep=True)
-    macro_lagging = macro[lagging_variables].copy(deep=True)
-
-    processed_companies = processed_companies.merge(macro_contemporaneous, how='left', left_on="date", right_index=True)
-
-    macro_lagging['mdate_lag'] = macro_lagging.index + MonthEnd(-1)
-    macro_lagging = macro_lagging.reset_index().set_index('mdate_lag').copy(deep=True)
-    macro_lagging = macro_lagging.drop(columns='date').copy(deep=True)
-
-    # Lagging
-    merged_companies = processed_companies.merge(macro_lagging, how='left', left_on="date", right_index=True)
-
-    return merged_companies
+    # merge monthly observations and volatility of each variable
+    macros = processed_macros.merge(processed_macros_vol, how="left", left_index=True, right_index=True)
+    macros.fillna(method='ffill', inplace=True)
+    return macros

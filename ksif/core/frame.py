@@ -201,7 +201,7 @@ class Portfolio(DataFrame):
 
         selected_benchmark.set_index(DATE, inplace=True)
         selected_benchmark = selected_benchmark.loc[
-                             :, [BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12]
+                             :, [BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60]
                              ]
         return selected_benchmark
 
@@ -365,7 +365,7 @@ class Portfolio(DataFrame):
         return returns
 
     def get_returns_and_turnovers(self, long_transaction_cost_ratio, short_transaction_cost_ratio, weighted):
-        portfolio = self.dropna(subset=[RET_M])
+        portfolio = self.dropna(subset=[RET_20])
         returns = pd.DataFrame()
         if weighted:
             if weighted not in self.columns:
@@ -373,13 +373,13 @@ class Portfolio(DataFrame):
             portfolio = portfolio.dropna(subset=[weighted])
             long_portfolio = portfolio.loc[portfolio[weighted] > 0, :]
             short_portfolio = portfolio.loc[portfolio[weighted] < 0, :]
-            short_portfolio.loc[:, RET_M] = -1 * short_portfolio.loc[:, RET_M]
+            short_portfolio.loc[:, RET_20] = -1 * short_portfolio.loc[:, RET_20]
             short_portfolio.loc[:, weighted] = -short_portfolio.loc[:, weighted]
             long_returns = long_portfolio.groupby([DATE]).apply(
-                lambda x: np.average(x[RET_M], weights=x[weighted])
+                lambda x: np.average(x[RET_20], weights=x[weighted])
             )
             short_returns = short_portfolio.groupby([DATE]).apply(
-                lambda x: np.average(x[RET_M], weights=x[weighted])
+                lambda x: np.average(x[RET_20], weights=x[weighted])
             )
             long_turnovers = _get_turnovers(long_portfolio, weighted)
             short_turnovers = _get_turnovers(short_portfolio, weighted)
@@ -402,7 +402,7 @@ class Portfolio(DataFrame):
         else:
             turnovers = _get_turnovers(portfolio)
             returns[PORTFOLIO_RETURN] = portfolio.groupby([DATE]).apply(
-                lambda x: np.average(x[RET_M])
+                lambda x: np.average(x[RET_20])
             ).subtract(turnovers.multiply(short_transaction_cost_ratio), fill_value=0)
         return portfolio, returns, turnovers
 
@@ -527,7 +527,7 @@ class Portfolio(DataFrame):
         labels = [str(x) for x in range(1, chunk_num + 1)]
 
         portfolio = dc(self)
-        portfolio = portfolio.dropna(subset=[factor, RET_M])
+        portfolio = portfolio.dropna(subset=[factor, RET_20])
 
         if only_positive:
             portfolio = portfolio.loc[portfolio[factor] > 0, :]
@@ -541,9 +541,9 @@ class Portfolio(DataFrame):
         for label in labels:
             labelled_data = portfolio.loc[portfolio[QUANTILE] == label, :]
             if weighted:
-                grouped_data = labelled_data.groupby([DATE]).apply(lambda x: np.average(x[RET_M], weights=x[MKTCAP]))
+                grouped_data = labelled_data.groupby([DATE]).apply(lambda x: np.average(x[RET_20], weights=x[MKTCAP]))
             else:
-                grouped_data = labelled_data.groupby([DATE])[RET_M].mean()
+                grouped_data = labelled_data.groupby([DATE])[RET_20].mean()
             grouped_data = grouped_data.rename(label)
             grouped_data = _cumulate(grouped_data, cumulative)
             quantile_portfolio_returns = pd.concat([quantile_portfolio_returns, grouped_data], axis=1, sort=True)
@@ -577,7 +577,7 @@ class Portfolio(DataFrame):
 
         return quantile_portfolio_returns
 
-    def rank_correlation(self, factor: str, ranked_by: str = RET_M, rolling: int = 6,
+    def rank_correlation(self, factor: str, ranked_by: str = RET_20, rolling: int = 6,
                          show_plot=False, title: str = '') -> DataFrame:
         portfolio = dc(self.dropna(subset=[ranked_by]))
         portfolio = portfolio.periodic_rank(factor=factor, drop_rank=False)
@@ -605,12 +605,12 @@ class Portfolio(DataFrame):
 
     def show_plot(self, cumulative: bool = True, weighted: bool = False, title: str = None,
                   show_benchmark: bool = True):
-        portfolio = self.dropna(subset=[RET_M])
+        portfolio = self.dropna(subset=[RET_20])
 
         if weighted:
-            grouped_data = portfolio.groupby([DATE]).apply(lambda x: np.average(x[RET_M], weights=x[MKTCAP]))
+            grouped_data = portfolio.groupby([DATE]).apply(lambda x: np.average(x[RET_20], weights=x[MKTCAP]))
         else:
-            grouped_data = portfolio.groupby([DATE])[RET_M].mean()
+            grouped_data = portfolio.groupby([DATE])[RET_20].mean()
 
         # noinspection PyProtectedMember
         grouped_data = _cumulate(grouped_data, cumulative)
@@ -623,7 +623,7 @@ class Portfolio(DataFrame):
             grouped_data = grouped_data.reset_index(drop=False)
             grouped_data = pd.merge(grouped_data, benchmark, on=[DATE])
             grouped_data = grouped_data.rename(index=str, columns={
-                RET_M: 'Portfolio',
+                RET_20: 'Portfolio',
                 BENCHMARK_RET_1: self.benchmark
             })
             grouped_data = grouped_data.set_index(keys=[DATE])

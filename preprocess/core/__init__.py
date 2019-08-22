@@ -10,10 +10,8 @@ import pandas as pd
 from tqdm import tqdm
 
 from preprocess.core.data_filter import filter_companies
-from preprocess.core.data_processor import process_companies, process_benchmarks, process_macro_daily, \
-    process_macro_monthly, merging_with_macros, process_factors
-from preprocess.core.data_reader import read_companies, read_benchmarks, read_macro_daily, read_macro_monthly, \
-    read_factors
+from preprocess.core.data_processor import process_companies, process_benchmarks, process_macro, process_factors
+from preprocess.core.data_reader import read_companies, read_benchmarks, read_macro, read_factors
 
 ENCODING = 'utf-8'
 
@@ -35,12 +33,9 @@ if __name__ == '__main__':
         progress_bar.update(30)
 
         progress_bar.set_postfix_str("Processing macro data...")
-        unprocessed_macro_daily = read_macro_daily(excel_file)
-        unprocessed_macro_monthly = read_macro_monthly(excel_file)
-        processed_macro_daily = process_macro_daily(unprocessed_macro_daily)
-        processed_macro_monthly = process_macro_monthly(unprocessed_macro_monthly)
-        merged_companies = merging_with_macros(processed_companies, processed_macro_daily,
-                                               processed_macro_monthly)
+        unprocessed_macros = read_macro(excel_file)
+        processed_macros = process_macro(unprocessed_macros)
+        merged_companies = processed_companies.merge(processed_macros, how='left', left_on="date", right_index=True)
         merged_companies.to_csv('data/{}_company.csv'.format(file_name), index=False, encoding=ENCODING)
         progress_bar.update(20)
 

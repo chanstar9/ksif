@@ -175,15 +175,8 @@ def _melt(raw, value_name):
     return melted
 
 
-def read_macro_daily(excel_file: ExcelFile):
+def read_macro(excel_file: ExcelFile):
     # Read excel file.
-    raw_macro_from_daily = excel_file.parse(MACRO_DAILY, skiprows=8)
+    raw_macro_from_daily = excel_file.parse(MACRO, skiprows=8)
 
     return raw_macro_from_daily
-
-
-def read_macro_monthly(excel_file: ExcelFile):
-    # Read excel file.
-    raw_macro_from_monthly = excel_file.parse(MACRO_MONTHLY, skiprows=8)
-
-    return raw_macro_from_monthly

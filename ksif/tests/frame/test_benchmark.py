@@ -24,12 +24,12 @@ class TestBenchmark(TestCase):
         # The default benchmark is KOSPI.
         benchmark = pf.get_benchmark()
         self.assertEqual(benchmark.columns.tolist(),
-                         [BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12])
+                         [BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60])
 
         # If the benchmark is set, return the benchmark.
         benchmark = pf.get_benchmark(benchmark=KOSDAQ)
         self.assertEqual(benchmark.columns.tolist(),
-                         [BENCHMARK_RET_1, BENCHMARK_RET_3, BENCHMARK_RET_6, BENCHMARK_RET_12])
+                         [BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60])
 
         # If the benchmark is not exist, raise ValueError.
         with self.assertRaises(ValueError):

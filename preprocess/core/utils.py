@@ -17,6 +17,7 @@ def last_day_of_month(any_day):
 def zero_to_nan(series: Series) -> Series:
     return series.apply(lambda x: np.where(x == 0, np.nan, x))
 
+
 def disparity(adj_close_p: Series, price_ma: Series):
     return adj_close_p / price_ma * 100
 
@@ -47,7 +48,7 @@ def double_bottom(three_inside_up: Series, time_period):
     ind = interval * signal
     ind = ind.dropna()
     ind = ind[ind != 0]
-    ind=ind.reindex(index=ind.values)
+    ind = ind.reindex(index=ind.values)
     three_inside_up[ind.index] += 1
     return three_inside_up
 
@@ -58,6 +59,7 @@ def golden_cross(price_ma20: Series, price_ma60: Series):
     pre_position = pre_position.fillna(method='bfill')
     cross = (df != pre_position) * 1
     return cross.to_frame()
+
 
 # technical indicator
 def big_bull_candle(open, high, low, close, volume):

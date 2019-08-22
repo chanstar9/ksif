@@ -7,21 +7,23 @@
 import itertools
 
 # Base information
-DATADATE = 'datadate'
 CODE = 'code'
 NAME = 'name'
 DATE = 'date'
-RET_D = 'daily_return'  # 1일 수익률
-RET_W = 'weekly_return'  # 1주일 수익률
-RET_M = 'monthly_return'  # 1개월 수익률
+RET_1 = 'return_1'  # 1일 수익률
+RET_5 = 'return_5'  # 5일 수익률
+RET_20 = 'return_20'  # 20일 수익률
+RET_60 = 'return_60'  # 60일 수익률
+RET_120 = 'return_120'  # 120일 수익률
 ADJ_OPEN_P = 'adj_open_p'  # 수정시가
 ADJ_HIGH_P = 'adj_high_p'  # 수정고가
 ADJ_LOW_P = 'adj_low_p'  # 수정고가
 ADJ_CLOSE_P = 'adj_close_p'  # 수정종가
 ADJ_TRADING_VOLUME = 'adj_trading_volume'  # 수정거래량
 MKTCAP = 'mktcap'  # 시가총액
-OS_SHARES = 'ut_shares'  # 유통 주식수 (보통)(주)
-BASE_INFORMATION = [CODE, NAME, DATE, RET_M, RET_W, RET_M, ADJ_OPEN_P, ADJ_HIGH_P, ADJ_LOW_P, ADJ_CLOSE_P, MKTCAP]
+OS_SHARES = 'os_shares'  # 유통 주식수 (보통)(주)
+BASE_INFORMATION = [CODE, NAME, DATE, RET_1, RET_5, RET_20, RET_60, RET_120, ADJ_OPEN_P, ADJ_HIGH_P, ADJ_LOW_P,
+                    ADJ_CLOSE_P, MKTCAP]
 
 # Fundamental
 REVTQ = 'revtq'
@@ -48,25 +50,6 @@ A_CUR = 'a_cur'
 A_CUR_MEAN12 = 'a_cur_mean12'
 L_CUR = 'l_cur'
 L_CUR_MEAN12 = 'l_cur_mean12'
-
-
-# 수익성지표
-S_A = 's_a'  # 매출/자산 Sale over Assets
-GP_A = 'gp_a'  # 매출총이익/자산 Gross Profit over Assets
-OP_A = 'op_a'  # 영업이익/자산 EBIT over Assets
-CF_A = 'cf_a'  # 영업활동으로 인한 현금흐름/자산 Cash Flow from operation over Assets
-ROA = 'roa'  # 연간 순이익/자산 Return On Assets
-ROE = 'roe'  # 연간 순이익/자본 Return On Equity
-QROA = 'qroa'  # 분기간 순이익/자산
-QROE = 'qroe'  # 분기간 순이익/자본
-EBT_E = 'ebt_e'  # (순이익+세금)/자본
-ROIC = 'roic'  # 투하자본수익률 Return On Invested Capital
-GP_S = 'gp_s'  # 매출총이익/매출
-DIVP = 'divp'  # 배당률 Dividend rate(12 month rolling)
-PROFIT_FACTORS = [S_A, GP_A, OP_A, CF_A, ROA, ROE, QROA, QROE, EBT_E, ROIC, GP_S, DIVP]
-
-
-
 
 # Filter
 EXCHANGE = 'exchange'  # 거래소
@@ -126,13 +109,12 @@ ASSETSQOQ = 'assetsqoq'  # 분기간 자산 변화율
 GROWTH_FACTORS = [SALESQOQ, GPQOQ, OPQOQ, ROAQOQ, ROAYOY, GP_SYOY, GP_AYOY, ASSETSYOY, ASSETSQOQ]
 
 # Momentum factors
-MOM12_1 = 'mom12-1'  # 12개월 모멘텀 - 1개월 모멘텀
-MOM6_1 = 'mom6-1'  # 6개월 모멘텀 - 1개월 모멘텀
-MOM12 = 'mom12'  # 12개월 모멘텀
-MOM6 = 'mom6'  # 6개월 모멘텀
-MOM3 = 'mom3'  # 3개월 모멘텀
-MOM1 = 'mom1'  # 1개월 모멘텀
-MOMENTUM_FACTORS = [MOM12_1, MOM6_1, MOM12, MOM6, MOM3, MOM1]
+MOM120 = 'mom120'  # 120일 모멘텀
+MOM60 = 'mom60'  # 60일 모멘텀
+MOM20 = 'mom20'  # 20일 모멘텀
+MOM5 = 'mom5'  # 5일 모멘텀
+MOM1 = 'mom1'  # 1일 모멘텀
+MOMENTUM_FACTORS = [MOM120, MOM60, MOM20, MOM5, MOM1]
 
 # Safety factors
 BETA_1D = 'beta_1d'  # 일일 베타
@@ -196,14 +178,6 @@ DOJI_CANDLE = 'doji_candle'  # 도지형 캔들
 HAMMER_CANDLE = 'hammer_candle'  # 망치형 캔들
 BIG_BULL_CANDLE = 'big_bull_candle'  # 장대양봉
 ACCUMULATION_CANDLE = 'accumulation_candle'  # 매집봉
-
-MORNING_STAR = 'morning_star'
-MORNING_DOJI_STAR = 'morning_doji_star'
-ABANDONED_BABY = 'abandoned_baby'
-THREE_INSIDE_UP = 'trhee_inside_up'
-THREE_OUTSIDE_UP = 'three_outside_up'
-UPSIDE_GAP_TWO_CROWS = 'upside_gap_two_crows'
-
 # sub
 BOLLINGER_UPPERBAND = 'bollinger_upperband'  # 볼린저밴드 상한선
 BOLLINGER_MIDBAND = 'bollinger_midband'  # 볼린저밴드 중심선
@@ -216,6 +190,8 @@ TRIX = 'trix'  # trix
 # pattern
 GAP_RISE = 'gap_rise'  # 갭상승
 GOLDEN_CROSS = 'golden_cross'  # 골든크로스
+MORNING_STAR = 'morning_star'
+MORNING_DOJI_STAR = 'morning_doji_star'
 EVENING_STAR = 'evening_star'
 EVENING_DOJI_STAR = 'evening_doji_star'
 ABANDONED_BABY = 'abandoned_baby'
@@ -225,7 +201,11 @@ UPSIDE_GAP_TWO_CROWS = 'upside_gap_two_crows'
 RISE_DIVERGENCE = 'rise_divergence'  # 상승 다이버젼스
 DOUBLE_BOTTOM = 'double_bottom'  # 쌍바닥
 
-TA_FACTOR = []
+TA_FACTOR = [PRICE_MA20, PRICE_MA60, TRADING_VOLUME_MA5, TRADING_VOLUME_MA20, DOJI_CANDLE, HAMMER_CANDLE,
+             BIG_BULL_CANDLE, ACCUMULATION_CANDLE, BOLLINGER_UPPERBAND, BOLLINGER_MIDBAND, BOLLINGER_LOWERBAND,
+             STOCHASTIC_SLOWK, STOCHASTIC_SLOWD, OBV, DISPARITY, TRIX, GAP_RISE, GOLDEN_CROSS, MORNING_STAR,
+             MORNING_DOJI_STAR, EVENING_STAR, EVENING_DOJI_STAR, ABANDONED_BABY, THREE_INSIDE_DOWN, THREE_OUTSIDE_DOWN,
+             UPSIDE_GAP_TWO_CROWS]
 
 # Consensus Factor
 CONSENSUS_MEAN = 'consensus_mean'
@@ -244,7 +224,7 @@ CONSENSUS_ADJ_CHG = 'consensus_adj_chg'
 CONSENSUS_FACTOR = [CONSENSUS_MEAN, CONSENSUS_CHG, CONSENSUS_MAX, CONSENSUS_MIN, CONSENSUS_MID, CONSENSUS_CV,
                     CONSENSUS_DIS, CONSENSUS_UP, CONSENSUS_DOWN, CONSENSUS_STAY, CONSENSUS_STD, CONSENSUS_ADJ_CHG]
 
-COMPANY_FACTORS = list(
+COMPANY_REFINED_FACTORS = list(
     itertools.chain(
         # Values factors
         VALUE_FACTORS,
@@ -258,6 +238,10 @@ COMPANY_FACTORS = list(
         SAFETY_FACTORS,
         # Liquidity factors
         LIQUIDITY_FACTORS,
+        # Technical Analysis factor
+        TA_FACTOR,
+        # Consensus Factor
+        CONSENSUS_FACTOR
     )
 )
 
@@ -302,9 +286,10 @@ TOTAL_SMALL = '코스피/코스닥 소형주 평균'
 CD91 = 'CD 91일'
 
 BENCHMARK_RET_1 = 'benchmark_return_1'
-BENCHMARK_RET_3 = 'benchmark_return_3'
-BENCHMARK_RET_6 = 'benchmark_return_6'
-BENCHMARK_RET_12 = 'benchmark_return_12'
+BENCHMARK_RET_5 = 'benchmark_return_5'
+BENCHMARK_RET_20 = 'benchmark_return_20'
+BENCHMARK_RET_60 = 'benchmark_return_60'
+BENCHMARK_RET_120 = 'benchmark_return_120'
 
 BENCHMARKS = [
     MKF_2000,
