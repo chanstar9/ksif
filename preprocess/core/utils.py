@@ -23,7 +23,7 @@ def disparity(adj_close_p: Series, price_ma: Series):
 
 
 def gap_rise(adj_close_p: Series, adj_open_p: Series):
-    return (adj_close_p > adj_open_p.shift(1)).to_frame()
+    return (adj_close_p > zero_to_nan(adj_open_p.shift(1))).to_frame()
 
 
 def rise_divergence(morning_star: Series, obv: Series):
@@ -59,15 +59,3 @@ def golden_cross(price_ma20: Series, price_ma60: Series):
     pre_position = pre_position.fillna(method='bfill')
     cross = (df != pre_position) * 1
     return cross.to_frame()
-
-
-# technical indicator
-def big_bull_candle(open, high, low, close, volume):
-    if volume.shift(-1) * 2 < volume:
-        return 1
-    else:
-        return 0
-
-
-def accumulation_candle(open, close, volume):
-    return (volume.shift(1) * 2 < volume) & ((close - open) / open <= 0.08) & (0 <= (close - open) / open)
