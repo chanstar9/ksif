@@ -55,7 +55,7 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
         OVER_20_QUARTILE_SHARES])
 
     # Calculate fiscal quarters of daily data.
-    daily_companies = unprocessed_companies.loc[:, DAILY_DATA].reset_index(drop=True)
+    daily_companies = unprocessed_companies.loc[:, DAILY_DATA].reset_index(drop=True).copy(deep=True)
     daily_companies.loc[:, MONTH_DAY] = daily_companies[DATE].dt.month * 100 + daily_companies[DATE].dt.day
     daily_companies.loc[:, YEAR] = daily_companies[DATE].dt.year
     daily_companies.loc[:, FISCAL_QUARTER] = 0
@@ -71,10 +71,11 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
 
     # Calculate fiscal quarters of quarterly data.
     quarterly_companies = unprocessed_companies.loc[
-        unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA].reset_index(drop=True)
+        unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA].reset_index(drop=True).copy(deep=True)
     quarterly_companies.sort_values([CODE, DATE], inplace=True)
     quarterly_companies[FISCAL_QUARTER] = quarterly_companies[DATE].dt.year * 10 + (
             quarterly_companies[DATE].dt.month / 3)
+    quarterly_companies = quarterly_companies.groupby([CODE, FISCAL_QUARTER]).last()
     quarterly_companies = quarterly_companies.drop(columns=[DATE])
     quarterly_companies = quarterly_companies.reset_index()
 
