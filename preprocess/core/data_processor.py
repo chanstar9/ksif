@@ -72,9 +72,11 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     # Calculate fiscal quarters of quarterly data.
     quarterly_companies = unprocessed_companies.loc[
         unprocessed_companies.date.dt.month.isin([3, 6, 9, 12]), QUARTERLY_DATA].reset_index(drop=True)
+    quarterly_companies.sort_values([CODE, DATE], inplace=True)
     quarterly_companies[FISCAL_QUARTER] = quarterly_companies[DATE].dt.year * 10 + (
             quarterly_companies[DATE].dt.month / 3)
     quarterly_companies = quarterly_companies.drop(columns=[DATE])
+    quarterly_companies = quarterly_companies.reset_index()
 
     quarterly_companies['sales12'] = quarterly_companies.groupby(CODE)[SALES].rolling(4).sum().reset_index(drop=True)
     quarterly_companies['gp12'] = quarterly_companies.groupby(CODE)[GP].rolling(4).sum().reset_index(drop=True)
