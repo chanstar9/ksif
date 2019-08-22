@@ -110,7 +110,7 @@ def read_benchmarks(excel_file: ExcelFile) -> pd.DataFrame:
     """
     # Read excel file.
     raw_benchmarks = excel_file.parse(BENCHMARK, skiprows=8)
-    raw_macro_from_monthly = excel_file.parse(MACRO_MONTHLY, skiprows=8)
+    raw_macro_from_monthly = excel_file.parse(MACRO, skiprows=8)
 
     # Use only CD91
     raw_risk_free = raw_macro_from_monthly.loc[raw_macro_from_monthly[ITEM_NAME] == '시장금리:CD유통수익률(91)(%)', :]

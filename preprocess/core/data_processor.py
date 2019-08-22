@@ -31,7 +31,8 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     """
     # price and volume adjustment
     unprocessed_companies[ADJ_TRADING_VOLUME] = unprocessed_companies[TRADING_VOLUME] * unprocessed_companies[ADJ_C]
-    unprocessed_companies[CONSENSUS_MEAN] = unprocessed_companies[CONSENSUS_MEAN] / zero_to_nan(unprocessed_companies[ADJ_C])
+    unprocessed_companies[CONSENSUS_MEAN] = unprocessed_companies[CONSENSUS_MEAN] / zero_to_nan(
+        unprocessed_companies[ADJ_C])
     unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[ADJ_C] * unprocessed_companies[DIV_ADJ_C]
     unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[::-1].groupby(CODE)[DIV_ADJ_C].apply(lambda x: x.cumprod())
     unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[::-1].groupby(CODE)[DIV_ADJ_C].shift(1)
@@ -294,7 +295,8 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     available_companies[ACCUMULATION_CANDLE] = (available_companies[ADJ_TRADING_VOLUME].shift(1) * 2 <
                                                 available_companies[ADJ_TRADING_VOLUME]) & (
                                                        (available_companies[ADJ_CLOSE_P] - available_companies[
-                                                           ADJ_OPEN_P]) / zero_to_nan(available_companies[ADJ_OPEN_P]) <= 0.08) & (
+                                                           ADJ_OPEN_P]) / zero_to_nan(
+                                                   available_companies[ADJ_OPEN_P]) <= 0.08) & (
                                                        0 <= (available_companies[ADJ_CLOSE_P] - available_companies[
                                                    ADJ_OPEN_P]) / zero_to_nan(available_companies[ADJ_OPEN_P]))
     available_companies.reset_index(inplace=True)
@@ -530,6 +532,8 @@ def process_macro(unprocessed_macros: DataFrame) -> DataFrame:
     unprocessed_macros["*_*log_oil"] = unprocessed_macros["ECO_주요상품선물_WTI-1M($/bbl)"].apply(lambda x: np.log(x))
     unprocessed_macros["*_*log_export"] = unprocessed_macros["ECO_수출금액지수(총지수)(2010=100)"].apply(lambda x: np.log(x))
     unprocessed_macros["*_*log_import"] = unprocessed_macros["ECO_수입금액지수(총지수)(2010=100)"].apply(lambda x: np.log(x))
+    unprocessed_macros['*_*log_foreign_exchange_reserve'] = unprocessed_macros['ECO_외환(천달러)'].apply(
+        lambda x: np.log(10000000 * x))
     unprocessed_macros["*_*log_industry_production_us"] = unprocessed_macros["ECO_미국(계절변동조정)(2010=100)"].apply(
         lambda x: np.log(x))
     unprocessed_macros["*_*log_industry_production_euro"] = unprocessed_macros["ECO_유로지역(계절변동조정 OECD)(2010=100)"].apply(
@@ -538,23 +542,32 @@ def process_macro(unprocessed_macros: DataFrame) -> DataFrame:
         lambda x: np.log(x))
 
     # columns to use
-    new_cols = [col for col in unprocessed_macros.columns if col[0:3] == '*_*']
+    new_cols = []
+    for col in unprocessed_macros.columns:
+        if col[0:3] == '*_*':
+            col = col.replace("*_*", "")
+            new_cols.append(col)
+        else:
+            new_cols.append(col)
+
+    unprocessed_macros.columns = new_cols
+    unprocessed_macros.index.name = 'date'
 
     # get preprocessed macro
-    processed_macros = unprocessed_macros[new_cols]
-    processed_macros.columns = [col.replace("*_*", "") for col in processed_macros.columns]
+    # processed_macros = unprocessed_macros[new_cols]
+    # processed_macros.columns = [col.replace("*_*", "") for col in processed_macros.columns]
 
     # get only last observations of each month
     # processed_macros_last_obs = processed_macros.resample("M").last()
     # processed_macros_last_obs.index.name = "date"
-    processed_macros.index.name = 'date'
+    # processed_macros.index.name = 'date'
 
     # calculate volatility
-    processed_macros_vol = processed_macros.rolling(20).apply(lambda x: np.std(x), raw=False)
+    processed_macros_vol = unprocessed_macros.rolling(20).apply(lambda x: np.std(x), raw=False)
     processed_macros_vol.columns = [col + "_monthly_vol" for col in processed_macros_vol.columns]
     processed_macros_vol.index.name = "date"
 
     # merge monthly observations and volatility of each variable
-    macros = processed_macros.merge(processed_macros_vol, how="left", left_index=True, right_index=True)
-    macros.fillna(method='ffill', inplace=True)
-    return macros
+    processed_macros = unprocessed_macros.merge(processed_macros_vol, how="left", left_index=True, right_index=True)
+    processed_macros.fillna(method='ffill', inplace=True)
+    return processed_macros

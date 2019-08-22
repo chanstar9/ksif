@@ -240,3 +240,76 @@ SMALL_LOW = 'Size & Book Value(2X3) 소형 - Low'
 FACTOR_RET = 'factor_return'
 
 FACTOR_RESULT_COLUMNS = [DATE, SMB, HML]
+
+# Macro
+CALL_RATE = 'call_rate'  # 콜(1일물)금리
+CD_RATE = 'cd_rate'  # CD 유통수익률(91)금리
+GOV_BOND = 'gov_bond'  # 국채(국민주택채권1종5년)금리
+KO_THREE_YEARS_TREASURY_RATE = 'three_years_treasury_rate'  # 국고3년(국채관리기금채3년)금리
+CURRENCY_STABILITY_RATE = 'currency_stability_rate'  # 통화안정(364일)금리
+AA_MINUS_DEBENTURE_RATE = 'aa_minus_debenture_rate'  # 회사채(무보증3년AA-) 금리
+MONETARY_STABILIZATION_BOND_RATE = 'monetary_stabilization_bond_rate'  # 통안증권(91일) 금리
+KO_ONE_YEAR_TREASURY_RATE = 'one_tear_treasury_rate'  # 국고1년국고5년(국채관리기금채5년) 금리
+KO_FIVE_YEARS_TREASURY_RATE = 'five_years_treasury_rate'  # 국고5년(국채관리기금채5년)
+BBB_MINUS_DEBENTURE_RATE = 'bbb_minus_debenture_rate'  # 회사채(무보증3년 BBB-)
+KO_TEN_YEARS_TREASURY_RATE = 'ten_years_treasury_rate'  # 국고10년
+USD2KRW_EXCHANGE_RATE = 'usd2krw_exchange_rate'  # 시장평균_미국(달러)(통화대원)
+CHY2KRW_EXCHANGE_RATE = 'chy2krw_exchange_rate'  # 시장평균_중국(위안)(통화대원)
+EURO2KRW_EXCHANGE_RATE = 'euro2krw'  # 시장평균_EU(유로)(통화대원)
+US_ONE_MONTH_GOV_BOND = 'us_one_month_gov_bond'  # 국채금리_미국국채(1개월)
+US_ONE_YEAR_GOV_BOND = 'us_one_year_gov_bond'  # 국채금리_미국국채(1년)
+US_FIVE_YEARS_GOV_BOND = 'us_five_years_gov_bond'  # 국채금리_미국국채(5년)
+US_TEN_YEARS_GOV_BOND = 'us_ten_years_gov_bond'  # 국채금리_미국국채(10년)
+ONE_MONTH_LIBOR = 'libor'  # 리보(미 달러) 1개월
+NYSE = 'nyse'  # 미국 NYSE Composite(종가)
+NASDAQ = 'nasdaq'  # 미국 Nasdaq Composite(종가)
+NAND_8Gb_P = 'nand_8gb_price'  # NAND 8Gb 1Gx8 (MLC)(단기)($/개)
+WTI_OIL_FUTURES_1M = 'wti_oil_futures_1m'  # 주요상품선물_WTI-1M($/bbl)
+DOLLAR_INDEX_FUTURES = 'dollar_index_futures'  # 미국달러지수 (선물, NYBOT)
+EXPORT = 'export'  # 수출금액지수(총지수)(2010=100)
+IMPORT = 'import'  # 수입금액지수(총지수)(2010=100)
+FOREIGN_EXCHANGE_RESERVE = 'foreign_exchange_reserve'  # 외환보유고(천달러)
+US_INDUSTRY_PRODUCTION = 'us_industry_production'  # 미국산업생산(계절변동조정)(2010=100)
+EURO_INDUSTRY_PRODUCTION = 'euro_industry_production'  # 유로지역산업생산(계절변동조정 OECD)(2010=100)
+KO_INDUSTRY_PRODUCTION = 'ko_industry_production'  # 한국산업생산지수(계절조정)(2010=100)
+
+MACRO_RENAMES = {
+    'ECO_시장금리:콜(1일물)(%)': CALL_RATE,
+    'ECO_시장금리:CD유통수익률(91)(%)': CD_RATE,
+    'ECO_시장금리:국채(국민주택채권1종5년)(%)': GOV_BOND,
+    'ECO_시장금리:국고3년(국채관리기금채3년)(%)': KO_THREE_YEARS_TREASURY_RATE,
+    'ECO_시장금리:통화안정(364일)(%)': CURRENCY_STABILITY_RATE,
+    'ECO_시장금리:회사채(무보증3년AA-)(%)': AA_MINUS_DEBENTURE_RATE,
+    'ECO_시장금리:통안증권(91일)(%)': MONETARY_STABILIZATION_BOND_RATE,
+    'ECO_시장금리:국고1년(%)': KO_ONE_YEAR_TREASURY_RATE,
+    'ECO_시장금리:국고5년(국채관리기금채5년)(%)': KO_FIVE_YEARS_TREASURY_RATE,
+    'ECO_시장금리:회사채(무보증3년BBB-)(%)': BBB_MINUS_DEBENTURE_RATE,
+    'ECO_시장금리:국고10년(%)': KO_TEN_YEARS_TREASURY_RATE,
+    'ECO_시장평균_미국(달러)(통화대원)': USD2KRW_EXCHANGE_RATE,
+    'ECO_시장평균_중국(위안)(통화대원)': CHY2KRW_EXCHANGE_RATE,
+    'ECO_시장평균_EU(유로)(통화대원)': EURO2KRW_EXCHANGE_RATE,
+    'ECO_국채금리_미국국채(1개월)(%)': US_ONE_MONTH_GOV_BOND,
+    'ECO_국채금리_미국국채(1년)(%)': US_ONE_YEAR_GOV_BOND,
+    'ECO_국채금리_미국국채(5년)(%)': US_FIVE_YEARS_GOV_BOND,
+    'ECO_국채금리_미국국채(10년)(%)': US_TEN_YEARS_GOV_BOND,
+    'ECO_리보(미 달러) 1개월(%)': ONE_MONTH_LIBOR,
+    'ECO_미국 NYSE Composite(종가)(Pt)': NYSE,
+    'ECO_미국 Nasdaq Composite(종가)(Pt)': NASDAQ,
+    'ECO_NAND 8Gb 1Gx8 (MLC)(단기)($/개)': NAND_8Gb_P,
+    'ECO_주요상품선물_WTI-1M($/bbl)': WTI_OIL_FUTURES_1M,
+    'ECO_미국달러지수 (선물, NYBOT)(Pt)': DOLLAR_INDEX_FUTURES,
+    'ECO_수출금액지수(총지수)(2010=100)': EXPORT,
+    'ECO_수입금액지수(총지수)(2010=100)': IMPORT,
+    'ECO_외환(천달러)': FOREIGN_EXCHANGE_RESERVE,
+    'ECO_미국(계절변동조정)(2010=100)': US_INDUSTRY_PRODUCTION,
+    'ECO_유로지역(계절변동조정 OECD)(2010=100)': EURO_INDUSTRY_PRODUCTION,
+    'ECO_산업생산지수(계절조정)(2010=100)': KO_INDUSTRY_PRODUCTION
+}
+
+MACRO_RAW = [CALL_RATE, CD_RATE, GOV_BOND, KO_THREE_YEARS_TREASURY_RATE, CURRENCY_STABILITY_RATE,
+             AA_MINUS_DEBENTURE_RATE, MONETARY_STABILIZATION_BOND_RATE, KO_ONE_YEAR_TREASURY_RATE,
+             KO_FIVE_YEARS_TREASURY_RATE, BBB_MINUS_DEBENTURE_RATE, KO_TEN_YEARS_TREASURY_RATE, USD2KRW_EXCHANGE_RATE,
+             CHY2KRW_EXCHANGE_RATE, EURO2KRW_EXCHANGE_RATE, US_ONE_MONTH_GOV_BOND, US_ONE_YEAR_GOV_BOND,
+             US_FIVE_YEARS_GOV_BOND, US_TEN_YEARS_GOV_BOND, ONE_MONTH_LIBOR, NYSE, NASDAQ, NAND_8Gb_P,
+             WTI_OIL_FUTURES_1M, DOLLAR_INDEX_FUTURES, EXPORT, IMPORT, FOREIGN_EXCHANGE_RESERVE, US_INDUSTRY_PRODUCTION,
+             EURO_INDUSTRY_PRODUCTION, KO_INDUSTRY_PRODUCTION]

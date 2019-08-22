@@ -260,6 +260,7 @@ LOG_DOLLAR_INDEX = "log_dollar_index"  # 달러 인덱스의 로그; 달러가 �
 LOG_OIL = "log_oil"  # 유가의 로그
 LOG_EXPORT = "log_export"  # 한국의 수출량 로그
 LOG_IMPORT = "log_import"  # 한국의 수입량 로그
+LOG_FOREIGN_EXCHANGE_RESERVE = 'log_foreign_exchange_reserve'   # 한국의 외환보유고 로그
 LOG_INDUSTRY_PRODUCTION_US = "log_industry_production_us"  # 미국의 산업생산 로그
 LOG_INDUSTRY_PRODUCTION_EURO = "log_industry_production_euro"  # 유로지역의 산업생산 로그
 LOG_INDUSTRY_PRODUCTION_KOR = "log_industry_production_kor"  # 한국의 산업생산 로그
