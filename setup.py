@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 :Author: Jaekyoung Kim
+         ChanKyu Choi
 :Date: 2018. 6. 6.
 """
 from setuptools import setup, find_packages
@@ -19,17 +20,18 @@ setup(
     download_url='https://github.com/chanstar9/ksif/archive/master.zip',
     install_requires=[
         'h5py==2.8.0',
-        'pandas',
-        'numpy',
+        'pandas==0.24.2',
+        'numpy==1.15.4',
         'matplotlib',
         'scikit-learn',
-        'scipy',
+        'scipy==1.2.0',
         'statsmodels',
         'patsy',
         'performanceanalytics',
+        'pymysql',
         'tqdm',
         'requests',
-        'tables',
+        'tables==3.4.4',
         'python-dateutil',
         'urllib3',
         'xlrd'

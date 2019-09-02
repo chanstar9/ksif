@@ -29,14 +29,16 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     :param unprocessed_companies: (DataFrame)
     :return processed_companies: (DataFrame)
     """
+    unprocessed_companies[DATE] = pd.to_datetime(unprocessed_companies[DATE], format='%Y-%m-%d')
     # price and volume adjustment
+    unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[ADJ_C] * unprocessed_companies[DIV_ADJ_C]
+    unprocessed_companies[ADJ_C] = unprocessed_companies.groupby(CODE).apply(
+        lambda x: x[ADJ_C][::-1].cumprod()[::-1].shift(-1).fillna(1)).reset_index(drop=True)
     unprocessed_companies[ADJ_TRADING_VOLUME] = unprocessed_companies[TRADING_VOLUME] * unprocessed_companies[ADJ_C]
     unprocessed_companies[CONSENSUS_MEAN] = unprocessed_companies[CONSENSUS_MEAN] / zero_to_nan(
         unprocessed_companies[ADJ_C])
-    unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[ADJ_C] * unprocessed_companies[DIV_ADJ_C]
-    unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[::-1].groupby(CODE)[DIV_ADJ_C].apply(lambda x: x.cumprod())
-    unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[::-1].groupby(CODE)[DIV_ADJ_C].shift(1)
-    unprocessed_companies[DIV_ADJ_C] = unprocessed_companies[DIV_ADJ_C].fillna(1)
+    unprocessed_companies[DIV_ADJ_C] = unprocessed_companies.groupby(CODE).apply(
+        lambda x: x[DIV_ADJ_C][::-1].cumprod()[::-1].shift(-1).fillna(1)).reset_index(drop=True)
     unprocessed_companies[ADJ_OPEN_P] = unprocessed_companies.groupby(CODE).apply(
         lambda x: x[OPEN_P] / zero_to_nan(x[DIV_ADJ_C])).reset_index(drop=True)
     unprocessed_companies[ADJ_HIGH_P] = unprocessed_companies.groupby(CODE).apply(
@@ -256,13 +258,13 @@ def process_companies(unprocessed_companies: DataFrame) -> DataFrame:
     # Technical Indicator factors
     # MA
     available_companies[PRICE_MA20] = available_companies.groupby(CODE).apply(
-        lambda x: ta.SMA(x[ADJ_CLOSE_P], 20)).reset_index(drop=True)
+        lambda x: ta.SMA(x[ADJ_CLOSE_P], timeperiod=20)).reset_index(drop=True)
     available_companies[PRICE_MA60] = available_companies.groupby(CODE).apply(
-        lambda x: ta.SMA(x[ADJ_CLOSE_P], 60)).reset_index(drop=True)
+        lambda x: ta.SMA(x[ADJ_CLOSE_P], timeperiod=60)).reset_index(drop=True)
     available_companies[TRADING_VOLUME_MA20] = available_companies.groupby(CODE).apply(
-        lambda x: ta.SMA(x[ADJ_TRADING_VOLUME], 20)).reset_index(drop=True)
+        lambda x: ta.SMA(x[ADJ_TRADING_VOLUME], timeperiod=20)).reset_index(drop=True)
     available_companies[TRADING_VOLUME_MA5] = available_companies.groupby(CODE).apply(
-        lambda x: ta.SMA(x[ADJ_TRADING_VOLUME], 5)).reset_index(drop=True)
+        lambda x: ta.SMA(x[ADJ_TRADING_VOLUME], timeperiod=5)).reset_index(drop=True)
     # candle
     available_companies[DOJI_CANDLE] = available_companies.groupby(CODE).apply(
         lambda x: ta.CDLDOJI(x[ADJ_OPEN_P], x[ADJ_HIGH_P], x[ADJ_LOW_P], x[ADJ_CLOSE_P]) / 100).reset_index(drop=True)
@@ -496,20 +498,6 @@ def _calculate_total(code, kospi, kosdaq):
 
 
 def process_macro(unprocessed_macros: DataFrame) -> DataFrame:
-    # Data re-formatting
-    raw_cols = unprocessed_macros.loc[:, "Symbol Name"] + "_" + unprocessed_macros.loc[:, "Item Name "]
-    unprocessed_macros = unprocessed_macros.T.copy(deep=True)
-
-    # get only data
-    unprocessed_macros = unprocessed_macros[
-        unprocessed_macros.reset_index()['index'].apply(lambda x: type(x) == datetime.datetime).values].copy(deep=True)
-    unprocessed_macros.columns = raw_cols
-
-    # make percent to non-percent
-    unprocessed_macros = unprocessed_macros.apply(lambda x: x * 0.01 if "(%)" in x.name else x).copy(deep=True)
-    # fill nan
-    unprocessed_macros.fillna(method='ffill', inplace=True)
-
     # generating meaningful macro variables
     unprocessed_macros["*_*term_spread_kor"] = unprocessed_macros["ECO_시장금리:국고10년(%)"] - unprocessed_macros[
         "ECO_시장금리:국고1년(%)"]
@@ -571,3 +559,46 @@ def process_macro(unprocessed_macros: DataFrame) -> DataFrame:
     processed_macros = unprocessed_macros.merge(processed_macros_vol, how="left", left_index=True, right_index=True)
     processed_macros.fillna(method='ffill', inplace=True)
     return processed_macros
+
+
+def select_date(unselected_data: DataFrame, start_date: datetime, end_date: datetime) -> DataFrame:
+    return unselected_data.loc[(start_date <= unselected_data[DATE]) & (unselected_data[DATE] <= end_date), :]
+
+
+def match_freq(selected_companies: DataFrame, selected_macros: DataFrame, selected_benchmarks: DataFrame,
+               selected_factors: DataFrame, freq: str) -> object:
+    # company
+    selected_companies.set_index([CODE, DATE], inplace=True)
+    freq_matched_companies = selected_companies.resample(freq).last()
+    freq_matched_companies[FIRST_LIST] = selected_companies[FIRST_LIST].resample(freq).first()
+    freq_matched_companies[MAX_LIST] = selected_companies[MAX_LIST].resample(freq).max()
+    freq_matched_companies[MIN_LIST] = selected_companies[MIN_LIST].resample(freq).mix()
+    freq_matched_companies[SUM_LIST] = selected_companies[SUM_LIST].resample(freq).sum()
+    freq_matched_companies[PROD_LIST] = selected_companies[PROD_LIST].resample(freq).prod()
+    # macro
+    freq_matched_macros = selected_macros.resample(freq).last()
+    # benchmark
+    freq_matched_benchmarks = selected_benchmarks.resample(freq).last()
+    # factor
+    selected_factors.set_index(DATE, inplace=True)
+    freq_matched_factors = selected_factors.resample(freq).apply(lambda x: ((100 + x).prod()) ** (1 / x.count()) - 1)
+    return freq_matched_companies, freq_matched_macros, freq_matched_benchmarks, freq_matched_factors
+
+
+def process_all(unprocessed_companies: DataFrame = None, unprocessed_macros: DataFrame = None,
+                unprocessed_benchmarks: DataFrame = None, unprocessed_factors: DataFrame = None,
+                start_date: datetime = None, end_date: datetime = None, freq: str = 'D') -> object:
+    # select
+    selected_companies = select_date(unprocessed_companies, start_date, end_date)
+    selected_macros = select_date(unprocessed_macros, start_date, end_date)
+    selected_benchmarks = select_date(unprocessed_benchmarks, start_date, end_date)
+    selected_factors = select_date(unprocessed_factors, start_date, end_date)
+    # match frequency
+    freq_matched_companies, freq_matched_macros, freq_matched_benchmarks, freq_matched_factors = match_freq(
+        selected_companies, selected_macros, selected_benchmarks, selected_factors, freq=freq)
+    # preprocess
+    processed_companies = process_companies(freq_matched_companies)
+    processed_macros = process_macro(freq_matched_macros)
+    processed_benchmarks = process_benchmarks(freq_matched_benchmarks)
+    processed_factors = process_factors(freq_matched_factors)
+    return processed_companies, processed_macros, processed_benchmarks, processed_factors

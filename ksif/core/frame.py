@@ -24,6 +24,7 @@ from pandas import Series
 from pandas.core.index import MultiIndex
 from pandas.core.indexing import convert_to_index_sliceable
 from performanceanalytics.charts.performance_summary import create_performance_summary
+from preprocess.core.data_processor import process_all
 
 from .columns import *
 from .outcomes import *
@@ -75,13 +76,14 @@ class Portfolio(DataFrame):
     def __init__(self, data=None, index=None, columns=None, dtype=None, copy: bool = False,
                  start_date: datetime = START_DATE, end_date: datetime = None,
                  include_holding: bool = False, include_finance: bool = False,
-                 include_managed: bool = False, include_suspended: bool = False):
+                 include_managed: bool = False, include_suspended: bool = False,
+                 merge_macro: bool = False, freq: str = 'D'):
 
         if not end_date:
             end_date = datetime.today()
 
         if data is None:
-            data, self.benchmarks, self.factors = download_latest_data(download_company_data=True)
+            data, self.macros, self.benchmarks, self.factors = download_latest_data(download_company_data=True)
 
             if not include_holding:
                 data = data.loc[~data[HOLDING], :]
@@ -95,14 +97,25 @@ class Portfolio(DataFrame):
             if not include_suspended:
                 data = data.loc[~data[IS_SUSPENDED], :]
 
-            data = data.loc[(start_date <= data[DATE]) & (data[DATE] <= end_date), :]
-
+            # match date & frequency and do preprocess
+            data, self.macros, self.benchmarks, self.factors = process_all(unprocessed_companies=data,
+                                                                           unprocessed_macros=self.macros,
+                                                                           unprocessed_benchmarks=self.benchmarks,
+                                                                           unprocessed_factors=self.factors,
+                                                                           start_date=start_date,
+                                                                           end_date=end_date, freq=freq)
         else:
-            _, self.benchmarks, self.factors = download_latest_data(download_company_data=False)
+            _, self.macros, self.benchmarks, self.factors = download_latest_data(download_company_data=False)
 
-        self.benchmarks = self.benchmarks.loc[
-                          (start_date <= self.benchmarks[DATE]) & (self.benchmarks[DATE] <= end_date), :]
-        self.factors = self.factors.loc[(start_date <= self.factors.index) & (self.factors.index <= end_date), :]
+            # match date & frequency and do preprocess
+            _, self.macros, self.benchmarks, self.factors = process_all(unprocessed_macros=self.macros,
+                                                                        unprocessed_benchmarks=self.benchmarks,
+                                                                        unprocessed_factors=self.factors,
+                                                                        start_date=start_date,
+                                                                        end_date=end_date, freq=freq)
+
+        if merge_macro:
+            data = data.merge(self.macros, how='left', left_on="date", right_index=True)
 
         DataFrame.__init__(self=self, data=data, index=index, columns=columns, dtype=dtype, copy=copy)
 
@@ -149,8 +162,7 @@ class Portfolio(DataFrame):
             if is_iterator(key):
                 key = list(key)
             # noinspection PyProtectedMember
-            indexer = self.loc._convert_to_indexer(key, axis=1,
-                                                   raise_missing=True)
+            indexer = self.loc._convert_to_indexer(key, axis=1, raise_missing=True)
 
         # take() does not accept boolean indexers
         if getattr(indexer, "dtype", None) == bool:
@@ -200,9 +212,8 @@ class Portfolio(DataFrame):
                                                      (self.benchmarks[DATE] <= max(self[DATE])), :]
 
         selected_benchmark.set_index(DATE, inplace=True)
-        selected_benchmark = selected_benchmark.loc[
-                             :, [BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60]
-                             ]
+        selected_benchmark = selected_benchmark.loc[:,
+                             [BENCHMARK_RET_1, BENCHMARK_RET_5, BENCHMARK_RET_20, BENCHMARK_RET_60, BENCHMARK_RET_120]]
         return selected_benchmark
 
     def set_benchmark(self, benchmark):
@@ -239,7 +250,7 @@ class Portfolio(DataFrame):
         return dataframe
 
     def outcome(self, benchmark: str = None, weighted: str = None,
-                long_transaction_cost_ratio: float = 0.01, short_transaction_cost_ratio: float = 0.01,
+                long_transaction_cost_ratio: float = 0.0025, short_transaction_cost_ratio: float = 0.0025,
                 show_plot: bool = False):
         """
         Calculate various indices of the portfolio.
@@ -355,8 +366,8 @@ class Portfolio(DataFrame):
         return result
 
     def get_returns(self, weighted: str = None,
-                    long_transaction_cost_ratio: float = 0.01,
-                    short_transaction_cost_ratio: float = 0.01, cumulative=False) -> DataFrame:
+                    long_transaction_cost_ratio: float = 0.0025,
+                    short_transaction_cost_ratio: float = 0.0025, cumulative=False) -> DataFrame:
         _, returns, _ = self.get_returns_and_turnovers(
             long_transaction_cost_ratio, short_transaction_cost_ratio, weighted
         )
@@ -365,7 +376,7 @@ class Portfolio(DataFrame):
         return returns
 
     def get_returns_and_turnovers(self, long_transaction_cost_ratio, short_transaction_cost_ratio, weighted):
-        portfolio = self.dropna(subset=[RET_20])
+        portfolio = self.dropna(subset=[RET_1])
         returns = pd.DataFrame()
         if weighted:
             if weighted not in self.columns:
@@ -373,13 +384,13 @@ class Portfolio(DataFrame):
             portfolio = portfolio.dropna(subset=[weighted])
             long_portfolio = portfolio.loc[portfolio[weighted] > 0, :]
             short_portfolio = portfolio.loc[portfolio[weighted] < 0, :]
-            short_portfolio.loc[:, RET_20] = -1 * short_portfolio.loc[:, RET_20]
+            short_portfolio.loc[:, RET_1] = -1 * short_portfolio.loc[:, RET_1]
             short_portfolio.loc[:, weighted] = -short_portfolio.loc[:, weighted]
             long_returns = long_portfolio.groupby([DATE]).apply(
-                lambda x: np.average(x[RET_20], weights=x[weighted])
+                lambda x: np.average(x[RET_1], weights=x[weighted])
             )
             short_returns = short_portfolio.groupby([DATE]).apply(
-                lambda x: np.average(x[RET_20], weights=x[weighted])
+                lambda x: np.average(x[RET_1], weights=x[weighted])
             )
             long_turnovers = _get_turnovers(long_portfolio, weighted)
             short_turnovers = _get_turnovers(short_portfolio, weighted)
@@ -402,7 +413,7 @@ class Portfolio(DataFrame):
         else:
             turnovers = _get_turnovers(portfolio)
             returns[PORTFOLIO_RETURN] = portfolio.groupby([DATE]).apply(
-                lambda x: np.average(x[RET_20])
+                lambda x: np.average(x[RET_1])
             ).subtract(turnovers.multiply(short_transaction_cost_ratio), fill_value=0)
         return portfolio, returns, turnovers
 
@@ -527,7 +538,7 @@ class Portfolio(DataFrame):
         labels = [str(x) for x in range(1, chunk_num + 1)]
 
         portfolio = dc(self)
-        portfolio = portfolio.dropna(subset=[factor, RET_20])
+        portfolio = portfolio.dropna(subset=[factor, RET_1])
 
         if only_positive:
             portfolio = portfolio.loc[portfolio[factor] > 0, :]
@@ -541,9 +552,9 @@ class Portfolio(DataFrame):
         for label in labels:
             labelled_data = portfolio.loc[portfolio[QUANTILE] == label, :]
             if weighted:
-                grouped_data = labelled_data.groupby([DATE]).apply(lambda x: np.average(x[RET_20], weights=x[MKTCAP]))
+                grouped_data = labelled_data.groupby([DATE]).apply(lambda x: np.average(x[RET_1], weights=x[MKTCAP]))
             else:
-                grouped_data = labelled_data.groupby([DATE])[RET_20].mean()
+                grouped_data = labelled_data.groupby([DATE])[RET_1].mean()
             grouped_data = grouped_data.rename(label)
             grouped_data = _cumulate(grouped_data, cumulative)
             quantile_portfolio_returns = pd.concat([quantile_portfolio_returns, grouped_data], axis=1, sort=True)
@@ -577,7 +588,7 @@ class Portfolio(DataFrame):
 
         return quantile_portfolio_returns
 
-    def rank_correlation(self, factor: str, ranked_by: str = RET_20, rolling: int = 6,
+    def rank_correlation(self, factor: str, ranked_by: str = RET_1, rolling: int = 6,
                          show_plot=False, title: str = '') -> DataFrame:
         portfolio = dc(self.dropna(subset=[ranked_by]))
         portfolio = portfolio.periodic_rank(factor=factor, drop_rank=False)
@@ -605,12 +616,12 @@ class Portfolio(DataFrame):
 
     def show_plot(self, cumulative: bool = True, weighted: bool = False, title: str = None,
                   show_benchmark: bool = True):
-        portfolio = self.dropna(subset=[RET_20])
+        portfolio = self.dropna(subset=[RET_1])
 
         if weighted:
-            grouped_data = portfolio.groupby([DATE]).apply(lambda x: np.average(x[RET_20], weights=x[MKTCAP]))
+            grouped_data = portfolio.groupby([DATE]).apply(lambda x: np.average(x[RET_1], weights=x[MKTCAP]))
         else:
-            grouped_data = portfolio.groupby([DATE])[RET_20].mean()
+            grouped_data = portfolio.groupby([DATE])[RET_1].mean()
 
         # noinspection PyProtectedMember
         grouped_data = _cumulate(grouped_data, cumulative)
@@ -623,7 +634,7 @@ class Portfolio(DataFrame):
             grouped_data = grouped_data.reset_index(drop=False)
             grouped_data = pd.merge(grouped_data, benchmark, on=[DATE])
             grouped_data = grouped_data.rename(index=str, columns={
-                RET_20: 'Portfolio',
+                RET_1: 'Portfolio',
                 BENCHMARK_RET_1: self.benchmark
             })
             grouped_data = grouped_data.set_index(keys=[DATE])

@@ -5,8 +5,10 @@
 :Date: 2018. 6. 21.
 """
 import math
+from datetime import datetime
 
 import pandas as pd
+from pandas import DataFrame
 from dateutil.relativedelta import relativedelta
 
 from ksif.io.google_drive import query_google_spreadsheet, HOLDING_COMPANY_GID, DELISTED_COMPANY_GID, \
@@ -49,13 +51,16 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
     pre_last_day = sorted(unfiltered_companies[DATE].unique())[-1]
 
     # Set the next price to 0 when a company is delisted due to bankruptcy.
-    delisted_companies = query_google_spreadsheet(DELISTED_COMPANY_GID)
+    delisted_companies = query_google_spreadsheet(DELISTED_COMPANY_GID).sort_values(CODE)
     delisted_records = unfiltered_companies.loc[
         [code in delisted_companies[CODE].unique() for code in unfiltered_companies[CODE]]
     ]
     delisted_records = delisted_records.groupby(CODE).last().reset_index()
     # delisted_records[DATE] = delisted_records[DATE].apply(lambda x: x + relativedelta(months=1))
-    delisted_records[[OPEN_P, HIGH_P, LOW_P, CLOSE_P, ADJ_C]] = 0
+    delisted_records[[OPEN_P, HIGH_P, LOW_P, CLOSE_P]] = 0
+    delisted_records[DATE] = \
+        delisted_companies.loc[[code in delisted_companies[CODE].unique() for code in delisted_records[CODE]]][DATE]
+    delisted_records[DATE] = pd.to_datetime(delisted_records[DATE], format='%Y-%m-%d')
     unfiltered_companies = pd.concat([unfiltered_companies, delisted_records], axis=0, ignore_index=True)
 
     # Set the next price to the current price when a company is delisted due to M&A.
@@ -65,10 +70,15 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
     ]
     merged_records = merged_records.groupby(CODE).last().reset_index()
     # merged_records[DATE] = merged_records[DATE].apply(lambda x: x + relativedelta(months=1))
+    merged_records[DATE] = \
+        merged_companies.loc[[code in merged_companies[CODE].unique() for code in merged_records[CODE]]][DATE]
+    merged_records[DATE] = pd.to_datetime(merged_records[DATE], format='%Y-%m-%d')
     unfiltered_companies = pd.concat([unfiltered_companies, merged_records], axis=0, ignore_index=True)
 
     # Set is_suspended of a delisted period to True when a company had been delisted and was listed again.
     relisted_companies = query_google_spreadsheet(RELISTED_COMPANY_GID)
+    relisted_companies['start_date'] = pd.to_datetime(relisted_companies['start_date'])
+    relisted_companies['end_date'] = pd.to_datetime(relisted_companies['end_date'])
     for index, (code, name, start_date, end_date) in relisted_companies.iterrows():
         unfiltered_companies.loc[(unfiltered_companies[CODE] == code) &
                                  (unfiltered_companies[DATE] >= start_date) &
@@ -86,4 +96,11 @@ def filter_companies(unfiltered_companies: pd.DataFrame) -> pd.DataFrame:
         ))
 
     filtered_companies = unfiltered_companies.sort_values([CODE, DATE]).reset_index(drop=True)
+
+    # 기존 데이터에 붙히기
+    # base_companies = pd.read_csv('data/unprocessed_company.csv')
+    # base_companies[DATE] = pd.to_datetime(base_companies[DATE], format='%Y-%m-%d')
+    # filtered_companies = base_companies.merge(filtered_companies, how='outer')
+    # filtered_companies.sort_values([CODE, DATE], inplace=True)
+
     return filtered_companies

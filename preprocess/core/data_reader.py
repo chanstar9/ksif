@@ -4,6 +4,7 @@
          Chankyu Choi
 :Date: 2018. 6. 19.
 """
+import datetime
 import numpy as np
 import pandas as pd
 from pandas.io.excel import ExcelFile
@@ -27,7 +28,7 @@ BENCHMARK_UNNECESSARY_COLUMNS = [SYMBOL, KIND, ITEM, ITEM_NAME, FREQUENCY]
 # noinspection PyShadowingNames
 def read_companies(excel_file: ExcelFile) -> pd.DataFrame:
     """
-    :param excel_file: (ExcelFile)
+    :param excel_file:
 
     :return melted_companies: (DataFrame)
          code   | (String)
@@ -35,9 +36,8 @@ def read_companies(excel_file: ExcelFile) -> pd.DataFrame:
          name   | (String)
          ...
     """
-    # Read excel file.
+    # Read excel file
     raw_companies = excel_file.parse(COMPANY, skiprows=8)
-
     # Rename Symbol -> code, Symbol Name -> name
     raw_companies = raw_companies.rename(columns={
         'Symbol': CODE,
@@ -99,7 +99,7 @@ def read_companies(excel_file: ExcelFile) -> pd.DataFrame:
 
 
 # noinspection PyShadowingNames
-def read_benchmarks(excel_file: ExcelFile) -> pd.DataFrame:
+def read_benchmarks(excel_file) -> pd.DataFrame:
     """
     :param excel_file: (ExcelFile)
 
@@ -110,10 +110,10 @@ def read_benchmarks(excel_file: ExcelFile) -> pd.DataFrame:
     """
     # Read excel file.
     raw_benchmarks = excel_file.parse(BENCHMARK, skiprows=8)
-    raw_macro_from_monthly = excel_file.parse(MACRO, skiprows=8)
+    raw_macro = excel_file.parse(MACRO, skiprows=8)
 
     # Use only CD91
-    raw_risk_free = raw_macro_from_monthly.loc[raw_macro_from_monthly[ITEM_NAME] == '시장금리:CD유통수익률(91)(%)', :]
+    raw_risk_free = raw_macro.loc[raw_macro[ITEM_NAME] == '시장금리:CD유통수익률(91)(%)', :]
 
     # Remove unnecessary columns, for example, Symbol, Kind, Item, Item Name, Frequency
     raw_benchmarks = raw_benchmarks.drop(columns=BENCHMARK_UNNECESSARY_COLUMNS)
@@ -175,8 +175,21 @@ def _melt(raw, value_name):
     return melted
 
 
-def read_macro(excel_file: ExcelFile):
+def read_macro(excel_file: ExcelFile) -> pd.DataFrame:
     # Read excel file.
-    raw_macro_from_daily = excel_file.parse(MACRO, skiprows=8)
+    raw_macro = excel_file.parse(MACRO, skiprows=8)
+    # Data re-formatting
+    raw_cols = raw_macro.loc[:, "Symbol Name"] + "_" + raw_macro.loc[:, "Item Name "]
+    unprocessed_macros = raw_macro.T.copy(deep=True)
 
-    return raw_macro_from_daily
+    # get only data
+    unprocessed_macros = unprocessed_macros[
+        unprocessed_macros.reset_index()['index'].apply(lambda x: type(x) == datetime.datetime).values].copy(deep=True)
+    unprocessed_macros.columns = raw_cols
+
+    # make percent to non-percent
+    unprocessed_macros = unprocessed_macros.apply(lambda x: x * 0.01 if "(%)" in x.name else x).copy(deep=True)
+    # fill nan
+    unprocessed_macros.fillna(method='ffill', inplace=True)
+
+    return unprocessed_macros

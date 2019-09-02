@@ -22,34 +22,34 @@ ADJ_CLOSE_P = 'adj_close_p'  # 수정종가
 ADJ_TRADING_VOLUME = 'adj_trading_volume'  # 수정거래량
 MKTCAP = 'mktcap'  # 시가총액
 OS_SHARES = 'os_shares'  # 유통 주식수 (보통)(주)
-BASE_INFORMATION = [CODE, NAME, DATE, RET_1, RET_5, RET_20, RET_60, RET_120, ADJ_OPEN_P, ADJ_HIGH_P, ADJ_LOW_P,
+BASE_INFORMATION = [CODE, NAME, DATE, RET_1, RET_5, RET_1, RET_60, RET_120, ADJ_OPEN_P, ADJ_HIGH_P, ADJ_LOW_P,
                     ADJ_CLOSE_P, MKTCAP]
 
 # Fundamental
-REVTQ = 'revtq'
-REVT12 = 'revt12'
-GPQ = 'gpq'
-GP12 = 'gp12'
-OPQ = 'opq'
-OP12 = 'op12'
-NIQ = 'niq'
-NI12 = 'ni12'
-ATQ = 'atq'
-ATQ_MEAN4 = 'atq_mean4'
-SEQ = 'seq'
-SEQ_MEAN4 = 'seq_mean4'
-LTQ = 'ltq'
+REVTQ = 'revtq'  # 매출액 분기별 Revenue total quarterly
+REVT12 = 'revt12'  # 매출액  4분기 누적
+GPQ = 'gpq'  # 매출총이익 분기별 Gross profit quartelry
+GP12 = 'gp12'  # 매출총이익 4분기 누적
+OPQ = 'opq'  # 영업이익 분기별 Operating Profit quarterly
+OP12 = 'op12'  # 영업이익 4분기 누적
+NIQ = 'niq'  # 순이익 분기별 Net income quarterly
+NI12 = 'ni12'  # 순이익 4분기 누적
+ATQ = 'atq'  # 총자산 분기별 Asset total quarterly
+ATQ_MEAN4 = 'atq_mean4'  # 총자산 4분기 평균
+SEQ = 'seq'  # 자본 Shareholder's equity quarterly
+SEQ_MEAN4 = 'seq_mean4'  # 자본 4분기 평균
+LTQ = 'ltq'  # 총부채 Total liabilities quarterly
 
-CF_DEP = 'cf_dep'
-CFOQ = 'cfoq'
-CFO12 = 'cfo12'
+CF_DEP = 'cf_dep'  # 현금흐름 감가상각비
+CFOQ = 'cfoq'  # 현금흐름 영업활동 분기별
+CFO12 = 'cfo12'  # 현금흐름 영업활동 연간
 
-A_TANG = 'a_tang'
-A_TANG_MEAN12 = 'a_tang_mean12'
-A_CUR = 'a_cur'
-A_CUR_MEAN12 = 'a_cur_mean12'
-L_CUR = 'l_cur'
-L_CUR_MEAN12 = 'l_cur_mean12'
+A_TANG = 'a_tang'  # 유형자산 분기별 Tangible asset quarterly
+A_TANG_MEAN12 = 'a_tang_mean12'  # 유형자산 4분기 누적
+A_CUR = 'a_cur'  # 유동자산 분기별 Current asset quarterly
+A_CUR_MEAN12 = 'a_cur_mean12'  # 유동자산 4분기 누적
+L_CUR = 'l_cur'  # 유동부채 분기별 Current liability quarterly
+L_CUR_MEAN12 = 'l_cur_mean12'  # 유동부채 4분기 누적
 
 # Filter
 EXCHANGE = 'exchange'  # 거래소
@@ -260,7 +260,7 @@ LOG_DOLLAR_INDEX = "log_dollar_index"  # 달러 인덱스의 로그; 달러가 �
 LOG_OIL = "log_oil"  # 유가의 로그
 LOG_EXPORT = "log_export"  # 한국의 수출량 로그
 LOG_IMPORT = "log_import"  # 한국의 수입량 로그
-LOG_FOREIGN_EXCHANGE_RESERVE = 'log_foreign_exchange_reserve'   # 한국의 외환보유고 로그
+LOG_FOREIGN_EXCHANGE_RESERVE = 'log_foreign_exchange_reserve'  # 한국의 외환보유고 로그
 LOG_INDUSTRY_PRODUCTION_US = "log_industry_production_us"  # 미국의 산업생산 로그
 LOG_INDUSTRY_PRODUCTION_EURO = "log_industry_production_euro"  # 유로지역의 산업생산 로그
 LOG_INDUSTRY_PRODUCTION_KOR = "log_industry_production_kor"  # 한국의 산업생산 로그

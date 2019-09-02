@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 :Author: Jaekyoung Kim
+         ChanKyu Choi
 :Date: 2018. 7. 18.
 """
 import os
@@ -20,6 +21,7 @@ urllib3.disable_warnings()  # Ignore InsecureRequestWarning.
 TABLE = 'table'
 
 COMPANY = 'company'
+MACRO = 'macro'
 BENCHMARK = 'benchmark'
 FACTOR = 'factor'
 
@@ -36,6 +38,8 @@ def download_latest_data(download_company_data) -> (DataFrame, DataFrame):
     csv_files_url = csv_files_url.sort_values(by=DATE)
     latest_company_id = csv_files_url.iloc[-1][COMPANY]
     latest_company_file_name = csv_files_url.iloc[-1][DATE] + '_' + COMPANY
+    latest_macro_id = csv_files_url.iloc[-1][MACRO]
+    latest_macro_file_name = csv_files_url.iloc[-1][DATE] + '_' + MACRO
     latest_benchmark_id = csv_files_url.iloc[-1][BENCHMARK]
     latest_benchmark_file_name = csv_files_url.iloc[-1][DATE] + '_' + BENCHMARK
     latest_factor_id = csv_files_url.iloc[-1][FACTOR]
@@ -48,11 +52,12 @@ def download_latest_data(download_company_data) -> (DataFrame, DataFrame):
         latest_company_data = _download_data(latest_company_file_name, latest_company_id)
     else:
         latest_company_data = None
+    latest_macro_data = _download_data(latest_macro_file_name, latest_macro_id)
     latest_benchmark_data = _download_data(latest_benchmark_file_name, latest_benchmark_id)
     latest_factor_data = _download_data(latest_factor_file_name, latest_factor_id)
     latest_factor_data.set_index(DATE, inplace=True)
 
-    return latest_company_data, latest_benchmark_data, latest_factor_data
+    return latest_company_data, latest_macro_data, latest_benchmark_data, latest_factor_data
 
 
 def _download_data(file_name, id):
